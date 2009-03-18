@@ -1,9 +1,0 @@
-"Recently practitioners of programming discipline have advised us not to be afraid to use procedure calls, as the readability they afford is worth the inefficiency. This is like saying that cars with square wheels qare all right because transportation is worth a bumpy ride: we really ought instead to concentrate on improving our wheels."
-
-An interesting metaphor from Guy Lewis Steele in his paper. "as the A they afford is worth the B", I've seen such statements serveral times. It make me think that it's usually an execuse because ppl just don't want to spend time to really resolve a problem.
-
-Two insightful points from this paper:
-
-* Our difficulties in dealing with programming and programming languages stem in part from a confusion between the abstract notions of prgram organization and the concrete embodiment of these notions as programming language constructs. The important point is that for each important programming concept which we have found useful -- modularity, iteration, assignment, conditionals -- there may exist more than one programming language construct which can embody that concept in a reasonably natural manner. In understanding (a piece of) a program it is necessary to determine not only what construct is being used, but the concept it is intended to express.
-
-* We discovered that GOTO was often being used even in situations where more appropriate and expressive constructs were available, and that it was being used for all sorts of purposes we hadn't anticipated, and so we sought to eliminate unwanted concepts and programming styles by banning a construct.

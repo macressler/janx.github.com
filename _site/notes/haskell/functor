@@ -1,6 +1,0 @@
-A correct functor instance should follow two rules:
-
-fmap id == id
-fmap (f . g) == fmap f . fmap g
-
-In natural words, functor should keep data's structure, only change it's value. This rule can't be guranteed by compiler, so we have to remember it by ourselves when implement a functor instance. 
