@@ -1,0 +1,21 @@
+Monad
+=====
+
+Monoid
+------
+
+In abstract algebra, there is a simple abstract structure called monoid. In order to be considered a monoid, an object must have two properties:
+
+  * An associative binary operator: suppose it's (*), then a * (b * c) must equal (a * b) * c
+  * An identity value: suppose it's e, then a * e == a and e * a == a must be true
+
+The rules for monoid don't say what the binary operator must do, merely that such an operator must exist, that's a very low "bar to entry". e.g. If we take addition as the binary operator and zero as the identity value, integers form a monoid. With multiplication as the binary operator and one as the identity value, integers form a different monoid. (But we can't write two differing Monoid instances for Int in Haskell)
+
+Rules a Monad should follow
+---------------------------
+
+I. return x >>= f === f x
+
+II. x >>= return === x
+
+III. m >>= (\x -> f x >>= g) === (m >>= f) >>= g 
