@@ -1,0 +1,175 @@
+Sets, Relations and Functions
+-----------------------------
+
+The set {0,1,2,..} of natural numbers is denoted by the symbol N. A set is said to be countable if its elements can be placed in one-to-one correspondence with the natural numbers.
+
+An n-place relation on a collection of sets S1, S2 .. Sn is a set R S1 x S2 .. x Sn of tuples of elements from S1 through Sn. We say that the elements s1 belongs to S1 through sn belongs to Sn are related by R if (s1, .., sn) is an element of R. Emphasize: A RELATION is a SET
+
+A one-place relation on a set S is called a predicate on S. We say that P is true of an element s belongs to S if s belongs to P. To emphasize this intuition, we often write P(s) instead of s belongs to P, regarding P as a function mapping elements of S to truth values.
+
+A two-place relation R on sets S and T is called a binary relation. We often write s R t instead of  (s, t) belongs to R. When S and Tare the same set U, we say that R is a binary relation on U.
+
+The domain of a relation R on sets S and T, written dom(R), is the set of elements s belongs to S such that (s, t) belongs to R for some t. The codomain or range of R, written range(R), is the set of elements t belongs to T such that (s, t) belongs to R for some s.
+
+A relation R on sets S and T is called a partial function from S to T if, whenever (s, t1) belongs to R and (s, t2) belongs to R, we have t1 = t2. If, in addition, dom(R) = S, then R is called a total function (or just function) from S to T
+
+A partial function R from S to T is said to be defined on an argument s belongs to S if s belongs dom(R), and undefined otherwise. We write f(x) (uparrow) or f(x) = (uparrow) to mean "f is undefined on x", and f(x) (downarrow) to mean "f is defined on x".
+
+Sometime we also need to define functions that may fail on some inputs. It is important to distinguish failure (which is a legitimate, observable result) from divergence; a function that may fail can be either partial (i.e. it may also diverge) or total (it must always return a result or explicitly fail). Indeed, we will often be interested in proving totality. We write f(x) = fail when f returns a failure result on the input x.
+
+Formally, a function from S to T that may also fail is actually a function from S to (T union {fail}), where we assume that fail does not belong to T.
+
+Suppose R is a binary relation on a set S and P is a predicate on S. We say that P is preserved by R if whenever we have s R s' and P(s), we also have P(s').
+
+
+Ordered Sets
+------------
+
+A binary relation R on a set S is reflexive if R relates every element of S to itself - that is, s R s (or (s, s) belongs to R) for all s belongs to S. R is symmetric if s R t implies t R s, for all s and t in S. R is transitive if s R t and t R u together imply s R u. R is antisymmetric if s R t and t R s together imply that s = t.
+
+A reflexive and transitive relation R on a set S is called a preorder on S. (When we speak of a "preordered set S", we always have in mind some particular preorder R on S). Preorders are usually written using symbols like <=. We write s < t ("s is strictly less than t") to means s <= t and s /= t.
+
+A preorder (on a set S) that is also antisymmetric is called a partial order on S. A partial order <= is called a total order if it also has the property that, for each s and t in S, either s <= t or t <= s.
+
+Suppose that <= is a partial order on a set S and s and t are elements of S. An element j belongs to S is said to be a join (or lease upper bound) of s and t if
+
+  1. s <= j and t <= j, and
+  2. for any element k belongs to S with s <= k and t <= k, we have j <= k
+
+Similarly, an element m belongs to S is said to be a meet (or greatest lower bound) of s and t if
+
+  1. m <= s and m <= t, and
+  2. for any element n belongs to S with n <= s and n <= t, we have n <= m
+
+A reflexive, transitive, and symmetric relation on a set S is called an equivalence on S. So:
+
+  (let R = binary relation on set S)
+  preorder = R + reflexive + transitive
+  partial order = preorder + antisymmetric
+  equivalence = preorder + symmetric
+
+Suppose R is binary relation on a set S. The reflexive closure of R is the smallest reflexive relation R' that contains R. ("Smallest" in the sense that if R" is some other reflexive relation that contains all the pairs in R, then we have R' contains by R") Similarly, the transitive closure of R is the smallest transitive relation R' that contains R. The transitive closure of R is often written R+. The reflexive and transitive closure of R is the smallest reflexive and transitive relation that contains R. It is often written R*.
+
+Suppose we have a preorder <= on a set S. A decreasing chain in <= is a sequence s1, s2, s3 .. of elements of S such that each member of the sequence is strictly less than its predecessor: s.i+1 < s.i for every i. (chains can be either finite or infinite, but we are more interested in infinite ones, as in the next definition.)
+
+Suppose we have a set S with a preorder <=. We say that <= is well founded if it contains no infinite decreasing chains. So <= on natural numbers is well founded, but <= on integers is not. We sometimes omit mentioning <= explicitly and simply speak of S as a well-founded set.
+
+
+
+Sequence
+--------
+
+A sequence is written by listing its elements, separated by commas. We use comma as both the "cons" operation for adding an element to either end of a sequence and as the "append" operation on sequences. For example, if a is the sequence 3, 2, 1 and b is the sequence 5, 6, then 0, a denotes the sequence 0, 3, 2, 1, while a, 0 denotes 3, 2, 1, 0 and b, a denotes 5, 6, 3, 2, 1. (The use of comma for both "cons" and "append" operations leads to no confusion, as long as we do not need to talk about sequences of sequences.) The sequence of numbers from 1 to n is abbreviated 1..n (with just two dots). We write |a| for the length of the sequence a. The empty sequence is written either as * or as a blank. One sequence is said to be a permutation of another if it contains exactly the same elements, possibly in a different order.
+
+
+Induction
+---------
+
+Axiom.1 Principle of Ordinary Induction on Natural Numbers
+
+Suppose that P is a predicate on the natural numbers. Then
+
+  * if P(0)
+  * and, for all i, P(i) implies P(i+1)
+  * then P(n) holds for all n
+
+Axiom.2 Principle of Complete Induction on Natural Numbers
+
+Suppose that P is a predicate on the natural numbers. Then
+
+  * if, for each natural number n, given P(i) for all i < n we can show P(n)
+  * then P(n) holds for all n
+
+Axiom.3 Principle of Lexicographic Induction
+
+The lexicographic order (or "dictionary order") on pairs of natural numbers is defined as follows: (m, n) <= (m', n') iff either m < m' or else m = m' and n <= n'
+
+Suppose that P is a predicate on pairs of natural numbers.
+
+  * if, for each pair (m, n) of natural numbers, given P(m', n') for all (m', n') < (m, n) we can show P(m, n)
+  * then P(m, n) holds for all m, n
+
+The lexicographic induction principle is the basis for proofs by nested induction, where some case of an inductive proof proceeds "by an inner induction". It can be generalized to lexicographic induction on triples of numbers, 4-tuples, etc.
+
+
+Untyped Systems
+===============
+
+Syntax Defintion
+----------------
+
+There's three approaches to define syntax
+
+* Defined by terms inductively
+
+* Defined by terms and inference rules
+
+* Defined by terms concretely
+
+Induction on Terms
+------------------
+
+(Principle of Induction on Terms)
+
+Consts(t) returns the set of constants appearing in a term t. size(t) returns the number of nodes in the terms abstract syntax tree. depth(t) returns the height of that tree.
+
+Suppose P is a predicate on terms.
+
+  * Induction on depth:
+    - if, for each term s, given P(r) for all r such that depth(r) < depth(s), we can show P(s)
+    - then P(s) holds for all s
+
+  * Induction on size:
+    - if, for each term s, give P(r) for all r such that size(r) < size(s), we can show P(s)
+    - then P(s) holds for all s
+
+  * Structural induction:
+    - if, for each term s, given P(r) for all immediate subterms r of s we can show P(s)
+    - then P(s) holds for all s
+
+Semantic Definition
+-------------------
+
+There're three basic approaches to formalizing semantics:
+
+* Operational semantics specifies the behavior of a programming language by defining a simple abstract machine for it. This machine is "abstract" in the sense that it uses the terms of the language as its machine code, rather than some low-level microprocessor instruction set. For simple languages, a state of the machine is just a term, and the machine's behavior is defined by a transition function that, for each state, either gives the next state by performing a step of simplification on the term or declares that the machine has halted. The meaning of a term t can be taken to be the final state that the machine reaches when started with t as its initial state. It is sometimes useful to give two or more different operational semantics for a single language-some more abstract, with machine states that look similar to the terms that the programmer writes, others closer to the structures manipulated by an actual interpreter or compiler for the language. Proving that the behaviors of these different machines correspond in some suitable sense when executing the same program amounts to proving the correctness of an implementation of the language.
+
+* Denotational semantics takes a more abstract view of meaning: instead of just a sequence of machine states, the meaning of a term is taken to be some mathematical object, such as a number or a function. Giving denotational semantics for a language consists of finding a collection of semantic domains and then defining an interpretation function mapping terms into elements of these domains. The search for appropriate semantic domains for modeling various language features has given rise to a rich and elegant research area known as domain theory. One major advantage of denotational semantics is that it abstracts from the gritty details of evaluation and highlights the essential concepts of the language. Also, the properties of the chosen collection of semantic domains can be used to derive powerful laws for reasoning about program behaviors-laws for proving that two programs have exactly the same behavior, for example, or that a program's behavior satisfies some specification. Finally, from the properties of the chosen collection of semantic domains, it is often immediately evident that various (desirable or undesirable) things are impossible in a language.
+
+* Axiomatic semantics takes a more direct approach to these laws: instead of first defining the behaviors of programs (by giving some operational or denotational semantics) and then deriving laws from this definition, axiomatic methods take the laws themselves as the definition of the language. The meaning of a term is just what can be proved about it.
+
+When use a operational semantic definition, we write down terms, values (which is a subset of terms that are possible final results of evaluation) and evaluation relations on terms.
+
+Evaluation relation
+-------------------
+
+Evaluation relation is written as t -> t'. The intuition is that, if t is the state of the abstract machine at a given moment, then the machine can make a step of computation and change its state to t′. Evaluation relation is defined by inference rules.
+
+There's two kinds of rules: computation rule (axiom) and congurence rule. We can think computation rule as congurence rule with no premise. From this POV, the conclusion of a rule is in fact a pair of terms (t, t').
+
+An instance of an inference rule is obtained by consistently replacing each metavariable by the same term in the rule's conclusion and all its premises (if any)
+
+A rule is satisfied by a relation if, for each instance of the rule, either the conclusion is in the relation or one of the premises is not.
+
+The one-step evaluation relation -> is the smallest binary relation on terms satisfying the inference rules. When the pair (t, t′) is in the evaluation relation, we say that "the evaluation statement (or judgment) t -> t′ is derivable.
+
+The force of the word "smallest" here is that a statement t -> t′ is derivable iff it is justified by the rules: either it is an instance of one of the axioms E-IFTRUE and E-IFFALSE, or else it is the conclusion of an instance of rule E-IF whose premise is derivable. The derivability of a given statement can be justified by exhibiting a derivation tree whose leaves are labeled with instances of E-IFTRUE or E-IFFALSE and whose internal nodes are labeled with instances of E-IF. 
+
+A term t is in normal form if no evaluation rule applies to it—i.e., if there is no t′ such that t -> t′.  Every value is in normal form. (We sometimes say "t is a normal form" as shorthand for "t is a term in normal form.")
+
+The multi-step evaluation relation ->* is the reflexive, transitive closure of one-step evaluation. That is, it is the smallest relation such that
+
+  (1) if t -> t′ then t ->* t′
+  (2) t ->* t for all t
+  (3) if t -> * t′ and t′ ->* t″, then t ->* t″.
+
+Theorem - Uniqueness of Normal Forms: if t ->* u and t ->* u', where u and u' are both normal forms, then u = u'.
+
+Most termination proofs in computer science have the same basic form:[6] First, we choose some well-founded set S and give a function f mapping "machine states" (here, terms) into S. Next, we show that, whenever a machine state t can take a step to another state t′, we have f(t′) < f(t). We now observe that an infinite sequence of evaluation steps beginning from t can be mapped, via f, into an infinite decreasing chain of elements of S. Since S is well founded, there can be no such infinite decreasing chain, and hence no infinite evaluation sequence. The function f is often called a termination measure for the evaluation relation.
+
+Theorem - Termination of Evaluation: for every term t there is some normal form t' such that t ->* t'.
+
+Proof: Just observe that each evaluation step reduces the size of the term and that size is a termination measure because the usual order on the natural numbers is well founded.
+
+A closed term is stuck if it is in normal form but not a value.
+
