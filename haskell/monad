@@ -1,0 +1,8 @@
+Rules a Monad should follow
+===========================
+
+I. return x >>= f === f x
+
+II. x >>= return === x
+
+III. m >>= (\x -> f x >>= g) === (m >>= f) >>= g 
