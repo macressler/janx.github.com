@@ -1,0 +1,50 @@
+Untyped (Pure) Lambda Calculus
+==============================
+
+terms
+-----
+
+In the lambda-calculus everything is a function: the arguments accepted by functions are themselves functions and the result returned by a function is another function.
+
+  t ::=          terms:
+        x        variable
+        λx.t     abstraction
+        t t      application
+
+two conventions:
+
+  1. application associates to the left
+  2. the bodies of abstractions are taken to extend as far to the right as possible
+
+An occurrence of the variable x is said to be bound when it occurs in the body t of an abstraction λx.t. (More precisely, it is bound by this abstraction. Equivalently, we can say that λx is a binder whose scope is t.) An occurrence of x is free if it appears in a position where it is not bound by an enclosing abstraction on x. 
+
+A term with no free variables is said to be closed; closed terms are also called combinators.
+
+operational semantics
+---------------------
+
+In its pure form, the lambda-calculus has no built-in constants or primitive operators. The sole means by which terms "compute" is the application of functions to arguments (which themselves are functions). Each step in the computation consists of rewriting an application whose left-hand component is an abstraction, by substituting the right-hand component for the bound variable in the abstraction's body:
+
+  (λx. t12) t2 -> [x |-> t2]t12
+
+where [x |-> t2]t12 means "the term obtained by replacing all free occurrences of x in t12 by t2". Following Church, a term of the form (λx. t12) t2 is called a redex ("reducible expression"), and the operation of rewriting a redex according to the above rule is called beta-reduction.
+
+There're several evaluation strategies developed by PL designers and theorists for lambda calculas (seems Church not defined this in his paper).
+
+  * Under full beta-reduction, any redex may be reduced at any time. At each step we pick some redex, anywhere inside the term we are evaluating, and reduce it.
+
+  * Under the normal order strategy, the leftmost, outermost redex is always reduced first.
+
+  * The call by name strategy is yet more restrictive, allowing no reductions inside abstractions. e.g.  id (id (λz. id z)) ->  id (λz. id z) -> λz. id z. We perform the first two reductions as under normal order, but stop at λz. id z.
+
+  * call by value is an optimized version of call by name. instead of re-evaluating an argument each time it is used, overwrites all occurrences of the argument with its value the first time it is evaluated, avoiding the need for subsequent re-evaluation. This strategy demands that we maintain some sharing in the run-time representation of terms—in effect, it is a reduction relation on abstract syntax graphs, rather than syntax trees.
+
+  * Most languages use a call by value strategy, in which only outermost redexes are reduced and where a redex is reduced only when its right-hand side has already been reduced to a value—a term that is finished computing and cannot be reduced any further. The call-by-value strategy is strict, in the sense that the arguments to functions are always evaluated, whether or not they are used by the body of the function. In contrast, non-strict (or lazy) strategies such as call-by-name and call-by-need evaluate only the arguments that are actually used.
+
+The choice of evaluation strategy actually makes little difference when discussing type systems. The issues that motivate various typing features, and the techniques used to address them, are much the same for all the strategies.
+
+The phrase lambda-term is used to refer to arbitrary terms in the lambda-calculus. Lambda-terms beginning with a λ are often called lambda-abstractions.
+
+Definitions of full-blown languages sometimes use even more levels. For example, following Landin, it is often useful to define the behaviors of some languages constructs as derived forms, by translating them into combinations of other, more basic, features. The restricted sublanguage containing just these core features is then called the internal language (or IL), while the full language including all derived forms is called the external language (EL). The transformation from EL to IL is (at least conceptually) performed in a separate pass, following parsing.
+
+Some people use the terms "reduction" and "evaluation" synonymously. Others use "evaluation" only for strategies that involve some notion of "value" and "reduction" otherwise.
