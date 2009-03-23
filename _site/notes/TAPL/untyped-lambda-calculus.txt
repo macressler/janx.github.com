@@ -1,6 +1,7 @@
 Untyped (Pure) Lambda Calculus
 ==============================
 
+
 terms
 -----
 
@@ -19,6 +20,7 @@ two conventions:
 An occurrence of the variable x is said to be bound when it occurs in the body t of an abstraction λx.t. (More precisely, it is bound by this abstraction. Equivalently, we can say that λx is a binder whose scope is t.) An occurrence of x is free if it appears in a position where it is not bound by an enclosing abstraction on x. 
 
 A term with no free variables is said to be closed; closed terms are also called combinators.
+
 
 operational semantics
 ---------------------
@@ -48,3 +50,108 @@ The phrase lambda-term is used to refer to arbitrary terms in the lambda-calculu
 Definitions of full-blown languages sometimes use even more levels. For example, following Landin, it is often useful to define the behaviors of some languages constructs as derived forms, by translating them into combinations of other, more basic, features. The restricted sublanguage containing just these core features is then called the internal language (or IL), while the full language including all derived forms is called the external language (EL). The transformation from EL to IL is (at least conceptually) performed in a separate pass, following parsing.
 
 Some people use the terms "reduction" and "evaluation" synonymously. Others use "evaluation" only for strategies that involve some notion of "value" and "reduction" otherwise.
+
+
+Programming
+-----------
+
+Multi Arguments: by Curry
+
+Church Boolean: 
+
+  tru = λt. λf. t;
+  fls = λt. λf. f;
+  test = λl. λm. λn. l m n;
+
+Pair:
+
+  pair = λf.λs.λb. b f s;
+  fst = λp. p tru;
+  snd = λp. p fls;
+
+Church Numerals:
+
+  c0 = λs. λz. z;
+  c1 = λs. λz. s z;
+  c2 = λs. λz. s (s z);
+  c3 = λs. λz. s (s (s z));
+  ...
+    
+  Each number n is represented by a combinator cn that takes two arguments, s and z (for "successor" and "zero"), and applies s, n times, to z. Note c0 and fls is in fact the same term.
+
+  scc = λn. λs. λz. s (n s z);
+  plus = λm. λn. λs. λz. m s (n s z);
+  times = λm. λn. m (plus n) c0;
+  power = λm. λn. n (times m) c1;
+  iszro = λm. m (λx. fls) tru;
+
+  Substract is tricky and harder by using Church Numerals. It can be done using a "predecessor function," which, given c0 as argument, returns c0 and, given ci+1, returns ci:
+
+  zz = pair c0 c0;
+  ss = λp. pair (snd p) (plus c1 (snd p));
+  prd = λm. fst (m ss zz);
+  substract = λm. λn. n prd m;
+
+  A list can be represented in the lambda-calculus by its fold function.
+
+  nil = λc. λn. n;
+  [x, y, z] = λc. λn. c x (c y (c z n));
+  cons = λh. λt. λc. λn. c h (t c n);
+  isnil = λl. l (λx. fls) tru;
+  head = λl. l (λf. λs. f) nil; (note λf. λs. f is the same term as tru)
+  tail = (use the same trick as substract)
+
+  The point is, a number n is in fact a "loop", means "do sth. n times". So times m n means plus n m times on c0, power m n means times m n times on c1. Church captured the essential of a 'Number', that is 'repeat sth. n times', he's genius. The great power of Church Numerals comes from its form - it's a lambda, not a variable, not an application. It's some like class and instance, class abstracts the essential of similar things. Class (Church Numeral) can be instantiated (applied with arguments) to anything we want, it's extremly flexbile and useful.
+
+
+Enriching the Calculus
+----------------------
+
+We can do all the programming we ever need to without going outside of the pure system, but it is often convenient to include the primitive booleans and numbers (and possibly other data types) as well. We will use the symbol λ for the pure lambda-calculus and λNB for the enriched system with booleans and arithmetic expressions.
+
+In λNB, we actually have two different implementations of booleans and two of numbers to choose from when writing programs: the real ones and the encodings we've developed above. Of course, it is easy to convert back and forth between the two.
+
+  realbool = λb. b true false;
+  churchbool = λb. if b then tru else fls;
+  realeq = λm. λn. (equal m n) true false;
+  realnat = λm. m (λx. succ x) 0; (We cannot apply m to succ directly, because succ by itself does not make syntactic sense)
+
+The reasons that primitive booleans and numbers come in handy for examples have to do primarily with evaluation order: usually you can't reduce a term anymore not because it's unreducable, but it's in lambda-abstraction form (so you can reduce the redex inside the lambda, see evaluation strategies in operation semantics)
+
+
+Recursion
+---------
+
+Recall that a term that cannot take a step under the evaluation relation is called a normal form. Interestingly, some terms cannot be evaluated to a normal form. For example, the divergent combinator
+
+  omega = (λx. x x) (λx. x x);
+
+contains just one redex, and reducing this redex yields exactly omega again! Terms with no normal form are said to diverge (means we can't get a result from the computation). The omega combinator has a useful generalization called the fixed-point combinator, which can be used to help define recursive functions.
+
+  fix = λf. (λx. f (λy. x x y)) (λx. f (λy. x x y));
+
+Suppose we want to define a recursive function h, this effect can be achieved using the fix combinator by first defining g = λf. <body containing f> (the recursive function h is supposed to be passed in as f) and then h = fix g. For example, let define a recursive factorial function:
+
+  g = λfct. λn. if realeq n c0 then c1 else (times n (fct (prd n)));
+  factorial = fix g;
+
+The key fact that makes this calculation work is that fct n ->* g fct n. That is, fct is a kind of "self-replicator" that, when applied to an argument, supplies itself and n as arguments to g. Wherever the first argument to g appears in the body of g, we will get another copy of fct, which, when applied to an argument, will again pass itself and that argument to g, etc. Each time we make a recursive call using fct, we unroll one more copy of the body of g and equip it with new copies of fct that are ready to do the unrolling again.
+
+Note that the simpler call-by-name fixed point combinator (Plotkin, Gordon. Call-by-name, call-by-value, and the λ-calculus. Theoretical Computer Science, 1:125–159, 1975. called it Z)
+
+    Y = λf. (λx. f (x x)) (λx. f (x x))
+
+is useless in a call-by-value setting, since the expression Y g diverges, for any g.
+
+这里的思路: 我们想定义f = <sth. use f>, 但是在lambda系统里面函数(abstraction)是没有名字的，因此无法在定义的时候使用*正在定义的*这个函数，唯一的解决方法，是把要定义的函数变成一个变量(variable)，因为变量是有名字的，自然我们想到定义一个新的函数g = λfct. <sth use fct>。很显然, 我们应该把f,　这个我们原本想定义的递归函数，作为fct传给g, 这样g(f)实际上变成了我们想要定义的递归函数f, 即f = g(f).
+
+到了这一步事情已经很明显，f是g的一个不动点。当我们知道这一事实后反过来看, 在g的定义里我们用到了f, 而f在计算的时候可以转化成g(f),也就是说,我们在g的定义中实际上隐式的调用了g本身，构成了一个漂亮的递归。
+
+现在问题已经转化为求g的不动点f. fix(即Y combinator)的伟大之处在于, 它抽象出了求任意函数不动点的算法, 如果没有它, 我们没有把握写出任意的递归函数。so Y combinator是lambda calculus中定义递归的核心, 我想不通这个公式是怎么推导出来的, 真神人也..
+
+Representation
+--------------
+
+What, exactly, does it mean to say that the Church numerals represent ordinary numbers?
+
+Suppose we have a whole program that does some complicated calculation with numbers to yield a boolean result. If we replace all the numbers and arithmetic operations with lambda-terms representing them and evaluate the program, we will get the same result. Thus, in terms of their effects on the overall results of programs, there is no observable difference between the real numbers and their Church-numeral representation.
