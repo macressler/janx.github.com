@@ -1,6 +1,8 @@
 Untyped (Pure) Lambda Calculus
 ==============================
 
+    There may, indeed, be other applications of the system than its use as a logic.
+        —Alonzo Church, 1932
 
 terms
 -----
@@ -55,7 +57,7 @@ Some people use the terms "reduction" and "evaluation" synonymously. Others use 
 Programming
 -----------
 
-Multi Arguments: by Curry
+Multi Arguments: by Curry (Despite its name, Curry denied inventing the idea of currying. It is commonly credited to Schönfinkel (1924), but the underlying idea was familiar to a number of 19th-century mathematicians, including Frege and Cantor.)
 
 Church Boolean: 
 
@@ -149,9 +151,72 @@ is useless in a call-by-value setting, since the expression Y g diverges, for an
 
 现在问题已经转化为求g的不动点f. fix(即Y combinator)的伟大之处在于, 它抽象出了求任意函数不动点的算法, 如果没有它, 我们没有把握写出任意的递归函数。so Y combinator是lambda calculus中定义递归的核心, 我想不通这个公式是怎么推导出来的, 真神人也..
 
+
 Representation
 --------------
 
 What, exactly, does it mean to say that the Church numerals represent ordinary numbers?
 
 Suppose we have a whole program that does some complicated calculation with numbers to yield a boolean result. If we replace all the numbers and arithmetic operations with lambda-terms representing them and evaluate the program, we will get the same result. Thus, in terms of their effects on the overall results of programs, there is no observable difference between the real numbers and their Church-numeral representation.
+
+
+Formalities Syntax
+------------------
+
+* Definition of Terms
+
+Let V be a countable set of variable names. The set of terms is the smallest set T such that
+
+   1.  x belongs to T for every x belongs to V;
+   2.  if t1 belongs to T and x belongs to V, then λx.t1 belongs to T;
+   3.  if t1 belongs to T and t2 belongs to T, then t1 t2 belongs to T.
+
+* Definition of Free Variable
+
+The set of free variables of a term t, written FV(t), is defined as follows:
+
+   1. FV(x) = {x} 
+   2. FV(λx,t1) = FV(t1) \ {x}
+   3. FV(t1 t2) = FV(t1) U FV(t2) 
+
+   (\ stands for difference, U stands for Union)
+
+* Substitution
+
+Terms that differ only in the names of bound variables are interchangeable in all contexts. What this means in practice is that the name of any λ-bound variable can be changed to another name (consistently making the same change in the body of the λ), at any point where this is convenient. This is called alpha-conversion by Church. This convention renders the substitution operation "as good as total," since whenever we find ourselves about to apply it to arguments for which it is undefined, we can rename as necessary, so that the side conditions are satisfied.
+
+   1. [x |-> s]x = s 
+   2. [x |-> s]y = y if y ≠ x
+   3. [x |-> s](λy.t1) = λy. [x |-> s]t1 if y ≠ x and y |-> FV(s)
+   4. [x |-> s](t1 t2) = [x |-> s]t1 [x |-> s]t2 
+
+With these rules and alpha-conversion, we can avoid all the pitfalls in substitution - e.g. it works well in these cases:
+
+   * [x |-> y](λx.x) = λx.y
+   * [x |-> z](λz.x) = λz.z
+
+
+Formalities Operational Semantics
+---------------------------------
+
+Since (call-by-value) evaluation stops when it reaches a lambda, values can be arbitrary lambda-terms.
+
+Syntax:
+
+  t ::=          terms:
+        x        variable
+        λx.t     abstraction
+        t t      application
+
+  v ::=          values:
+        λx.t     abstraction value
+
+Evaluation: t -> t'
+
+  * if t1 -> t1', then t1 t2 -> t1' t2    (E-APP1)
+  * if t2 -> t2', then v1 t2 -> v1 t2'    (E-APP2)
+  * (λx.t12) v2 -> [x |-> v2]t12          (E-APPABS)
+
+Notice how the choice of metavariables in these rules helps control the order of evaluation. Since v2 ranges only over values, the left-hand side of rule E-APPABS can match any application whose right-hand side is a value. Similarly, rule E-APP1 applies to any application whose left-hand side is not a value, since t1 can match any term whatsoever, but the premise further requires that t1 can take a step. E-APP2, on the other hand, cannot fire until the left-hand side is a value so that it can be bound to the value-metavariable v. Taken together, these rules completely determine the order of evaluation for an application t1 t2: we first use E-APP1 to reduce t1 to a value, then use E-APP2 to reduce t2 to a value, and finally use E-APPABS to perform the application itself.
+
+Note that, in the pure lambda-calculus, lambda-abstractions are the only possible values, so if we reach a state where E-APP1 has succeeded in reducing t1 to a value, then this value must be a lambda-abstraction. This observation fails, of course, when we add other constructs such as primitive booleans to the language, since these introduce forms of values other than abstractions.
