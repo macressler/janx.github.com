@@ -34,8 +34,28 @@ Another way to translate serveral variables function into one variable function 
 
 examples:
 
-constancy function K is a function with two variable, that Kxy is x, for any x and y. So KII is I, KHI is H, and KI = H.
+constancy function K is a function with two variable, that Kxy is x, for any x and y. So KII is I, KHI is H, and KI = H. application function 1 is a function whoise value for arguments f, x is (fx). It's a kind of identify function.
 
-application function 1 is a function whoise value for arguments f, x is (fx). It's a kind of identify function.
 
-(stopped at page 4)
+Abstraction
+-----------
+
+For our present purpose it is necessary to distinguish carefully between a symbol or expression which denotes a function and an expression which contains a variable and denotes ambiguously some value of the functions — a distinction which is more or less obscured in the usual language of mathematical function theory.
+
+To take an example from the theory of functions of natural numbers, consider the expression (x^2+x)^2. If we say, “(x^2+x)^2 is greater than 1,000” we make a statement which depends on x and actually has no meaning unless x is determined as some particular natural number. On the other hand, if we say, “(x^2+x)^2 is a primitive recursive function,” we make a definitive statement whose meaning in no way depends on a determination of the variable x (so that in this case x plays the rôle of an apparent, or bound, variable). The difference between the two cases is that in the first case the expression (x^2+x)^2 serves as an ambiguous, or variable, denotation of a natural number, while in the second case it serves as the denotation of a particular function. We shall hereafter distinguish by using (x^2+x)^2 when we intend an ambiguous denotation of a natural number, but (λx(x^2+x)^2) as the denotation of the corresponding function — and likewise in other cases. 
+
+(It is, of course, irrelevant here that the notation (x^2+x)^2 is commonly used also for a certain function of real numbers, a certain function of complex numbers, etc. In a logically exact notation the function, addition of natural numbers, addition of complex numbers, would be denoted by different symbols, say +n, +r, +c, and these three functions, square of a natural number, square of a real number, square of a complex number, would be similarly distinguished. The uncertainties as to the exact meaning of the notation (x^2+x)^2, and the consequent uncertainty as the the range of the arguments of the function (x^2+x)^2 would then disappear.)
+
+In general if M is an expression containing a variable x (as a free variable, i.e. in such a way that the meaning of M depends on a determination of x), then (λxM) denotes a function whose value, for argument α is denoted by the result of substituting (a symbol denoting) α for x in M. The range of arguments of the function (λxM) consists of all objects α such the expression M has a meaning when (a symbol denoting) α is substituted for x.
+
+If M does not contain the variable x (as a free variable), then (λxM) might be used to denote a function whose value is constant and equal to (the thing denoted by) M, and whose range of arguments consists of all things. This usage is contemplated below in connection with the calculi of λ-K-conversion, but is excluded from the calculi of λ-conversion and λ-δ-conversion — for technical reasons which will appear.
+
+Notice that, although x occurs as a free variable in M, nevertheless, in the expression (λxM), x is a bound or apparent, variable. Example: the equation (x^2+x)^2 = (y2+y)2 expresses a relation between the natural numbers denoted by x and y and its truth depends on a determination of x and y (in fact, it is true if and only if x and y are determined as denoting the same natural number); but the equation (λx(x^2+x)^2) = (λy(y2+y)2) expresses a particular proposition — namely that (λx(x^2+x)^2) is the same function as (λy(y2+y)2) — and it is true (there is no question of a determination of x and y).
+
+Notice that λ, or λx, is not the name of any function or other abstract object, but is an incomplete symbol — i.e. the symbol has no meaning alone, but appropriate formed expressions containing the symbol have meaning. We call the symbol λx an abstraction operator, and speak of the function which is denoted by (λxM) as obtained from the expression M by abstraction.
+
+The expression (λx(λyM)), which we shall often abbreviate (λxy.M), denoted a function whose value, for an argument whose value is denoted by x, is denoted by (λyM) — thus a function whose values are functions, or a function of two variables. The expression (λy(λxM)), abbreviated as (λyx.M) denotes the converse function to that denoted by (λyx.M). Similarly (λx(λy(λzM))), abbreviated as (λxyz.M), denotes a function of three variables, and so on.
+
+Functions introduced in previous sections as examples can now be expressed, if desired, by means of abstraction operators. For instance I is (λxx); J is (λfxyz.fx(fzy)); S is (λnfx.f(nfx)); H is (λxI), or (λx(λyy)) or (λxy.y); K is (λxy.x); 1 is (λfx.fx). 
+
+(end of chapter I, where is later chapters?)
