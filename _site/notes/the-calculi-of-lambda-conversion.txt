@@ -1,0 +1,41 @@
+by Alonzo Church, 1941
+
+Introductory
+============
+
+
+What's Function
+---------------
+
+A function is a rule of correspondence by which when anything is given (as argument) another thing (the value of the function for that argument) may be obtained. That is, a function is an operation which may be applied on one thing (the argument) to yield another thing (the value of the function). It is not, however, required that the operation shall necessarily be applicable to everything whatsoever; but for each function there is a class, or range, of possible arguments -- the class of things to which the operation is significanly applicable -- and this we shall call the range of arguments, or range of the independent variable, for that function. The class of all values of the function, obtained by taking all possible arguments, will be called the range of values, or range of the dependent variable.
+
+If f denotes a particular function, we shall use the notation (fa) for the value of the function f for the argument a. If a does not belong to the range of arguments of f, the notation (fa) shall be meaningless. (a means greek character alpha)
+
+Calculus, in general, refers to any method or system of calculation guided by the symbolic manipulation of expressions. So there's differential calculus and integral calculus, both dealing with functions which are symbols. This the is difference between algebra and calculus, the former is dealing with numbers. Calculus is more abstract, because functions/symbols is more abstract than numbers.
+
+It is not excluded that the range of arguments or range of values of a function should consist wholly or partly of functions. In particular it is not excluded that one of the elements of the range of arguments of a function f should be the function f itself. This possibility has frequently been denied, and indeed, if a function is defined as a correspondence between two previously given ranges, the reason for the denial is clear. Here, however, we regard the operation or rule of correspondence, which constitutes the function, as being first given, and the range of arguments then determined as consisting of the things to which the opeartion is applicable. This is a departure from the point of view usual in mathematics, but it is a departure which is natural in passing from consideration of functions in a special domain to the consideration of function in general, and it finds support in consistency theorems which will be proved in this paper.
+
+The identity function I is defined by the rule that (Ix) is x, whatever x may be; then in particular (II) is I. Functions H is defined by (Hx) yields I, for any x.
+
+Function Equality
+-----------------
+
+The most immediate and, from some points of view, the best way to settle this question is to specify that two functions f and q are the same if they have the same range of arguments and, for every element a that belongs to this range, (fa) is the same as (qa). When this is done we shall say that we are dealing with functions in extension.
+
+It is possible, however, to allow two functions to be different on the ground that the rule of correspondence is different in meaning in the two cases although yielding the same result when applied to any particular argument. When this is done we shall say that we are dealing with functions in intension. The notion of difference in meaning between two rules of correspondence is a vague one, but, in terms of some system of notation, it can be made exact in various ways.
+
+
+Functions of Serveral Variables
+-------------------------------
+
+It is desirable, however, for each positive integer n, to have the notion of a function of n variables. And in order to avoid the introduction of a separate primitive idea for each n, it is desirable to find a means of explaining functions of n variables as particular cases of functions of one variable. For our present purpose, the most convinient and natural method of doing this is to adopt an idea of Schonfinkel (which is known as currying by modern people). We use (fab) or ((fa)b) to denote a function which has two variables.
+
+Another way to translate serveral variables function into one variable function is regarding serveral variables as a *union* (this word is selected by myself, not Church). So a function of two variables is regarded as a function (of one variable) whose arguments are ordered pairs, a function of three variables as a function whose arguments are ordered triads, and so on.
+
+examples:
+
+constancy function K is a function with two variable, that Kxy is x, for any x and y. So KII is I, KHI is H, and KI = H.
+
+application function 1 is a function whoise value for arguments f, x is (fx). It's a kind of identify function.
+
+(stopped at page 4)
