@@ -1,0 +1,52 @@
+Nameless Representation of Terms
+================================
+
+alpha-conversion works well for discussing basic concepts and for presenting proofs cleanly, but for building an implementation we need to choose a single representation for each term; in particular, we must decide how occurrences of variables are to be represented. There is more than one way to do this:
+
+   1.  We can represent variables symbolically, as we have done so far, but replace the convention about implicit renaming of bound variables with an operation that explicitly replaces bound variables with "fresh" names during substitution as necessary to avoid capture.
+
+   2.  We can represent variables symbolically, but introduce a general condition that the names of all bound variables must all be different from each other and from any free variables we may use. This convention (sometimes called the Barendregt convention) is more stringent than ours, since it does not allow renaming "on the fly" at arbitrary moments. However, it is not stable under substitution (or beta-reduction): since substitution involves copying the term being substituted, it is easy to construct examples where the result of substitution is a term in which some λ-abstractions have the same bound variable name. This implies that each evaluation step involving substitution must be followed by a step of renaming to restore the invariant.
+
+   3.  We can devise some "canonical" representation of variables and terms that does not require renaming.
+
+   4.  We can avoid substitution altogether by introducing mechanisms such as explicit substitutions (Abadi, Cardelli, Curien, and Lévy, 1991a).
+
+   5.  We can avoid variables altogether by working in a language based directly on combinators, such as combinatory logic (Curry and Feys, 1958; Barendregt, 1984)-variant of the lambda-calculus based on combinators instead of procedural abstraction-or Backus' functional language FP (1978).
+
+In TAPL we choose 3, based on the paper de Bruijn, Nicolas G. Lambda-calculus notation with nameless dummies: a tool for automatic formula manipulation with application to the Church-Rosser theorem. Indag. Math., 34(5):381–392, 1972.
+
+
+Terms and Contexts
+------------------
+
+De Bruijn's idea was that we can represent terms more straightforwardly—if less readably—by making variable occurrences point directly to their binders, rather than referring to them by name. This can be accomplished by replacing named variables by natural numbers, where the number k stands for "the variable bound by the k'th enclosing λ." For example, the ordinary term λx.x corresponds to the nameless term λ.0, while λx.λy. x (y x) corresponds to λ.λ. 1 (0 1). Nameless terms are also sometimes called de Bruijn terms, and the numeric variables in them are called de Bruijn indices[2] Compiler writers use the term "static distances" for the same concept.
+
+Formally, we define the syntax of nameless terms almost exactly like the syntax of ordinary terms (5.3.1). The only difference is that we need to keep careful track of how many free variables each term may contain. That is, we distinguish the sets of terms with no free variables (called the 0-terms), terms with at most one free variable (1-terms), and so on. Note combinator are all 0-terms.
+
+* Formal definition of Term:
+
+  Let T be the smallest family of sets {T0, T1, T2,...} such that
+
+    1.  k belongs to Tn whenever 0 ≤ k < n; (variable k is a number, element of set Tn is n-terms)
+
+    2.  if t1 belongs to Tn and n > 0, then λ.t1 belongs to Tn-1; (abstraction rule)
+
+    3.  if t1 belongs to Tn and t2 belongs to Tn, then (t1 t2) belongs to Tn; (application rule)
+
+The elements of Tn are terms with at most n free variables, numbered between 0 and n - 1: a given element of Tn need not have free variables with all these numbers, or indeed any free variables at all. When t is closed, for example, it will be an element of Tn for every n - in other words, any combinator is element of all Tn.
+
+Note that each (closed) ordinary term has just one de Bruijn representation, and that two ordinary terms are equivalent modulo renaming of bound variables iff they have the same de Bruijn representation.
+
+To deal with terms containing free variables, we need the idea of a naming context. For example, suppose we want to represent λx. y x as a nameless term. We know what to do with x, but we cannot see the binder for y, so it is not clear how "far away" it might be and we do not know what number to assign to it. The solution is to choose, once and for all, an assignment (called a naming context) of de Bruijn indices to free variables, and use this assignment consistently when we need to choose numbers for free variables. For example, suppose that we choose to work under the following naming context:
+
+  Г = x |-> 4 
+      y |-> 3 
+      z |-> 2 
+      a |-> 1 
+      b |-> 0
+
+Then x (y z) would be represented as 4 (3 2), while λw. y w would be represented as λ. 4 0 and λw.λa.x as λ.λ.6. Since the order in which the variables appear in Г determines their numerical indices, we can write it compactly as a sequence.
+
+* Formal definition of Context:
+
+  Suppose x0 through xn are variable names from v. The naming context Г = xn, xn-1, ... x1, x0 assigns to each xi the de Bruijn index i. Note that the rightmost variable in the sequence is given the index 0; this matches the way we count λ binders—from right to left—when converting a named term to nameless form. We write dom(Г) for the set {xn, ..., x0} of variable names mentioned in Г.
