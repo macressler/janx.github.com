@@ -50,3 +50,43 @@ Then x (y z) would be represented as 4 (3 2), while λw. y w would be represente
 * Formal definition of Context:
 
   Suppose x0 through xn are variable names from v. The naming context Г = xn, xn-1, ... x1, x0 assigns to each xi the de Bruijn index i. Note that the rightmost variable in the sequence is given the index 0; this matches the way we count λ binders—from right to left—when converting a named term to nameless form. We write dom(Г) for the set {xn, ..., x0} of variable names mentioned in Г.
+
+
+Shifting and Substitution
+-------------------------
+
+Shifting is an auxiliary operation which renumbers the indices of the free variables in a term. When a substitution goes under a λ-abstraction, as in [1 |-> s](λ.2) (i.e., [x |-> s](λy.x), assuming that 1 is the index of x in the outer context), the context in which the substitution is taking place becomes one variable longer than the original; we need to increment the indices of the free variables in s so that they keep referring to the same names in the new context as they did before. But we need to do this carefully: we can't just shift every variable index in s up by one, because this could also shift bound variables within s. For example, if s = 2 (λ.0) (i.e., s = z (λw.w), assuming 2 is the index of z in the outer context), we need to shift the 2 but not the 0. The shifting function below takes a "cutoff" parameter c that controls which variables should be shifted. It starts off at 0 (meaning all variables should be shifted) and gets incremented by one every time the shifting function goes through a binder. So, when calculating (here is a uparrow symbol, which has d as up label and c as down label, followed by (t), will write as ^(d,c)(t) from now on), we know that the term t comes from inside c-many binders in the original argument to ↑d. Therefore all identifiers k < c in t are bound in the original argument and should not be shifted, while identifiers k ≥ c in t are free and should be shifted.
+
+* Formal definition of Shifting
+
+The d-place shift of a term t above cutoff c, written ^(d,c)(t) , is defined as follows:
+
+  1. ^(d,c)(k) = k if k < c, k + d if k >= c
+  2. ^(d,c)(λ.t1) = λ.^(d,c+1)(t1)
+  3. ^(d,c)(t1 t2) = ^(d,c)(t1) ^(d,c)(t2)
+
+We write ^(d)(t) for ^(d,0)(t) .
+
+* Formal definition of Substitution
+
+The substitution of a term s for variable number j in a term t, written [j |-> s]t, is defined as follows:
+
+  1. [j |-> s]k = s if k = j, k otherwise
+  2. [j |-> s](λ.t1) = λ.[j+1 |-> ^(1)(s)]t1
+  3. [j |-> s](t1 t2) = ([j |-> s]t1 [j |-> s]t2)
+
+
+Evaluation
+----------
+
+To define the evaluation relation on nameless terms, the only thing we need to change (because it is the only place where variable names are mentioned) is the beta-reduction rule, which must now use our new nameless substitution operation.
+
+The only slightly subtle point is that reducing a redex "uses up" the bound variable: when we reduce ((λx.t12) v2) to [x |-> v2]t12, the bound variable x disappears in the process. Thus, we will need to renumber the variables of the result of substitution to take into account the fact that x is no longer part of the context. For example:
+
+    * (λ.1 0 2) (λ.0) -> 0 (λ.0) 1 (not 1 (λ.0) 2).
+
+Similarly, we need to shift the variables in v2 up by one before substituting into t12, since t12 is defined in a larger context than v2. Taking these points into account, the beta-reduction rule looks like this:
+
+    * (λ.t12) v2 -> ^(-1)([0 |-> ^1(v2)]t12)
+
+The other rules are identical to what we had before. (see Formalities Operational Semantics section in untyped-lambda-calculus.txt)
