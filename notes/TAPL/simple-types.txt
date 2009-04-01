@@ -1,0 +1,25 @@
+Simple Types
+============
+
+
+Typed Arithmetic Expressions
+----------------------------
+
+Evaluating a term can either result in a value or else get stuck at some stage, for which no evaluation rule applies. Stuck terms correspond to meaningless or erroneous programs. We would therefore like to be able to tell, without actually evaluating a term, that its evaluation will definitely not get stuck. To do this we need introduce type to distinguish between terms.
+
+Saying that "a term t has type T" (or "t belongs to T," or "t is an element of T") means that t "obviously" evaluates to a value of the appropriate form-where by "obviously" we mean that we can see this statically, without doing any evaluation of t. For example, the term if true then false else true has type Bool, while pred (succ (pred (succ 0))) has type Nat. However, our analysis of the types of terms will be conservative, making use only of static information. This means that we will not be able to conclude that terms like if (iszero 0) then 0 else false or even if true then 0 else false have any type at all, even though their evaluation does not, in fact, get stuck.
+
+The typing relation for arithmetic expressions is the smallest binary relation between terms and types satisfying all instances of the rules. A term t is typable (or well typed) if there is some T such that t : T.
+
+A typing derivation is a tree of instances of the typing rules. Each pair (t, T) in the typing relation is justified by a typing derivation with conclusion t : T. In other words, statements are formal assertions about the typing of programs, typing rules are implications between statements, and derivations are deductions based on typing rules.
+
+* Safety = Progress + Preservation
+
+The most basic property of this type system or any other is safety (also called soundness): well-typed terms do not "go wrong." We have already chosen how to formalize what it means for a term to go wrong: it means reaching a "stuck state" (Definition 3.5.15) that is not designated as a final value but where the evaluation rules do not tell us what to do next. What we want to know, then, is that well-typed terms do not get stuck. We show this in two steps, commonly known as the progress and preservation theorems.
+
+  * Progress: A well-typed term is not stuck (either it is a value or it can take a step according to the evaluation rules).
+  * Preservation: If a well-typed term takes a step of evaluation, then the resulting term is also well typed.
+
+These properties together tell us that a well-typed term can never reach a stuck state during evaluation. The preservation theorem is often called subject reduction (or subject evaluation)-the intuition being that a typing statement t : T can be thought of as a sentence, "t has type T." The term t is the subject of this sentence, and the subject reduction property then says that the truth of the sentence is preserved under reduction of the subject.
+
+PROGRESS AND PRESERVATION WILL BE BASIC REQUIREMENTS FOR ALL OF THE TYPE SYSTEMS THAT WE CONSIDER.
