@@ -1,0 +1,50 @@
+Simply Typed Lambda Calculus
+============================
+
+Because pure lambda-calculus is Turing complete, there's no hope of giving an exact type analysis for lambda terms. e.g.
+
+  if <long and tricky computation> then true else (λx.x)
+
+You can't determine the result is true or (λx.x) unless you run it. (halting problem)
+
+
+Function Types
+--------------
+
+Introduce a type named '->' for functions is naturally, but it's too conservative: functions like λx.true and λx.λy.y are lumped together in the same type ->, ignoring the fact that applying the first to true yields a boolean, while applying the second to true yields another function. In general, in order to give a useful type to the result of an application, we need to know more about the left-hand side than just that it is a function: we need to know what type the function returns. Moreover, in order to be sure that the function will behave correctly when it is called, we need to keep track of what type of arguments it expects. To keep track of this information, we replace the bare type -> by an INFINITE FAMILY OF TYPES of the form T1->T2, each classifying functions that expect arguments of type T1 and return results of type T2.
+
+Definition:
+
+  T    ::=        types
+           Bool   type of booleans
+           T->T   type of functions
+
+The type constructor -> is right-associative—that is, the expression T1->T2->T3 stands for T1->(T2->T3).
+
+
+The Typing Relation
+-------------------
+
+In order to assign a type to an abstraction like λx.t, we need to calculate what will happen when the abstraction is applied to some argument. The next question that arises is: how do we know what type of arguments to expect? There are two possible responses: either we can simply annotate the λ-abstraction with the intended type of its arguments, or else we can analyze the body of the abstraction to see how the argument is used and try to deduce, from this, what type it should have. For now, we choose the first alternative. Instead of just λx.t, we will write λx:T1.t2, where the annotation on the bound variable tells us to assume that the argument will be of type T1.
+
+In general, languages in which type annotations in terms are used to help guide the typechecker are called explicitly typed. Languages in which we ask the typechecker to infer or reconstruct this information are called implicitly typed. (In the λ-calculus literature, the term type-assignment systems is also used.) 
+
+Formally, a typing context (also called a type environment) Г is a sequence of variables and their types, and the "comma" operator extends Г by adding a new binding on the right. The empty context is sometimes written /, but usually we just omit it, writing |- t : T for "The closed term t has type T under the empty set of assumptions."
+
+To avoid confusion between the new binding and any bindings that may already appear in Г, we require that the name x be chosen so that it is distinct from the variables bound by Г. Since our convention is that variables bound by λ-abstractions may be renamed whenever convenient, this condition can always be satisfied by renaming the bound variable if necessary. Г can thus be thought of as a finite function from variables to their types. Following this intuition, we write dom(Г) for the set of variables bound by Г.
+
+Rules:
+
+  Г,x:T1 |- t2:T2
+  ----------------------           (T-ABS)
+  Г |- λx:T1.t2 : T1->T2
+
+  x:T <- Г
+  --------                         (T-VAR, The premise x:T <- Г is read "The type assumed for x in Г is T.)
+  Г |- x:T
+
+  Г |- t1:T11->T12  Г |- t2:T11
+  -----------------------------    (T-APP)
+  Г |- t1 t2 : T12
+
+These're the pure simply typed lambda-calculus with no base types, the seperate rules for base type booleans in presented in previous chapter. A pure simply typed lambda-calculus with no base types is actually degenerate, in the sense that it has no well-typed terms at all.
