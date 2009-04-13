@@ -1,8 +1,4 @@
-Simply Typed Lambda Calculus
-============================
-
-Because pure lambda-calculus is Turing complete, there's no hope of giving an exact type analysis for lambda terms. e.g.
-
+Simply Typed Lambda Calculus ============================ Because pure lambda-calculus is Turing complete, there's no hope of giving an exact type analysis for lambda terms. e.g.  
   if <long and tricky computation> then true else (λx.x)
 
 You can't determine the result is true or (λx.x) unless you run it. (halting problem)
@@ -48,3 +44,37 @@ Rules:
   Г |- t1 t2 : T12
 
 These're the pure simply typed lambda-calculus with no base types, the seperate rules for base type booleans in presented in previous chapter. A pure simply typed lambda-calculus with no base types is actually degenerate, in the sense that it has no well-typed terms at all.
+
+
+Properties of Typing
+--------------------
+
+* Lemma: Inversion of Typing Relation (a collection of observations about how typing derivations are built: the clauses for each syntactic form tells us "if a term of this form is well typed, then its subterm must have types of these forms ..")
+
+  1. If Г |- x:R, then x:R <- Г
+  2. If Г |- λx:T1.t2:R, then R = T1 -> R2 for some R2 with Г, x:T1 |- t2:R2
+  3. If Г |- t1 t2:R, then there is some type T11 such that Г |- t1:T11 -> R and Г |- t2:T11
+  4. if Г |- true:R, then R = Bool
+  5. if Г |- false:R, then R = Bool
+  6. if Г |- if t1 then t2 else t3:R, then Г |- t1:Bool and Г |- t2,t3:R
+
+* Theorem: Uniqueness of Types (one-to-one mapping of term and its typing derivation)
+
+In a given typing context Г, a term t (with free variables all in the domain of Г) has at most one type. That is, if a term is typable, then its type is unique. Moreover, there is just one derivation of this typing built from the inference rules that generate the typing relation.
+
+* Canonical Forms Lemma
+
+  1. If v is a value of type Bool, then v is either true of false
+  2. If v is a value of type T1 -> T2, then v = λx:T1.t2
+
+* Progress Theorem: Suppose t is a closed, well-typed term (that is, |- t:T for some T). Then either t is a value or else there is some t' with t -> t'
+
+* Permutation Lemma: if Г |- t:T and delta (a triangle symbol) is a permutation of Г, then delta |- t:T. Moreover, the latter derivation has the same depth as the former.
+
+* Weakening Lemma: if Г |- t:T and x not belongs to dom(Г), then Г,x:S |- t:T. Moreover, the latter derivation has the same depth as the former.
+
+* Lemma: Preservation of Types Under Substitution (the substitution lemma)
+
+If Г,x:S |- t:T and Г |- s:S, then Г |- [x |-> s]t:T
+
+* Preservation Theorem: If Г |- t:T and t -> t', then Г |- t':T
