@@ -78,3 +78,57 @@ In a given typing context Г, a term t (with free variables all in the domain of
 If Г,x:S |- t:T and Г |- s:S, then Г |- [x |-> s]t:T
 
 * Preservation Theorem: If Г |- t:T and t -> t', then Г |- t':T
+
+
+The Curry-Howard Correspondence
+-------------------------------
+
+The "->" type constructor comes with typing rules of two kinds:
+
+  1.  an introduction rule (T-ABS) describing how elements of the type can be created, and
+  2.  an elimination rule (T-APP) describing how elements of the type can be used.  
+
+When an introduction form (λ) is an immediate subterm of an elimination form (application), the result is a redex—an opportunity for computation. The terminology of introduction and elimination forms is frequently useful in discussing type systems. When we come to more complex systems later in the book, we'll see a similar pattern of linked introduction and elimination rules for each type constructor we consider.
+
+The introduction/elimination terminology arises from a connection between type theory and logic known as the Curry-Howard correspondence or Curry-Howard isomorphism.
+
+LOGIC                                           PROGRAMMING LANGUAGES
+
+propositions                                    types
+proposition P (向左倒下的U) Q                   type P -> Q
+proposition P ∧ Q                               type P × Q
+proof of proposition P                          term t of type P
+proposition P is provable                       type P is inhabited (by some term)
+
+
+Erasure and Typability
+----------------------
+
+Although type annotations play no role in evaluation — we don't do any sort of run-time checking to ensure that functions are applied to arguments of appropriate types — we do carry along these annotations inside of terms as we evaluate them.
+
+Most compilers for full-scale programming languages actually avoid carrying annotations at run time: they are used during typechecking (and during code generation, in more sophisticated compilers), but do not appear in the compiled form of the program. In effect, programs are converted back to an untyped form before they are evaluated. This style of semantics can be formalized using an erasure function mapping simply typed terms into the corresponding untyped terms.
+
+* Erase function
+
+The erasure of a simply typed term t is defined as follows:
+
+  erase(x) = x
+  erase(λx:T1. t2) = λx. erase(t2)
+  erase(t1 t2) = erase(t1) erase(t2)
+
+Of course, we expect that the two ways of presenting the semantics of the simply typed calculus actually coincide: it doesn't really matter whether we evaluate a typed term directly, or whether we erase it and evaluate the underlying untyped term. This expectation is formalized by the following theorem, summarized by the slogan "evaluation commutes with erasure" in the sense that these operations can be performed in either order — we reach the same term by evaluating and then erasing as we do by erasing and then evaluating:
+
+  1.  If t -> t′ under the typed evaluation relation, then erase(t) -> erase(t′).
+  2.  If erase(t) -> m′ under the typed evaluation relation, then there is a simply typed term t′ such that t → t′ and erase(t′) = m′.  
+
+A term m in the untyped lambda-calculus is said to be typable in λ-> if there are some simply typed term t, type T, and context Г such that erase(t) = m and Г |- t : T.
+
+
+Curry-style and Church-style
+----------------------------
+
+We have seen two different styles in which the semantics of the simply typed lambda-calculus can be formulated: as an evaluation relation defined directly on the syntax of the simply typed calculus, or as a compilation to an untyped calculus plus an evaluation relation on untyped terms. An important commonality of the two styles is that, in both, it makes sense to talk about the behavior of a term t, whether or not t is actually well typed. This form of language definition is often called Curry-style. We first define the terms, then define a semantics showing how they behave, then give a type system that rejects some terms whose behaviors we don't like. Semantics is prior to typing.
+
+A rather different way of organizing a language definition is to define terms, then identify the well-typed terms, then give semantics just to these. In these so-called Church-style systems, typing is prior to semantics: we never even ask the question "what is the behavior of an ill-typed term?" Indeed, strictly speaking, what we actually evaluate in Church-style systems is typing derivations, not terms. (See §15.6 for an example of this.)
+
+Historically, implicitly typed presentations of lambda-calculi are often given in the Curry style, while Church-style presentations are common only for explicitly typed systems. This has led to some confusion of terminology: "Church-style" is sometimes used when describing an explicitly typed syntax and "Curry-style" for implicitly typed.
