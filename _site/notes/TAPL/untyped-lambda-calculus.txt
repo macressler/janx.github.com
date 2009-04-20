@@ -176,7 +176,7 @@ Let V be a countable set of variable names. The set of terms is the smallest set
 The set of free variables of a term t, written FV(t), is defined as follows:
 
    1. FV(x) = {x} 
-   2. FV(λx,t1) = FV(t1) \ {x}
+   2. FV(λx.t1) = FV(t1) \ {x}
    3. FV(t1 t2) = FV(t1) U FV(t2) 
 
    (\ stands for difference, U stands for Union)

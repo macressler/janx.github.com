@@ -1,0 +1,50 @@
+Base Types
+----------
+
+Every programming language provides a variety of base types - sets of simple, unstructured values such as numbers, booleans, or characters - plus appropriate primitive operations for manipulating these values.
+
+For theoretical purposes, it is often useful to abstract away from the details of particular base types and their operations, and instead simply suppose that our language comes equipped with some set A of uninterpreted or unknown base types, with no primitive operations on them at all. A can be thought of as standing for atomic types.
+
+
+The Unit Type
+-------------
+
+Unit is a singleton type interpreted in the simplest possible way: we explicitly introduce a single element - the term constant unit (written with a small u) - and a typing rule making unit an element of Unit. We also add unit to the set of possible result values of computations - indeed, unit is the only possible result of evaluating an expression of type Unit.
+
+Even in a purely functional language, the type Unit is not completely without interest, but its main application is in languages with side effects, such as assignments to reference cells. In such languages, it is often the side effect, not the result, of an expression that we care about; Unit is an appropriate result type for such expressions.
+
+This use of Unit is similar to the role of the void type in languages like C and Java. The name void suggests a connection with the empty type Bot, but the usage of void is actually closer to our Unit.
+
+Unit                            extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      unit                      constant unit
+
+v ::= ...                       values
+      unit                      constant unit
+
+T ::= ...                       types
+      Unit
+
+Г |- unit:Unit                  (T-UNIT)
+
+New derived forms
+t1; t2 => (λx:Unit.t2) t1 where x not belongs to FV(t2)
+
+
+Sequencing is a derived form (theorem)
+--------------------------------------
+
+Write λE ("E" for external language) for the simply typed lambda-calculus with the Unit type, the sequencing construct, and the rules E-SEQ, E-SEQNEXT, and T-SEQ, and λI ("I" for internal language) for the simply typed lambda-calculus with Unit only. Let e <- λE -> λI be the elaboration function that translates from the external to the internal language by replacing every occurrence of t1 ; t2 with (λx:Unit.t2) t1, where x is chosen fresh in each case. Now, for each term t of λE, we have
+
+    * t ->E t′ iff e(t) ->I e(t′)
+    * Г |-E t:T iff Г |-I e(t):T
+
+where the evaluation and typing relations of λE and λI are annotated with E and I, respectively, to show which is which.
+
+The advantage of introducing features like sequencing as derived forms rather than as full-fledged language constructs is that we can extend the surface syntax (i.e., the language that the programmer actually uses to write programs) without adding any complexity to the internal language about which theorems such as type safety must be proved.
+
+Derived forms are often called syntactic sugar, following Landin. Replacing a derived form with its lower-level definition is called desugaring.
+
+Another derived form that will be useful in examples later on is the "wild-card" convention for variable binders. It often happens (for example, in terms created by desugaring sequencing) that we want to write a "dummy" lambda-abstraction in which the parameter variable is not actually used in the body of the abstraction. In such cases, it is annoying to have to explicitly choose a name for the bound variable; instead, we would like to replace it by a wildcard binder, written _. That is, we will write λ_:S.t to abbreviate λx:S.t, where x is some variable not occurring in t.
+
