@@ -48,3 +48,54 @@ Derived forms are often called syntactic sugar, following Landin. Replacing a de
 
 Another derived form that will be useful in examples later on is the "wild-card" convention for variable binders. It often happens (for example, in terms created by desugaring sequencing) that we want to write a "dummy" lambda-abstraction in which the parameter variable is not actually used in the body of the abstraction. In such cases, it is annoying to have to explicitly choose a name for the bound variable; instead, we would like to replace it by a wildcard binder, written _. That is, we will write λ_:S.t to abbreviate λx:S.t, where x is some variable not occurring in t.
 
+
+Ascription
+----------
+
+Ascription is the ability to explicitly ascribe a particular type to a given term (i.e., to record in the text of the program an assertion that this term has this type). We write "t as T" for "the term t, to which we ascribe the type T."
+
+as                              extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      t as T                    ascription
+
+v1 as T -> v1                   E-ASCRIBE
+
+t1 -> t1'
+-------------------             E-ASCRIBE1
+t1 as T -> t1' as T
+
+Г |- t1:T
+--------------                  T-ASCRIBE
+Г |- t1 as T:T
+
+There are a number of situations where ascription can be useful in programming. One common one is documentation. It can sometimes become difficult for a reader to keep track of the types of the subexpressions of a large compound expression. Judicious use of ascription can make such programs much easier to follow. Similarly, in a particularly complex expression, it may not even be clear to the writer what the types of all the subexpressions are. Sprinkling in a few ascriptions is a good way of clarifying the programmer's thinking. Indeed, ascription is sometimes a valuable aid in pinpointing the source of puzzling type errors.
+
+Another use of ascription is for controlling the printing of complex types.  A final use of ascription is for abstraction. In systems where a given term t may have many different types (for example, systems with subtyping), ascription can be used to "hide" some of these types by telling the typechecker to treat t as if it had only a smaller set of types. (the relation between ascription and casting will be discussed later)
+
+
+Let Binding
+-----------
+
+it is often useful-both for avoiding repetition and for increasing readability-to give names to some of its subexpressions. 
+
+let                             extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      let x = t1 in t2          let binding
+
+let x = v1 in t2 -> [x->v1]t2   E-LETV
+
+t1 -> t1'
+--------------------------------------    E-LET
+let x = t1 in t2 ->  let x = t1' in t2
+
+Г |- t1:T1    Г,x:T1 |- t2:T2
+-----------------------------   T-LET
+Г |- let x = t1 in t2:T2
+
+We can define let binding as derived form too:
+
+let x = t1 in t2 => (λx:T1.t2)t1
+
+But notice that the right-hand side of this abbreviation includes the type annotation T1, which does not appear on the left-hand side. We discover the needed type annotation simply by calculating the type of t1. More formally, what this tells us is that the let constructor is a slightly different sort of derived form than the ones we have seen up till now: we should regard it not as a desugaring transformation on terms, but as a transformation on typing derivations.
