@@ -99,3 +99,126 @@ We can define let binding as derived form too:
 let x = t1 in t2 => (λx:T1.t2)t1
 
 But notice that the right-hand side of this abbreviation includes the type annotation T1, which does not appear on the left-hand side. We discover the needed type annotation simply by calculating the type of t1. More formally, what this tells us is that the let constructor is a slightly different sort of derived form than the ones we have seen up till now: we should regard it not as a desugaring transformation on terms, but as a transformation on typing derivations.
+
+
+Pairs
+-----
+
+x                               extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      {t,t}                     pair
+      t.1                       first projection
+      t.2                       second projection
+
+v ::= ...                       values
+      {v,v}                     pair value
+
+T ::= ...                       types
+      T1xT2                     product type
+
+{v1,v2}.1 -> v1                 E-PAIRBETA1
+
+{v1,v2}.2 -> v2                 E-PAIRBETA2
+
+t1 -> t1'
+-------------                   E-PROJ1
+t1.1 -> t1'.1
+
+t1 -> t1'
+-------------                   E-PROJ2
+t1.2 -> t1'.2
+
+t1 -> t1'
+-------------------             E-PAIR1
+{t1,t2} -> {t1',t2}
+
+t2 -> t2'
+-------------------             E-PAIR2
+{v1,t2} -> {v1,t2'}
+
+Г |- t1:T1  Г |- t2:T2
+----------------------          T-PAIR
+Г |- {t1,t2}:T1xT2
+
+Г |- t1:T11xT12
+---------------                 T-PROJ1
+Г |- t1.1:T11 
+
+Г |- t1:T11xT12
+---------------                 T-PROJ2
+Г |- t1.2:T12
+
+
+Tuples
+------
+
+It is easy to generalize the binary products (pairs) to n-ary products, often called tuples. The only cost of this generalization is that, to formalize the system, we need to invent notations for uniformly describing structures of arbitrary arity; such notations are always a bit problematic, as there is some inevitable tension between rigor and readability. We write {ti,i<-1..n} for a tuple of n terms, t1 through tn, and {Ti,i<-1..n} for its type. Note that n here is allowed to be 0; in this case, the range 1..n is empty and {ti,i<-1..n} is {}, the empty tuple. Also, note the difference between a bare value like 5 and a one-element tuple like {5}: the only operation we may legally perform on the latter is projecting its first component.
+
+{}                              extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      {ti,i<-1..n}              tuple
+      t.i                       projection
+
+v ::= ...                       values
+      {vi,i<-1..n}              tuple value
+
+T ::= ...                       types
+      {Ti,i<-1..n}
+
+{vi,i<-1..n}.j -> vj            E-PROJTUPLE
+
+t1 -> t1'
+-------------                   E-PROJ
+t1.i -> t1'.i
+
+tj -> tj'
+---------------------------------------------------------------------    E-TUPLE
+{vi,i<-1..j-1, tj, tk,k<-j+1..n} -> {vi,i<-1..j-1, tj', tk,k<-j+1..n}
+
+for each i  Г |- ti:Ti
+------------------------------  T-TUPLE
+Г |- {ti,i<-1..n}:{Ti,i<-1..n}
+
+Г |- t1:{Ti,i<-1..n}
+--------------------            T-PROJ
+Г |- t1.j:Tj
+
+
+Records
+-------
+
+{}                              extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      {li=ti,i<-1..n}           record
+      t.l                       projection
+
+v ::= ...                       values
+      {li=vi,i<-1..n}           record value
+
+T ::= ...                       types
+      {li:Ti,i<-1..n}           record type
+
+{li=vi,i<-1..n}.lj -> vj        E-PROJRCD
+
+t1 -> t1'
+-------------                   E-PROJ
+t1.l -> t1'.l
+
+tj -> tj'
+--------------------------------------------------------------------------------------        E-RCD
+{li=vi,i<-1..j-1, lj=tj, lk=tk,k<-j+1..n} -> {li=vi,i<1..j-1, lj=tj', lk=tk,k<-j+1..n}
+
+for each i  Г |- ti:Ti
+------------------------------------        T-RCD
+Г |- {li=ti,i<-1..n}:{li:Ti,i<-1..n}
+
+Г |- t1:{li:Ti,i<-1..n}
+-----------------------                     T-PROJ
+Г |- t1.lj:Tj
+
+Note that the same "feature symbol," {}, appears in the list of features on the upper-left corner of the definitions of both tuples and products. Indeed, we can obtain tuples as a special case of records, simply by allowing the set of labels to include both alphabetic identifiers and natural numbers. Then when the ith field of a record has the label i, we omit the label. For example, we regard {Bool,Nat,Bool} as an abbreviation for {1:Bool,2:Nat,3:Bool}. (This convention actually allows us to mix named and positional fields, writing {a:Bool,Nat,c:Bool} as an abbreviation for {a:Bool,2:Nat,c:Bool}, though this is probably not very useful in practice.) In fact, many languages keep tuples and records notationally distinct for a more pragmatic reason: they are implemented differently by the compiler.
+
+Programming languages differ in their treatment of the order of record fields. In many languages, the order of fields in both record values and record types has no affect on meaning - i.e., the terms {partno=5524,cost=30.27} and {cost=30.27,partno=5524} have the same meaning and the same type, which may be written either {partno:Nat,cost:Float} or {cost:Float, partno:Nat}. Our presentation chooses the other alternative: {partno=5524,cost=30.27} and {cost=30.27,partno=5524} are different record values, with types {partno:Nat,cost:Float} and {cost:Float, partno:Nat}, respectively.
