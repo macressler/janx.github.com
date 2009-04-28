@@ -222,3 +222,102 @@ for each i  Г |- ti:Ti
 Note that the same "feature symbol," {}, appears in the list of features on the upper-left corner of the definitions of both tuples and products. Indeed, we can obtain tuples as a special case of records, simply by allowing the set of labels to include both alphabetic identifiers and natural numbers. Then when the ith field of a record has the label i, we omit the label. For example, we regard {Bool,Nat,Bool} as an abbreviation for {1:Bool,2:Nat,3:Bool}. (This convention actually allows us to mix named and positional fields, writing {a:Bool,Nat,c:Bool} as an abbreviation for {a:Bool,2:Nat,c:Bool}, though this is probably not very useful in practice.) In fact, many languages keep tuples and records notationally distinct for a more pragmatic reason: they are implemented differently by the compiler.
 
 Programming languages differ in their treatment of the order of record fields. In many languages, the order of fields in both record values and record types has no affect on meaning - i.e., the terms {partno=5524,cost=30.27} and {cost=30.27,partno=5524} have the same meaning and the same type, which may be written either {partno:Nat,cost:Float} or {cost:Float, partno:Nat}. Our presentation chooses the other alternative: {partno=5524,cost=30.27} and {cost=30.27,partno=5524} are different record values, with types {partno:Nat,cost:Float} and {cost:Float, partno:Nat}, respectively.
+
+
+Sums
+----
+
+Many programs need to deal with heterogeneous collections of values. The type-theoretic mechanism that supports this kind of programming is variant types. Before introducing variants in full generality, let us consider the simpler case of binary sum types. A sum type describes a set of values drawn from exactly two given types. Sum is a type whose element is either type A or type B.
+
+We create element of Sum type by tagging its component (with inl and inr, stands for inject left/right). We use case construct/pattern matching to extract its value.
+
++                               extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      inl t                     tagging (left)
+      inr t                     tagging (right)
+      case t of inl x => t | inr x => t        case
+
+v ::= ...                       values
+      inl v                     tagged value (left)
+      inr v                     tagged value (right)
+
+T ::= ...                       types
+      T+T                       sum type
+
+case (inl v0)
+of inl x1 => t1 | inr x2 => t2  E-CASEINL
+  -> [x1->v0]t1
+
+case (inr v0)
+of inl x1 => t1 | inr x2 => t2  E-CASEINR
+  -> [x2->v0]t2
+
+t0 -> t0'
+--------------------------------------------        E-CASE
+case t0 of inl x1 => t1 | inr x2 => t2
+  -> case t0' of inl x1 => t1 | inr x2 => t2
+
+t1 -> t1'
+-----------------               E-INL
+inl t1 -> inl t1'
+
+t1 -> t1'
+-----------------               E-INR
+inr t1 -> inr t1'
+
+Г |- t1:T1
+-----------------               T-INL
+Г |- inl t1:T1+T2
+
+Г |- t1:T2
+-----------------               T-INR
+Г |- inr t1:T1+T2
+
+Г |- t0:T1+T2  Г,x1:T1 |- t1:T  Г,x2:T2 |- t2:T
+-----------------------------------------------        T-CASE
+Г |- case t0 of inl x1 => t1 | inr x2 => t2:T
+
+Most of the properties of the typing relation of pure typed lambda calculus extend to the system with sums, but one important one fails: the Uniqueness of Types theorem. The difficulty arises from the tagging constructs inl and inr. The typing rule T-INL, for example, says that, once we have shown that t1 is an element of T1, we can derive that inl t1 is an element of T1+T2for any type T2. The failure of uniqueness of types means that we cannot build a typechecking algorithm simply by "reading the rules from bottom to top," as we have done for all the features we have seen so far. At this point, we have various options:
+
+  1. We can complicate the typechecking algorithm so that it somehow "guesses" a value for T2. Concretely, we hold T2 indeterminate at this point and try to discover later what its value should have been. Such techniques will be explored in detail when we consider type reconstruction.
+
+  2. We can refine the language of types to allow all possible values for T2 to somehow be represented uniformly. This option will be explored when we discuss subtyping.
+
+  3. We can demand that the programmer provide an explicit annotation to indicate which type T2 is intended. This alternative is the simplest-and it is not actually as impractical as it might at first appear, since, in full-scale language designs, these explicit annotations can often be "piggybacked" on other language constructs and so made essentially invisible (we'll come back to this point in the following section). We take this option for now.
+
+The rules below shows the needed extensions, relative to the rules above. Instead of writing just inl t or inr t, we write inl t as T or inr t as T, where T specifies the whole sum type to which we want the injected element to belong. The typing rules T-INL and T-INR use the declared sum type as the type of the injection, after checking that the injected term really belongs to the appropriate branch of the sum. (To avoid writing T1+T2 repeatedly in the rules, the syntax rules allow any type T to appear as an annotation on an injection. The typing rules ensure that the annotation will always be a sum type, if the injection is well typed.) The syntax for type annotations is meant to suggest the ascription construct from §11.4: in effect these annotations can be viewed as syntactically required ascriptions.
+
++                               extends lambda
+----------------------------------------------
+t ::= ...                       types
+      inl t as T                tagging (left)
+      inr t as T                tagging (right)
+
+v ::= ...                       values
+      inl v as T                tagged value (left)
+      inr v as T                tagged value (right)
+
+case (inl v0 as T0)
+of inl x1 => t1 | inr x2 => t2  E-CASEINL
+  -> [x1->v0]t1
+
+case (inr v0 as T0)
+of inl x1 => t1 | inr x2 => t2  E-CASEINR
+  -> [x2->v0]t2
+
+t1 -> t1'
+-----------------------------   E-INL
+inl t1 as T2 -> inl t1' as T2
+
+t1 -> t1'
+-----------------------------   E-INR
+inr t1 as T2 -> inr t1' as T2
+
+Г |- t1:T1
+--------------------------      T-INL
+Г |- inl t1 as T1+T2:T1+T2
+
+Г |- t1:T2
+--------------------------      T-INR
+Г |- inr t1 as T1+T2:T1+T2

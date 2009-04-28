@@ -1,4 +1,8 @@
-Simply Typed Lambda Calculus ============================ Because pure lambda-calculus is Turing complete, there's no hope of giving an exact type analysis for lambda terms. e.g.  
+Simply Typed Lambda Calculus
+============================
+
+Because pure lambda-calculus is Turing complete, there's no hope of giving an exact type analysis for lambda terms. e.g.  
+
   if <long and tricky computation> then true else (λx.x)
 
 You can't determine the result is true or (λx.x) unless you run it. (halting problem)
