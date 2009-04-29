@@ -436,3 +436,7 @@ Type Dynamic
 Even in statically typed languages, there is often the need to deal with data whose type cannot be determined at compile time. This occurs in particular when the lifetime of the data spans multiple machines or many runs of the compiler—when, for example, the data is stored in an external file system or database, or communicated across a network. To handle such situations safely, many languages offer facilities for inspecting the types of values at run time.
 
 One attractive way of accomplishing this is to add a type Dynamic whose values are pairs of a value v and a type tag T where v has type T. Instances of Dynamic are built with an explicit tagging construct and inspected with a type safe typecase construct. In effect, Dynamic can be thought of as an infinite disjoint union, whose labels are types.
+
+
+General Recursion
+-----------------
