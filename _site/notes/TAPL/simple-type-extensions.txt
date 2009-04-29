@@ -321,3 +321,118 @@ inr t1 as T2 -> inr t1' as T2
 Г |- t1:T2
 --------------------------      T-INR
 Г |- inr t1 as T1+T2:T1+T2
+
+
+Variants
+--------
+
+Binary sums generalize to labeled variants just as products generalize to labeled records. As with records the order of labels in a variant type is significant here.
+
+<>                              extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      <l=t> as T                tagging
+      case t of <li=xi> => ti, i<-1..n        case
+
+T ::= ...                       types
+      <li:Ti,i<-1..n>           type of variants
+
+case (<lj=vj> as T) of <li=xi> => ti, i<-1..n
+  -> [xj->vj]tj                 E-CASEVARIANT
+
+t0 -> t0'
+-------------------------------------------------------------------------        E-CASE
+case t0 of <li=xi> => ti, i<-1..n  ->  case t0' of <li=xi> => ti, i<-1..n
+
+ti -> ti'
+-----------------------------   E-VARIANT
+<li=ti> as T -> <li=ti'> as T
+
+Г |- tj:Tj
+-----------------------------------------------        T-VARIANT
+Г |- <lj=tj> as <li:Ti,i<-1..n>:<li:Ti,i<-1..n>
+
+Г |- t0:<li:Ti,i<-1..n>    for each i Г,xi:Ti |- ti:T
+-----------------------------------------------------        T-CASE
+Г |- case t0 of <li=xi> => ti, i<-1..n:T
+
+
+There are 3 useful "degenerate cases" of variant types: Options, Enumerations and Single Field variants.
+
+Options is either the trivial unit value with the tag none or else a value with the tag 'some'. e.g.
+
+  OptionalNat = <none:Unit, some:Nat>;
+
+OptionalNat is isomorphic to Nat extended with an additional distinguished value none. (familiar? remember Maybe in Haskell?)
+
+Many languages provide built-in support for options. OCaml, for example, predefines a type constructor option, and many functions in typical OCaml programs yield options. Also, the null value in languages like C, C++, and Java is actually an option in disguise. A variable of type T in these languages (where T is a "reference type"—i.e., something allocated in the heap) can actually contain either the special value null or else a pointer to a T value. That is, the type of such a variable is really Ref(Option(T)), where Option(T) = <none:Unit,some:T>. Chapter 13 discusses the Ref constructor in detail.
+
+An enumerated type (or enumeration) is a variant type in which the field type associated with each label is Unit.
+
+  Weekday = <monday:Unit, tuesday:Unit, wednesday:Unit, thursday:Unit, friday:Unit>;
+
+The concrete syntax we are using here is not well tuned for making such programs easy to write or read. some languages (beginning with Pascal) provide special syntax for declaring and using enumerations. Others—such as ML, cf. page 141—make enumerations a special case of the variants.
+
+Single-Field variants is variant types with just a single label l:
+
+  V = <l:T>
+
+Such a type might not seem very useful at first glance: after all, the elements of V will be in one-to-one correspondence with the elements of the field type T, since every member of V has precisely the form <l=t> for some t : T. What's important, though, is that the usual operations on T cannot be applied to elements of V without first unpackaging them: a V cannot be accidentally mistaken for a T. e.g.
+
+  DollarAmount = <dollars:Float>;
+  EuroAmount = <euros:Float>;
+
+
+Variants vs Datatypes
+---------------------
+
+A variant type T of the form <li:Ti,i<-1..n> is roughly analogous to the ML datatype defined by:
+
+  type T = l1 of T1
+         | l2 of T2
+         | ...
+         | ln of Tn
+
+But there are several differences worth noticing.
+
+   1. One trivial but potentially confusing point is that the capitalization conventions for identifiers that we are assuming here are different from those of OCaml. In OCaml, types must begin with lowercase letters and datatype constructors (labels, in our terminology) with capital letters, so, strictly speaking, the datatype declaration above should be written like this:
+
+        type t = L1 of t1 | ... | Ln of tn
+
+      To avoid confusion between terms t and types T, we'll ignore OCaml's conventions for the rest of this discussion and use ours instead.
+
+   2. The most interesting difference is that OCaml does not require a type annotation when a constructor li is used to inject an element of Ti into the datatype T: we simply write li(t). The way OCaml gets away with this (and retains unique typing) is that the datatype T must be declared before it can be used. Moreover, the labels in T cannot be used by any other datatype declared in the same scope. So, when the typechecker sees li(t), it knows that the annotation can only be T. In effect, the annotation is "hidden" in the label itself. This trick eliminates a lot of silly annotations, but it does lead to a certain amount of grumbling among users, since it means that labels cannot be shared between different datatypes—at least, not within the same module. Latter we will see another way of omitting annotations that avoids this drawback.
+
+   3. Another convenient trick used by OCaml is that, when the type associated with a label in a datatype definition is just Unit, it can be omitted altogether. This permits enumerations to be defined by writing
+
+        type Weekday = monday | tuesday | wednesday | thursday | friday
+
+      Similarly, the label monday all by itself (rather than monday applied to the trivial value unit) is considered to be a value of type Weekday.
+
+   4. Finally, OCaml datatypes actually bundle variant types together with several additional features that we will be examining, individually, in later chapters.
+
+      * A datatype definition may be recursive—i.e., the type being defined is allowed to appear in the body of the definition. For example, in the standard definition of lists of Nats, the value tagged with cons is a pair whose second element is a NatList.
+
+          type NatList = nil
+                       | cons of Nat * NatList
+
+      * An OCaml datatype can be [parametric data type]parameterizedparametric!data type on a type variable, as in the general definition of the List datatype:
+
+          type 'a List = nil
+                       | cons of 'a * 'a List
+
+        Type-theoretically, List can be viewed as a kind of function—called a type operator—that maps each choice of ′a to a concrete datatype... Nat to NatList, etc.
+
+
+Variants as Disjoint Unions
+---------------------------
+
+Sum and variant types are sometimes called disjoint unions. The type T1+T2 is a "union" of T1 and T2 in the sense that its elements include all the elements from T1 and T2. This union is disjoint because the sets of elements of T1 or T2 are tagged with inl or inr, respectively, before they are combined, so that it is always clear whether a given element of the union comes from T1 or T2. The phrase union type is also used to refer to untagged (non-disjoint) union types.
+
+
+Type Dynamic
+------------
+
+Even in statically typed languages, there is often the need to deal with data whose type cannot be determined at compile time. This occurs in particular when the lifetime of the data spans multiple machines or many runs of the compiler—when, for example, the data is stored in an external file system or database, or communicated across a network. To handle such situations safely, many languages offer facilities for inspecting the types of values at run time.
+
+One attractive way of accomplishing this is to add a type Dynamic whose values are pairs of a value v and a type tag T where v has type T. Instances of Dynamic are built with an explicit tagging construct and inspected with a type safe typecase construct. In effect, Dynamic can be thought of as an infinite disjoint union, whose labels are types.
