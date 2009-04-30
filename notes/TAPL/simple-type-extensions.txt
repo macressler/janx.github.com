@@ -440,3 +440,156 @@ One attractive way of accomplishing this is to add a type Dynamic whose values a
 
 General Recursion
 -----------------
+
+We have seen in the untyped lambda-calculus recursive functions can be defined with the aid of the fix combinator. They can be defined in a typed setting in a similar way. For example, here is a function iseven that returns true when called with an even argument and false otherwise:
+
+  ff = λie:Nat -> Bool.
+       λx:Nat.
+         if iszero x then true
+         else if iszero (pred x) then false
+         else ie (pred (pred x));
+  > ff : (Nat -> Bool) -> Nat -> Bool
+
+  iseven = fix ff;
+  > iseven : Nat -> Bool
+
+  iseven 7;
+  > false : Bool
+
+The intuition is that the higher-order function ff passed to fix is a generator for the iseven function: if ff is applied to a function ie that approximates the desired behavior of iseven up to some number n (that is, a function that returns correct results on inputs less than or equal to n), then it returns a better approximation to iseven—a function that returns correct results for inputs up to n + 2. Applying fix to this generator returns its fixed point — a function that gives the desired behavior for all inputs n.
+
+However, there is one important difference from the untyped setting: fix itself cannot be defined in the simply typed lambda-calculus. Indeed, we will see later that no expression that can lead to non-terminating computations can be typed using only simple types. So, instead of defining fix as a term in the language, we simply add it as a new primitive, with evaluation rules mimicking the behavior of the untyped fix combinator and a typing rule that captures its intended uses.
+
+
+fix                             extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      fix t                     fixed point of t
+
+fix(λx:T1.t2)                   E-FIXBETA
+  -> [x->(fix(λx.T1.t2))]t2
+
+t1 -> t1'
+-----------------               E-FIX
+fix t1 -> fix t1'
+
+Г |- t1:T1 -> T1
+----------------                T-FIX
+Г |- fix t1:T1
+
+letrec x:T1 = t1 in t2          new derived form
+  def= let x = fix (λx:T1.t1) in t2
+
+The simply typed lambda-calculus with numbers and fix has long been a favorite experimental subject for programming language researchers, since it is the simplest language in which a range of subtle semantic phenomena such as full abstraction (Plotkin, 1977, Hyland and Ong, 2000, Abramsky, Jagadeesan, and Malacaria, 2000) arise. It is often called PCF.
+
+The fix construct is typically used to build functions (as fixed points of functions from functions to functions), but it is worth noticing that the type T in rule T-FIX is not restricted to function types. This extra power is some-times handy. For example, it allows us to define a record of mutually recursive functions as the fixed point of a function on records (of functions). The following implementation of iseven uses an auxiliary function isodd; the two functions are defined as fields of a record, where the definition of this record is abstracted on a record ieio whose components are used to make recursive calls from the bodies of the iseven and isodd fields.
+
+  ff = λieio:{iseven:Nat->Bool, isodd:Nat->Bool}.
+         {iseven = λx:Nat.
+                   if iszero x then true
+                   else ieio.isodd (pred x),
+          isodd = λx:Nat.
+                   if iszero x then false
+                   else ieio.iseven (pred x)};
+  > ff : {iseven:Nat->Bool,isodd:Nat->Bool} -> {iseven:Nat->Bool, isodd:Nat->Bool}
+
+Forming the fixed point of the function ff gives us a record of two functions
+
+  r = fix ff;
+  > r : {iseven:Nat->Bool, isodd:Nat->Bool}
+
+and projecting the first of these gives us the iseven function itself:
+
+  iseven = r.iseven;
+  > iseven : Nat -> Bool
+
+The ability to form the fixed point of a function of type T->T for any T has some surprising consequences. In particular, it implies that every type is inhabited by some term. To see this, observe that, for every type T, we can define a function divergeT as follows:
+
+  divergeT = λ_:Unit. fix (λx:T.x);
+  > divergeT : Unit -> T
+
+Whenever divergeT is applied to a unit argument, we get a non-terminating evaluation sequence in which E-FIXBETA is applied over and over, always yielding the same term. That is, for every type T, the term divergeT unit is an undefined element of T.
+
+One final refinement that we may consider is introducing more convenient concrete syntax for the common case where what we want to do is to bind a variable to the result of a recursive definition. In most high-level languages, the first definition of iseven above would be written something like this:
+
+  letrec iseven : Nat->Bool =
+         λx:Nat.
+          if iszero x then true
+          else if iszero (pred x) then false
+          else iseven (pred (pred x))
+  in iseven 7;
+  > false : Bool
+
+The recursive binding construct letrec is easily defined as a derived form:
+
+  letrec x:T1 = t1 in t2    def=    let x = fix (λx:T1.t1) in t2
+
+
+Lists
+-----
+
+The typing features we have seen can be classified into base types like Bool and Unit, and type constructors like → and × that build new types from old ones. Another useful type constructor is List. For every type T, the type List T describes finite-length lists whose elements are drawn from T.
+
+List                            extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      nil[T]                    empty list
+      cons[T] t t               list constructor
+      isnil[T] t                test for empty list
+      head[T] t                 head of a list
+      tail[T] t                 tail of a list
+
+v ::= ...                       values
+      nil[T]                    empty list
+      cons[T] v v               list constructor
+
+T ::= ...                       types
+      List T                    type of list
+
+t1 -> t1'
+------------------------------- E-CONS1
+cons[T] t1 t2 -> cons[T] t1' t2
+
+t2 -> t2'
+------------------------------- E-CONS2
+cons[T] v1 t2 -> cons[T] v1 t2'
+
+isnil[S](nil[T]) -> true        E-ISNILNIL
+
+isnil[S](cons[T] v1 v2) -> false        E-ISNILCONS
+
+t1 -> t1'
+---------------------------     E-ISNIL
+isnil[T] t1 -> isnil[T] t1'
+
+head[S](cons[T] v1 v2) -> v1    E-HEADCONS
+
+t1 -> t1'
+-------------------------       E-HEAD
+head[T] t1 -> head[T] t1'
+
+tail[S](cons[T] v1 v2) -> v2    E-TAILCONS
+
+t1 -> t1'
+-------------------------       E-TAIL
+tail[T] t1 -> tail[T] t1'
+
+Г |- nil[T1]:List T1            T-NIL
+
+Г |- t1:T1    Г |- t2:List T1
+-----------------------------   T-CONS
+Г |- cons[T1] t1 t2:List T1
+
+Г |- t1:List T11
+----------------------          T-ISNIL
+Г |- isnil[T11]t1:Bool
+
+Г |- t1:List T11
+--------------------            T-HEAD
+Г |- head[T11]t1:T11
+
+Г |- t1:List T11
+-------------------------       T-TAIL
+Г |- tail[T11]t1:List T11
+
+We adopt the "head/tail/isnil presentation" of lists here for simplicity. from the perspective of language design, it is arguably better to treat lists as a datatype and use case expressions for destructing them, since more programming errors can be caught as type errors this way.
