@@ -31,6 +31,7 @@ T ::= ...                       types
 New derived forms
 t1; t2 => (λx:Unit.t2) t1 where x not belongs to FV(t2)
 
+* Jan: If sequence is defined in this form, monad is a natural derivation then
 
 Sequencing is a derived form (theorem)
 --------------------------------------
@@ -593,3 +594,42 @@ tail[T] t1 -> tail[T] t1'
 Г |- tail[T11]t1:List T11
 
 We adopt the "head/tail/isnil presentation" of lists here for simplicity. from the perspective of language design, it is arguably better to treat lists as a datatype and use case expressions for destructing them, since more programming errors can be caught as type errors this way.
+
+
+Shared State
+------------
+
+The possibility of aliasing can make programs with references quite tricky to reason about. For example, the expression (r:=1; r:=!s), which assigns 1 to r and then immediately overwrites it with s's current value, has exactly the same effect as the single assignment r:=!s, unless we write it in a context where r and s are aliases for the same cell.
+
+Of course, aliasing is also a large part of what makes references useful. In particular, it allows us to set up "implicit communication channels"-shared state-between different parts of a program. Based on this we can construct simple object.
+
+
+References to Compound Types
+----------------------------
+
+A reference cell need not contain just a number: the primitives above allow us to create references to values of any type, including functions. For example, we can use references to functions to give a (not very efficient) implementation of arrays of numbers, as follows. Write NatArray for the type Ref (Nat->Nat).
+
+  NatArray = Ref (Nat->Nat);
+
+To build a new array, we allocate a reference cell and fill it with a function that, when given an index, always returns 0.
+
+  newarray = λ_:Unit. ref (λn:Nat.0);
+  > newarray : Unit -> NatArray
+
+To look up an element of an array, we simply apply the function to the desired index.
+
+  lookup = λa:NatArray. λn:Nat. (!a) n;
+  > lookup : NatArray -> Nat -> Nat
+
+The interesting part of the encoding is the update function. It takes an array, an index, and a new value to be stored at that index, and does its job by creating (and storing in the reference) a new function that, when it is asked for the value at this very index, returns the new value that was given to update, and on all other indices passes the lookup to the function that was previously stored in the reference.
+
+  update = λa:NatArray. λm:Nat. λv:Nat.
+           let oldf = !a in
+           a := (λn:Nat. if equal m n then v else oldf n);
+  > update : NatArray -> Nat -> Nat -> Unit
+
+
+Garbage Collection
+------------------
+
+A last issue that we should mention before we move on formalizing references is storage deallocation. We have not provided any primitives for freeing reference cells when they are no longer needed. Instead, like many modern languages (including ML and Java) we rely on the run-time system to perform garbage collection, collecting and reusing cells that can no longer be reachedby the program. This is not just a question of taste in language design: it is extremely difficult to achieve type safety in the presence of an explicit deallocation operation. The reason for this is the familiar dangling reference problem: we allocate a cell holding a number, save a reference to it in some data structure, use it for a while, then deallocate it and allocate a new cell holding a boolean, possibly reusing the same storage. Now we can have two names for the same storage cell-one with type Ref Nat and the other with type Ref Bool.

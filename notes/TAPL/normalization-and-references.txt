@@ -1,0 +1,161 @@
+Normalization
+=============
+
+Here we consider another fundamental theoretical property of the pure simply typed lambda-calculus: the fact that the evaluation of a well-typed program is guaranteed to halt in a finite number of steps — i.e., every well-typed term is normalizable.
+
+Unlike the type-safety properties we have considered so far, the normalization property does not extend to full-blown programming languages, because these languages nearly always extend the simply typed lambda-calculus with constructs such as general recursion or recursive types that can be used to write nonterminating programs. However, the issue of normalization will reappear at the level of types when we discuss the metatheory of System Fω later: in this system, the language of types effectively contains a copy of the simply typed lambda-calculus, and the termination of the typechecking algorithm will hinge on the fact that a "normalization" operation on type expressions is guaranteed to terminate.
+
+*****************************************************
+frankly speaking, I don't understand the proofs in
+this chapter ...  what a shame. I'll come back to this
+at some time later ...
+*****************************************************
+
+
+
+
+References
+==========
+
+So far, we have considered a variety of pure language features, including functional abstraction, basic types such as numbers and booleans, and structured types such as records and variants. These features form the backbone of most programming languages—including purely functional languages such as Haskell, "mostly functional" languages such as ML, imperative languages such as C, and object-oriented languages such as Java.
+
+Most practical programming languages also include various impure features that cannot be described in the simple semantic framework we have used so far. In particular, besides just yielding results, evaluation of terms in these languages may assign to mutable variables (reference cells, arrays, mutable record fields, etc.), perform input and output to files, displays, or network connections, make non-local transfers of control via exceptions, jumps, or continuations, engage in inter-process synchronization and communication, and so on. In the literature on programming languages, such "side effects" of computation are more generally referred to as computational effects.
+
+Extends lambda with Unit and Ref
+----------------------------------------------
+t ::=                           terms
+      x                         variable
+      λx:T.t                    abstraction
+      t t                       application
+      unit                      constant unit
+      ref t                     reference creation
+      !t                        dereference
+      t:=t                      assignment
+      l                         store location
+
+v ::=                           values
+      λx:T.t                    abstraction value
+      unit                      constant unit
+      l                         store location
+
+T ::=                           types
+      T -> T                    type of functions
+      Unit                      unit type
+      Ref T                     type of reference cells
+
+Г ::=                           contexts
+      /                         empty context
+      Г,x:T                     term variable binding
+
+u ::=                           stores
+      /                         empty store
+      u,l->v                    location binding
+
+E ::=                           store typings
+      /                         empty store typing
+      E,l:T                     location typing
+
+Evaluation                      t|u -> t'|u'
+
+t1|u -> t1'|u'
+--------------------            E-APP1
+t1 t2|u -> t1' t2|u'
+
+t2|u -> t2'|u'
+--------------------            E-APP2
+v1 t2|u -> v1 t2'|u'
+
+(λx:T11.t12)v2|u -> [x->v2]t12|u        E-APPABS
+
+l not belongs to dom(u)
+-----------------------         E-REFV
+ref v1|u -> l|(u,l->v1)
+
+t1|u -> t1'|u'
+----------------------          E-REF
+ref t1|u -> ref t1'|u'
+
+u(l) = v
+-----------                     E-DEREFLOC
+!l|u -> v|u
+
+t1|u -> t1'|u'
+----------------                E-DEREF
+!t1|u -> !t1'|u'
+
+l:=v2|u -> unit|[l->v2]u        E-ASSIGN
+
+t1|u -> t1'|u'
+----------------------          E-ASSIGN1
+t1:=t2|u -> t1':=t2|u'
+
+t2|u -> t2'|u'
+----------------------          E-ASSIGN2
+v1:=t2|u -> v:=t2'|u'
+
+Typing                          Г|E |- t:T
+
+x:T <- Г
+----------                      T-VAR
+Г|E |- x:T
+
+Г,x:T1|E !- t2:T2
+----------------------          T-ABS
+Г|E |- λx:T1.t2:T1->T2
+
+Г|E !- t1:T11->T12     Г|E |- t2:T11
+-------------------------------------        T-APP
+Г|E |- t1 t2:T12
+
+Г|E |- unit:Unit                T-UNIT
+
+E(l) = T1
+---------------                 T-LOC
+Г|E |- l:Ref T1
+
+Г|E |- t1:T1
+--------------------            T-REF
+Г|E |- ref t1:Ref T1
+
+Г|E |- t1:Ref T11
+-----------------               T-DEREF
+Г|E |- !t1:T11
+
+Г|E |- t1:Ref T11    Г|E |- t2:T11
+----------------------------------        T-ASSIGN
+Г|E |- t1:=t2:Unit
+
+
+The basic operations on references are allocation, dereferencing, and assignment.
+
+  r = ref 5                     (allocation/reference)
+  > r:Ref Nat
+
+  !r                            (dereference)
+  > 5:Nat
+
+  r := 7                        (assignment)
+  > unit:Unit
+
+The fact that the result of an assignment expression is the trivial value unit fits nicely with the sequencing notation defined in simple-type-extensions, allowing us to write
+
+  (r:=succ(!r); !r);
+  > 8:Nat
+
+instead of the equivalent, but more cumbersome,
+
+  (λ_:Unit. !r) (r := succ(!r));
+  > 9:Nat
+
+Restricting the type of the first expression to Unit helps the typechecker to catch some silly errors by permitting us to throw away the first value only if it is really guaranteed to be trivial.
+
+
+Aliasing
+--------
+
+It is important to bear in mind the difference between the reference that is bound to r and the cell in the store that is pointed to by this reference. If we write:
+
+  s = r
+  > s:Ref Nat
+
+then s is a reference refers to the same cell as r. If we change value by using s (s := 99) then the value refer by r will also be changed. The references r and s are said to be aliases for the same cell.
