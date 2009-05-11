@@ -159,3 +159,129 @@ It is important to bear in mind the difference between the reference that is bou
   > s:Ref Nat
 
 then s is a reference refers to the same cell as r. If we change value by using s (s := 99) then the value refer by r will also be changed. The references r and s are said to be aliases for the same cell.
+
+
+Evaluation
+----------
+
+(This is a cool section, explained the extended lambda calculus in details. So I just copied it here)
+
+A more subtle aspect of the treatment of references appears when we consider how to formalize their operational behavior. One way to see why is to ask, "What should be the values of type Ref T?" The crucial observation that we need to take into account is that evaluating a ref operator should do something-namely, allocate some storage-and the result of the operation should be a reference to this storage.
+
+What, then, is a reference?
+
+The run-time store in most programming language implementations is essentially just a big array of bytes. The run-time system keeps track of which parts of this array are currently in use; when we need to allocate a new reference cell, we allocate a large enough segment from the free region of the store (4 bytes for integer cells, 8 bytes for cells storing Floats, etc.), mark it as being used, and return the index (typically, a 32- or 64-bit integer) of the start of the newly allocated region. These indices are references.
+
+For present purposes, there is no need to be quite so concrete. We can think of the store as an array of values, rather than an array of bytes, abstracting away from the different sizes of the run-time representations of different values. Furthermore, we can abstract away from the fact that references (i.e., indexes into this array) are numbers. We take references to be elements of some uninterpreted set L of store locations, and take the store to be simply a partial function from locations l to values. We use the metavariable μ to range over stores. A reference, then, is a location-an abstract index into the store. We'll use the word location instead of reference or pointer from now on to emphasize this abstract quality.
+
+Next, we need to extend our operational semantics to take stores into account. Since the result of evaluating an expression will in general depend on the contents of the store in which it is evaluated, the evaluation rules should take not just a term but also a store as argument. Furthermore, since the evaluation of a term may cause side effects on the store that may affect the evaluation of other terms in the future, the evaluation rules need to return a new store. Thus, the shape of the single-step evaluation relation changes from t -> t′ to t|μ -> t′|μ′, where μ and μ′ are the starting and ending states of the store. In effect, we have enriched our notion of abstract machines, so that a machine state is not just a program counter (represented as a term), but a program counter plus the current contents of the store.
+
+To carry through this change, we first need to augment all of our existing evaluation rules with stores: E-APPABS, E-APP1, E-APP2
+
+Note that the first rule here returns the store μ unchanged: function application, in itself, has no side effects. The other two rules simply propagate side effects from premise to conclusion.
+
+Next, we make a small addition to the syntax of our terms. The result of evaluating a ref expression will be a fresh location, so we need to include locations in the set of things that can be results of evaluation-i.e., in the set of values: (see values definition)
+
+Since all values are also terms, this means that the set of terms should include locations. (see terms definition)
+
+Of course, making this extension to the syntax of terms does not mean that we intend programmers to write terms involving explicit, concrete locations: such terms will arise only as intermediate results of evaluation. In effect, the term language in this chapter should be thought of as formalizing an intermediate language, some of whose features are not made available to programmers directly.
+
+In terms of this expanded syntax, we can state evaluation rules for the new constructs that manipulate locations and the store. First, to evaluate a dereferencing expression !t1, we must first reduce t1 until it becomes a value: E-DEREF
+
+Once t1 has finished reducing, we should have an expression of the form !l, where l is some location. A term that attempts to dereference any other sort of value, such as a function or unit, is erroneous. The evaluation rules simply get stuck in this case. The type safety properties in §13.5 assure us that well-typed terms will never misbehave in this way. (E-DEREFLOC)
+
+Next, to evaluate an assignment expression t1 :=t2, we must first evaluate t1 until it becomes a value (i.e., a location): E-ASSIGN1, and then evaluate t2 until it becomes a value (of any sort): E-ASSIGN2
+
+Once we have finished with t1 and t2, we have an expression of the form l:=v2, which we execute by updating the store to make location l contain v2: E-ASSIGN
+
+(The notation [l->v2]μ here means "the store that maps l to v2 and maps all other locations to the same thing as μ." Note that the term resulting from this evaluation step is just unit; the interesting result is the updated store.)
+
+Finally, to evaluate an expression of the form ref t1, we first evaluate t1 until it becomes a value: E-REF
+
+Then, to evaluate the ref itself, we choose a fresh location l (i.e., a location that is not already part of the domain of μ) and yield a new store that extends μ with the new binding l -> v1: E-REFV
+
+The term resulting from this step is the name l of the newly allocated location.
+
+Note that these evaluation rules do not perform any kind of garbage collection: we simply allow the store to keep growing without bound as evaluation proceeds. This does not affect the correctness of the results of evaluation (after all, the definition of "garbage" is precisely parts of the store that are no longer reachable and so cannot play any further role in evaluation), but it means that a naive implementation of our evaluator will sometimes run out of memory where a more sophisticated evaluator would be able to continue by reusing locations whose contents have become garbage.
+
+Treating locations abstractly in this way will prevent us from modeling the pointer arithmetic found in low-level languages such as C. This limitation is intentional. While pointer arithmetic is occasionally very useful (especially for implementing low-level components of run-time systems, such as garbage collectors), it cannot be tracked by most type systems: knowing that location n in the store contains a Float doesn't tell us anything useful about the type of location n + 4. In C, pointer arithmetic is a notorious source of type safety violations.
+
+
+Store Typings
+-------------
+
+Having extended our syntax and evaluation rules to accommodate references, our last job is to write down typing rules for the new constructs-and, of course, to check that they are sound. Naturally, the key question is, "What is the type of a location?"
+
+When we evaluate a term containing concrete locations, the type of the result depends on the contents of the store that we start with. For example, if we evaluate the term !l2 in the store (l1 -> unit, l2 -> unit), the result is unit; if we evaluate the same term in the store (l1 -> unit, l2 -> λx:Unit.x), the result is λx:Unit.x. With respect to the former store, the location l2 has type Unit, and with respect to the latter it has type Unit->Unit. This observation leads us immediately to a first attempt at a typing rule for locations:
+
+Г |- u(l):T1
+-------------
+Г |- l:Ref T1
+
+That is, to find the type of a location l, we look up the current contents of l in the store and calculate the type T1 of the contents. The type of the location is then Ref T1.
+
+Having begun in this way, we need to go a little further to reach a consistent state. In effect, by making the type of a term depend on the store, we have changed the typing relation from a three-place relation (between contexts, terms, and types) to a four-place relation (between contexts, stores, terms, and types). Since the store is, intuitively, part of the context in which we calculate the type of a term, let's write this four-place relation with the store to the left of the turnstile: Г|μ |- t:T. Our rule for typing references now has the form
+
+Г|u |- u(l):T1
+---------------
+Г|u |- l:Ref T1
+
+and all the rest of the typing rules in the system are extended similarly with stores. The other rules do not need to do anything interesting with their stores-just pass them from premise to conclusion.
+
+However, there are two problems with this rule. First, typechecking is rather inefficient, since calculating the type of a location l involves calculating the type of the current contents v of l. If l appears many times in a term t, we will re-calculate the type of v many times in the course of constructing a typing derivation for t. Worse, if v itself contains locations, then we will have to recalculate their types each time they appear. Second, the proposed typing rule for locations may not allow us to derive anything at all, if the store contains a cycle.
+
+Both of these problems arise from the fact that our proposed typing rule for locations requires us to recalculate the type of a location every time we mention it in a term. But this, intuitively, should not be necessary. After all, when a location is first created, we know the type of the initial value that we are storing into it. Moreover, although we may later store other values into this location, those other values will always have the same type as the initial one. In other words, we always have in mind a single, definite type for every location in the store, which is fixed when the location is allocated. These intended types can be collected together as a store typing-a finite function mapping locations to types. We'll use the metavariable Σ to range over such functions.
+
+Suppose we are given a store typing Σ describing the store μ in which some term t will be evaluated. Then we can use Σ to calculate the type of the result of t without ever looking directly at μ. (T-LOC)
+
+Typing is again a four-place relation, but it is parameterized on a store typing rather than a concrete store. The rest of the typing rules are analogously augmented with store typings.
+
+Of course, these typing rules will accurately predict the results of evaluation only if the concrete store used during evaluation actually conforms to the store typing that we assume for purposes of typechecking. This proviso exactly parallels the situation with free variables in all the calculi we have seen up to this point: the substitution lemma (9.3.8) promises us that, if Г |- t:T, then we can replace the free variables in t with values of the types listed in Г to obtain a closed term of type T, which, by the type preservation theorem (9.3.9) will evaluate to a final result of type T if it yields any result at all. We will see later how to formalize an analogous intuition for stores and store typings.
+
+Finally, note that, for purposes of typechecking the terms that programmers actually write, we do not need to do anything tricky to guess what store typing we should use. As we remarked above, concrete location constants arise only in terms that are the intermediate results of evaluation; they are not in the language that programmers write. Thus, we can simply typecheck the programmer's terms with respect to the empty store typing. As evaluation proceeds and new locations are created, we will always be able to see how to extend the store typing by looking at the type of the initial values being placed in newly allocated cells; this intuition is formalized in the statement of the type preservation theorem below.
+
+Notice that we do not need to extend the store typing in T-REF, since the name of the new location will not be determined until run time, while Σ records only the association between already-allocated storage cells and their types.
+
+
+Safty
+-----
+
+A store μ is said to be well typed with respect to a typing context Г and a store typing Σ, written Г|Σ |- μ, if dom(μ) = dom(Σ) and Г|Σ |- μ(l):Σ(l) for every l <- dom(μ).
+
+Intuitively, a store μ is consistent with a store typing Σ if every value in the store has the type predicted by the store typing.
+
+Evidently, since the store can increase in size during evaluation, we need to allow the store typing to grow as well.
+
+* Preservation Theorem
+
+  If
+    Γ|Σ -> t:T
+    Γ|Σ -> μ
+    t|μ -> t′|μ′
+
+  then, for some Σ′ includes Σ,
+
+    Γ|Σ′ -> t′:T
+    Γ|Σ′ -> μ′.
+
+Note that the preservation theorem merely asserts that there is some store typing Σ′ includes Σ (i.e., agreeing with Σ on the values of all the old locations) such that the new term t′ is well typed with respect to Σ′; it does not tell us exactly what Σ′ is. It is intuitively clear, of course, that Σ′ is either Σ or else it is exactly (μ, l |-> T1), where l is a newly allocated location (the new element of the domain of μ′) and T1 is the type of the initial value bound to l in the extended store (μ, l |-> v1), but stating this explicitly would complicate the statement of the theorem without actually making it any more useful: the weaker version above is already in the right form (because its conclusion implies its hypothesis) to "turn the crank" repeatedly and conclude that every sequence of evaluation steps preserves well-typedness. Combining this with the progress property, we obtain the usual guarantee that "well-typed programs never go wrong."
+
+* Substitution Lemma
+
+  If Г,x:S|Σ |- t:T and Г|Σ |- s:S, then Г|Σ |- [x |-> s]t:T.
+
+The next states that replacing the contents of a cell in the store with a new value of appropriate type does not change the overall type of the store.
+
+  If
+    Г|Σ |- μ
+    Σ(l) = T
+    Г|Σ |- v:T
+  then Г|Σ |- [l |-> v]μ.
+
+Finally, we need a kind of weakening lemma for stores, stating that, if a store is extended with a new location, the extended store still allows us to assign types to all the same terms as the original.
+
+  If Г|Σ |- t:T and Σ′ includes Σ, then Г|Σ′ |- t : T.
+
+* Progress Theorem 
+
+Suppose t is a closed, well-typed term (that is, ø|Σ |- t:T for some T and Σ). Then either t is a value or else, for any store μ such that ø|Σ |- μ, there is some term t′ and store μ′ with t|μ -> t′|μ′.
