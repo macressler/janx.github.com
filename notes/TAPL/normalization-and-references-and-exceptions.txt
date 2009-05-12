@@ -285,3 +285,124 @@ Finally, we need a kind of weakening lemma for stores, stating that, if a store 
 * Progress Theorem 
 
 Suppose t is a closed, well-typed term (that is, ø|Σ |- t:T for some T and Σ). Then either t is a value or else, for any store μ such that ø|Σ |- μ, there is some term t′ and store μ′ with t|μ -> t′|μ′.
+
+
+
+Exceptions
+==========
+
+Extends lambda with error and try
+----------------------------------------------
+t ::= ...                       terms
+      error                     runtime error
+      try t with t              trap errors
+
+error t2 -> error               E-APPERR1
+
+v1 error -> error               E-APPERR2
+
+try v1 with t2 -> v1            E-TRYV
+
+try error with t2 -> t2         E-TRYERROR
+
+t1 -> t1'
+---------------------------------    E-TRY
+try t1 with t2 -> try t1' with t2
+
+Г |- error:T                    T-ERROR
+
+Г |- t1:T    Г |- t2:T
+----------------------          T-TRY
+Г |- try t1 with t2:T
+
+
+Extends lambda with exceptions
+----------------------------------------------
+t ::= ...                       terms
+      raise t                   raise exception
+      try t with t              trap exception
+
+(raise v11) t2 -> raise v11     E-APPRAISE1
+
+v1 (raise v21) -> raise v21     E-APPRAISE2
+
+t1 -> t1'
+---------------------           E-RAISE
+raise t1 -> raise t1'
+
+raise (raise v11) -> raise v11  E-RAISERAISE
+
+try v1 with t2 -> v1            E-TRYV
+
+try raise v11 with t2 -> t2 v11 E-TRYRAISE
+
+t1 -> t1'
+---------------------------------    E-TRY
+try t1 with t2 -> try t1' with t2
+
+Г |- t1:Texn
+---------------                 T-EXN
+Г |- raise t1:T
+
+Г |- t1:T    Г |- t2:Texn->T
+----------------------------    T-TRY
+Г |- try t1 with t2:T
+
+A term error is the simplest possible mechanism for signaling exceptions: when evaluated, completely aborts evaluation of the term in which it appears. Observe that we have not included error in the syntax of values-only the syntax of terms. This guarantees that there will never be an overlap between the left-hand sides of the E-APPABS and E-APPERR2 rules - there is no ambiguity as to whether we should evaluate the term
+
+  (λx:Nat.0) error
+
+by performing the application (yielding 0 as result) or aborting: only the latter is possible. Similarly, the fact that we used the metavariable v1 (rather than t1, ranging over arbitrary terms) in E-APPERR2 forces the evaluator to wait until the left-hand side of an application is reduced to a value before aborting it, even if the right-hand side is error. Thus, a term like
+
+  (fix (λx:Nat.x)) error
+
+will diverge instead of aborting. 
+
+Since we may want to raise an exception in any context, the term error form is allowed to have any type whatsoever (T-ERROR). This flexibility in error's type raises some difficulties in implementing a typechecking algorithm, since it breaks the property that every typable term in the language has a unique type (Theorem 9.3.3). This can be dealt with in various ways. In a language with subtyping, we can assign error the minimal type Bot, which can be promoted to any other type as necessary. In a language with parametric polymorphism, we can give error the polymorphic type "X.X, which can be instantiated to any other type. Both of these tricks allow infinitely many possible types for error to be represented compactly by a single type.
+
+* Preservation Theorem: unchanged.
+* Progress Theorem: Suppose t is a closed, well-typed normal form. Then either t is a value or t = error.
+
+The evaluation rules for error can be thought of as "unwinding the call stack," discarding pending function calls until the error has propagated all the way to the top level. In real implementations of languages with exceptions, this is exactly what happens: the call stack consists of a set of activation records, one for each active function call; raising an exception causes activation records to be popped off the call stack until it becomes empty.
+
+In most languages with exceptions, it is also possible to install exception handlers in the call stack. When an exception is raised, activation recordsare popped off the call stack until an exception handler is encountered, and evaluation then proceeds with this handler. In other words, the exception functions as a non-local transfer of control, whose target is the most recently installed exception handler (i.e., the nearest one on the call stack).
+
+The typing rule for try follows directly from its operational semantics. The result of the whole try can be either the result of the main body t1 or else the result of the handler t2; we simply need to require that these have the same type T, which is also the type of the try.
+
+The type safety property and its proof remain essentially unchanged.
+
+In T-RAISE we demand that the extra information has type Texn; the whole raise can then be given any type T that may be required by the context. 
+
+
+Alternatives for type Texn
+--------------------------
+
+1. We can take Texn to be just Nat. This corresponds to the errno convention used, for example, by Unix operating system functions: each system call returns a numeric "error code," with 0 signaling success and other values reporting various exceptional conditions.
+
+2. We can take Texn to be String, which avoids looking up error numbers in tables and allows exception-raising sites to construct more descriptive messages if they wish. The cost of this extra flexibility is that error handlers may now have to parse these strings to find out what happened.
+
+3. We can keep the ability to pass more informative exceptions while avoiding string parsing if we define Texn to be a variant type:
+
+   Texn  =  <divideByZero:      Unit,
+            overflow:          Unit,
+            fileNotFound:      String,
+            fileNotReadable:   String,
+            ...>
+
+   This scheme allows a handler to distinguish between kinds of exceptions using a simple case expression. Also, different exceptions can carry different types of additional information: exceptions like divideByZero need no extra baggage, fileNotFound can carry a string indicating which file was being opened when the error occurred, etc.
+
+   The problem with this alternative is that it is rather inflexible, demanding that we fix in advance the complete set of exceptions that can be raised by any program (i.e., the set of tags of the variant type Texn). This leaves no room for programmers to declare application-specific exceptions.
+
+4. The same idea can be refined to leave room for user-defined exceptions by taking Texn to be an extensible variant type. ML adopts this idea, providing a single extensible variant type called exn. The ML declaration exception l of T can be understood, in the present setting, as "make sure that l is different from any tag already present in the variant type Texn, and from now on let Texn be <l1 :T1...ln:tn,l:T>, where l1:T1 through ln:tn were the possible variants before this declaration."
+
+   The ML syntax for raising exceptions is raise l(t), where l is an exception tag defined in the current scope. This can be understood as a combination of the tagging operator and our simple raise:
+
+   Similarly, the ML try construct can be desugared using our simple try plus a case.
+
+   The case checks whether the exception that has been raised is tagged with l. If so, it binds the value carried by the exception to the variable x and evaluates the handler h. If not, it falls through to the else clause, which re-raises the exception. The exception will keep propagating (and perhaps being caught and re-raised) until it either reaches a handler that wants to deal with it, or else reaches the top level and aborts the whole program.
+
+5.  Java uses classes instead of extensible variants to support user-defined exceptions. The language provides a built-in class Throwable; an instance of Throwable or any of its subclasses can be used in a throw (same as our raise) or try...catch (same as our try...with) statement. New exceptions can be declared simply by defining new subclasses of Throwable.
+
+   There is actually a close correspondence between this exception-handling mechanism and that of ML. Roughly speaking, an exception object in Java is represented at run time by a tag indicating its class (which corresponds directly to the extensible variant tag in ML) plus a record of instance variables (corresponding to the extra information labeled by this tag).
+
+   Java exceptions go a little further than ML in a couple of respects. One is that there is a natural partial order on exception tags, generated by the subclass ordering. A handler for the exception l will actually trap all exceptions carrying an object of class l or any subclass of l. Another is that Java distinguishes between exceptions (subclasses of the built-in class Exception—a subclass of Throwable), which application programs might want to catch and try to recover from, and errors (subclasses of Error—also a subclass of Throwable), which indicate serious conditions that should normally just terminate execution. The key difference between the two lies in the typechecking rules, which demand that methods explicitly declare which exceptions (but not which errors) they might raise.
