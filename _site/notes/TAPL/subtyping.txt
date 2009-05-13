@@ -1,0 +1,147 @@
+Subtyping
+=========
+
+Subtyping is a very fundamental extension, sometimes called subtype polymorphism. Unlike the features we have studied up to now, which could be formulated more or less orthogonally to each other, subtyping is a cross-cutting extension, interacting with most other language features in non-trivial ways. Subtyping is characteristically found in object-oriented languages and is often considered an essential feature of the object-oriented style. 
+
+Extends lambda with record ({}) and subtyping (<:)
+----------------------------------------------
+t ::=                          terms
+      x                        variable
+      λx:T.t                   abstraction
+      t t                      application
+      {li=ti,i<-1..n}          record
+      t.l                      projection
+
+v ::=                          values
+      λx:T.t                   abstraction value
+      {li=vi,i<-1..n}          record value
+
+T ::=                          types
+      Top                      maximum type
+      T->T                     type of functions
+      {li:Ti,i<-1..n}          type of records
+
+Г ::=                          contexts
+      /                        empty context
+      Г,x:T                    term variable binding
+
+Evaluation                     t -> t'
+
+t1 -> t1'
+---------------                E-APP1
+t1 t2 -> t1' t2
+
+t2 -> t2'
+---------------                E-APP2
+v1 t2 -> v1 t2'
+
+(λx:T11.t12)v2 -> [x -> v2]t12 E-APPABS
+
+{li=vi,i<-1..n}.lj -> vj       E-PROJRCD
+
+t1 -> t1'
+-------------                  E-PROJ
+t1.l -> t1'.l
+
+tj -> tj'
+-----------------------------------------------------------------------------------------    E-RCD
+{li=vi,i<-1..j-1,  lj=tj,  lk=tk,k<-j+1..n} -> {li=vi,i<-1..j-1, lj=tj', lk=tk,k<-j+1..n}
+
+Subtyping                      S <: T
+
+S <: S                         S-REFL
+
+S <: U    U <: T
+----------------               S-TRANS
+S <: T
+
+S <: Top                       S-TOP
+
+T1 <: S1    S2 <: T2
+--------------------           S-ARROW
+S1->S2 <: T1->T2
+
+{li:Ti,i<-1..n+k} <: {li:Ti,i<-1..n}    S-RCDWIDTH
+
+for each i Si <: Ti
+----------------------------------    S-RCDDEPTH
+{li:Si,i<-1..n} <: {li:Ti,i<-1..n}
+
+{kj:Sj,j<-1..n} is a permutation of {li:Ti,i<-1..n}
+---------------------------------------------------    S-RCDPERM
+{kj:Sj,j<-1..n} <: {li:Ti,i<-1..n}
+
+Typing                         Г |- t:T
+
+x:T belongs to Г
+----------------               T-VAR
+Г |- x:T
+
+Г,x:T1 |- t2:T2
+--------------------           T-ABS
+Г |- λx:T1.t2:T1->T2
+
+Г |- t1:T11->T12    Г |- t2:T11
+-------------------------------    T-APP
+Г |- t1 t2:T12
+
+Г |- t:S    S <: T
+------------------             T-SUB
+Г |- t:T
+
+for each i Г |- ti:Ti
+------------------------------------    T-RCD
+Г |- {li=ti,i<-1..n}:{li:Ti,i<-1..n}
+
+Г |- t1:{li:Ti,i<-1..n}
+-----------------------        T-PROJ
+Г |- t1.lj:Tj
+
+
+Subsumption
+-----------
+
+The goal of subtyping is to 'loose' the typing rules. We accomplish this by formalizing the intuition that some types are more informative than others: we say that S is a subtype of T, written S <: T (T is a supertype of S), to mean that any term of type S can safely be used in a context where a term of type T is expected. This view of subtyping is often called the principle of safe substitution.
+
+A simpler intuition is to read S <: T as "every value described by S is also described by T," that is, "the elements of S are a subset of the elements of T (T-SUB).
+
+
+Subtype Relation
+----------------
+
+The subtype relation is formalized as a collection of inference rules for deriving statements of the form S <: T, We consider each form of type (function types, record types, etc.) separately; for each one, we introduce one or more rules formalizing situations when it is safe to allow elements of one type of this form to be used where another is expected.
+
+We have two general stipulations: S-REFL (subtyping should be reflexive) and S-TRANS (subtyping should be transitive). These rules follow directly from the intuition of safe substitution.
+
+
+For record types, we have
+
+  {li:Ti,i<-1..n+k} <: {li:Ti,i<-1..n}    (S-RCDWIDTH, width subtyping)
+
+  for each i Si <: Ti
+  ----------------------------------    (S-RCDDEPTH, depth subtyping)
+  {li:Si,i<-1..n} <: {li:Ti,i<-1..n}
+
+  {kj:Sj,j<-1..n} is a permutation of {li:Ti,i<-1..n}
+  ---------------------------------------------------    (S-RCDPERM)
+  {kj:Sj,j<-1..n} <: {li:Ti,i<-1..n}
+
+It may seem surprising that the "smaller" type-the subtype-is the one with more fields. The easiest way to understand this is regarding a record type {x:Nat} as describing "the set of all records with at least a field x of type Nat". So a longer record constitutes a more demanding-i.e., more informative-specification, and so describes a smaller set of values.
+
+S-RCDPERM arises from the observation that the order of fields in a record does not make any difference to how we can safely use it, since the only thing that we can do with records once we've built them-i.e., projecting their fields-is insensitive to the order of fields.
+
+S-RCDWIDTH, S-RCDDEPTH, and S-RCDPERM each embody a different sort of flexibility in the use of records. For purposes of discussion, it is useful to present them as three separate rules. In particular, there are languages that allow some of them but not others; for example, most variants of Abadi and Cardelli's object calculus (1996) omit width subtyping. However, for purposes of implementation it is more convenient to combine them into a single macro-rule that does all three things at once.
+
+
+For function types, we have
+
+  T1 <: S1    S2 <: T2
+  --------------------    (S-ARROW)
+  S1->S2 <: T1->T2
+
+Notice that the sense of the subtype relation is reversed (contravariant) for the argument types in the left-hand premise, while it runs in the same direction (covariant) for the result types as for the function types themselves. The intuition is that, if we have a function f of type S1->S2, then we know that f accepts elements of type S1; clearly, f will also accept elements of any subtype T1 of S1. The type of f also tells us that it returns elements of type S2; we can also view these results belonging to any supertype T2 of S2. That is, any function f of type S1->S2 can also be viewed as having type T1->T2.
+
+An alternative view is that it is safe to allow a function of one type S1->S2 to be used in a context where another type T1->T2 is expected as long as none of the arguments that may be passed to the function in this context will surprise it (T1 <: S1) and none of the results that it returns will surprise the context (S2 <: T2).
+
+
+Finally, it is convenient to have a type that is a supertype of every type. We introduce a new type constant Top, plus a rule that makes Top a maximum element of the subtype relation (S-TOP). Note that the presence of the reflexivity and transitivity rules means that the subtype relation is clearly a preorder; however, because of the record permutation rule, it is not a partial order: there are many pairs of distinct types where each is a subtype of the other.
