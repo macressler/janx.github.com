@@ -18,6 +18,7 @@ v ::=                          values
 
 T ::=                          types
       Top                      maximum type
+      Bot                      minimum type
       T->T                     type of functions
       {li:Ti,i<-1..n}          type of records
 
@@ -56,6 +57,8 @@ S <: U    U <: T
 S <: T
 
 S <: Top                       S-TOP
+
+Bot <: S                       S-BOT
 
 T1 <: S1    S2 <: T2
 --------------------           S-ARROW
@@ -144,4 +147,45 @@ Notice that the sense of the subtype relation is reversed (contravariant) for th
 An alternative view is that it is safe to allow a function of one type S1->S2 to be used in a context where another type T1->T2 is expected as long as none of the arguments that may be passed to the function in this context will surprise it (T1 <: S1) and none of the results that it returns will surprise the context (S2 <: T2).
 
 
-Finally, it is convenient to have a type that is a supertype of every type. We introduce a new type constant Top, plus a rule that makes Top a maximum element of the subtype relation (S-TOP). Note that the presence of the reflexivity and transitivity rules means that the subtype relation is clearly a preorder; however, because of the record permutation rule, it is not a partial order: there are many pairs of distinct types where each is a subtype of the other.
+Finally, it is convenient to have a type that is a supertype of every type. We introduce a new type constant Top, plus a rule that makes Top a maximum element of the subtype relation (S-TOP). Note that the presence of the reflexivity and transitivity rules means that the subtype relation is clearly a preorder; however, because of the record permutation rule, it is not a partial order: there are many pairs of distinct types where each is a subtype of the other. The maximal type Top is not a necessary part of the simply typed lambda-calculus with subtyping; it can be removed without damaging the properties of the system. However, it is included in most presentations, for several reasons. First, it corresponds to the type Object found in most object-oriented languages. Second, Top is a convenient technical device in more sophisticated systems combining subtyping and parametric polymorphism.
+
+It is natural to ask whether we can also complete the subtype relation with a minimal element—a type Bot that is a subtype of every type. The answer is that we can: see T-BOT and S-BOT. The first thing to notice is that Bot is empty - there are no closed values of type Bot. If there were one, say v, then the subsumption rule plus S-Bot would allow us to derive |- v:Top->Top, from which the canonical forms lemma tells us that v must have the form λx:S1.t2 for some S1 and t2. On the other hand, by subsumption, we also have |- v:{}, from which the canonical forms lemma tells us that v must be a record. The syntax makes it clear that v cannot be both a function and a record, and so assuming that |- v:Bot has led us to a contradiction. The emptiness of Bot does not make it useless. On the contrary: Bot provides a very convenient way of expressing the fact that some operations (in particular, throwing an exception or invoking a continuation) are not intended to return. Giving such expressions the type Bot has two good effects: first, it signals to the programmer that no result is expected (since if the expression did return a result, it would be a value of type Bot); second, it signals to the typechecker that such an expression can safely be used in a context expecting any type of value. For example, if the exception-raising term error is given type Bot, then a term like
+
+   λx:T.
+     if <check that x is reasonable> then
+       <compute result>
+     else
+       error
+
+will be well typed because, no matter what the type of the normal result is, the term error can always be given the same type by subsumption, so the two branches of the if are compatible, as required by T-If. Unfortunately, the presence of Bot significantly complicates the problem of building a typechecker for the system. A simple typechecking algorithm for a language with subtyping needs to rely on inferences like "if an application t1 t2 is well typed, then t1 must have an arrow type." In the presence of Bot, we must refine this to "if t1 t2 is well typed, then t1 must have either an arrow type or type Bot". So adding Bot is a more serious step than adding Top.
+
+In languages with polymorphism, such as ML, we can also use "X.X as a result type for error and similar constructs. This achieves the same effect as Bot by different means: instead of giving error a type that can be promoted to any type, we give it a type scheme that can be instantiated to any type. Though they rest on different foundations, the two solutions are quite similar: in particular, the type "X.X is also empty.
+
+Properties of Subtyping and Typing
+----------------------------------
+
+* Inversion of the Subtype Relation Lemma
+
+  1. If S <: T1->T2, then S has the form S1->S2, with T1 <: S1 and S2 <: T2.
+  2. If S <: {li:Ti,i<-1..n}, then S has the form {kj:Sj,j<-1..m}, with at least the labels {li,i<-1..n} - i.e., {li,i<-1..n} included by {kj,j<-1..m} - and with Sj <: Ti for each common label li = kj.
+
+* Lemma
+
+  1. If Г |- λx:S1.s2:T1->T2, then T1 <: S1 and Г, x:S1 |- s2:T2.
+  2. If Г |- {ka=sa,a<-1..m}:{li:Ti,i<-1..n}, then {li,i<-1..n} included by {ka,a<-1..m} and Г |- sa:Ti for each common label ka = li.
+
+* Substitution Lemma: If Г, x:S |- t:T and Г |- s:S, then Г |- [x|->s]t:T.
+
+** Preservation Theorem: If Г |- t:T and t -> t′, then Г |- t′:T.
+
+* Canonical Forms Lemma
+
+  1. If v is a closed value of type T1->T2, then v has the form λx:S1.t2.
+  2. If v is a closed value of type {li:Ti,i<-l..n}, then v has the form {kj=vj,j<-l..m}, with {li,i<-l..n} included by {kj,j<-l..m}.
+
+** Progress Theorem: If t is a closed, well-typed term, then either t is a value or else there is some t′ with t -> t′.
+
+
+The Top and Bottom Types
+------------------------
+
