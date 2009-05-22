@@ -23,3 +23,6 @@ This sort of detail in a test creates a dependency in the test on the internal s
 
 
 Rspec is specifications for objects, Cucumber is specifications for the whole application.
+
+Behavior: as(who), want(what), so(why)
+Scenario: given(context)/and, when(input), then(output)
