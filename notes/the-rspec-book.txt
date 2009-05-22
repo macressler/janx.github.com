@@ -1,0 +1,25 @@
+Behavior Driven Development
+
+everything started from here: http://techblog.daveastels.com/2005/07/05/a-new-look-at-test-driven-development/
+
+"Also, the idea of “unit” is a major problem. First of all it’s a vague term, and second it implies a structural division of the code (i.e. people think that they have to test methods or classes). We shouldn’t be thinking about units… we should be thinking about facets of behaviour."
+
+"That’s not what we want… we want behavioural divisions.. we want to work at a level of granularity much smaller than that of the typical unit test. As I’ve said before when talking about TDD, we should be working with very small, focused pieces of behaviour… one small aspect of a single method. Things like “after the add() method is called with an object when the list is empty, there should be one thing in the list”. The method is being called in a very specific context, often with very specific argument, and with a very specific outcome."
+
+
+
+
+BDD is in fact the same thing as TDD, but TDD is a misleading word. People usually understand T in TDD as Test/UnitTest, but it isn't. So BDD is TDD with a whole changed vocabulary.
+
+"As the code base gradually increases in size, more and more attention is consumed by the refactoring step. The design is constantly evolving and under constant review, though it is not pre-determined. This process is known as emergent design, and is one of the most significant by-products of Test Driven Development.
+
+This is not a testing practice at all. Instead, the goal of TDD is to deliver high quality code to testers, but it is the testers who are responsible for testing practices (see the Joe Asks. . . on the current page).
+
+And this is where the Test in TDD becomes a problem. Specifically, it is the idea of Unit Testing that often leads new TDD’ers to verifying things like making sure that a register() method stores a Registration in a Registry’s registrations collection, and that collection is specifically an Array.
+
+This sort of detail in a test creates a dependency in the test on the internal structure of the object being tested. This dependency means that if other requirements guide us to changing the Array to a Hash, this test will fail, even though the behaviour of the object hasn’t changed. This brittleness can make test suites much more expensive to maintain, and is the primary reason for test suites to become ignored and, ultimately, discarded."
+
+
+
+
+Rspec is specifications for objects, Cucumber is specifications for the whole application.

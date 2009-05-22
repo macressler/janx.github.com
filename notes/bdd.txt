@@ -1,7 +1,0 @@
-Behavior Driven Development
-
-everything started from here: http://techblog.daveastels.com/2005/07/05/a-new-look-at-test-driven-development/
-
-"Also, the idea of “unit” is a major problem. First of all it’s a vague term, and second it implies a structural division of the code (i.e. people think that they have to test methods or classes). We shouldn’t be thinking about units… we should be thinking about facets of behaviour."
-
-"That’s not what we want… we want behavioural divisions.. we want to work at a level of granularity much smaller than that of the typical unit test. As I’ve said before when talking about TDD, we should be working with very small, focused pieces of behaviour… one small aspect of a single method. Things like “after the add() method is called with an object when the list is empty, there should be one thing in the list”. The method is being called in a very specific context, often with very specific argument, and with a very specific outcome."
