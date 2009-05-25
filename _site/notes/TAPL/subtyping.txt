@@ -11,6 +11,7 @@ t ::=                          terms
       t t                      application
       {li=ti,i<-1..n}          record
       t.l                      projection
+      <l=t> (no as)            tagging
 
 v ::=                          values
       λx:T.t                   abstraction value
@@ -48,6 +49,10 @@ tj -> tj'
 -----------------------------------------------------------------------------------------    E-RCD
 {li=vi,i<-1..j-1,  lj=tj,  lk=tk,k<-j+1..n} -> {li=vi,i<-1..j-1, lj=tj', lk=tk,k<-j+1..n}
 
+|- v1:T
+-------------                  E-DOWNCAST
+v1 as T -> v1
+
 Subtyping                      S <: T
 
 S <: S                         S-REFL
@@ -74,6 +79,16 @@ for each i Si <: Ti
 ---------------------------------------------------    S-RCDPERM
 {kj:Sj,j<-1..n} <: {li:Ti,i<-1..n}
 
+<li:Ti,i<-1..k> <: <li:Ti,i<-1..n+k>    S-VARIANTWIDTH
+
+for each i Si <: Ti
+----------------------------------    S-VARIANTDEPTH
+<li:Si,i<-1..n> <: <li:Ti,i<-1..n>
+
+<kj:Sj,j<-1..n> is a permutation of <li:Ti,i<-1..n>
+---------------------------------------------------    S-VARIANTPERM
+<kj:Sj,j<-1..n> <: <li:Ti,i<-1..n>
+
 Typing                         Г |- t:T
 
 x:T belongs to Г
@@ -92,6 +107,14 @@ x:T belongs to Г
 ------------------             T-SUB
 Г |- t:T
 
+Г |- t1:T
+--------------                 T-ASCRIBE
+Г |- t1 as T:T
+
+Г |- t1:S
+--------------                 T-DOWNCAST
+Г |- t1 as T:T
+
 for each i Г |- ti:Ti
 ------------------------------------    T-RCD
 Г |- {li=ti,i<-1..n}:{li:Ti,i<-1..n}
@@ -100,6 +123,9 @@ for each i Г |- ti:Ti
 -----------------------        T-PROJ
 Г |- t1.lj:Tj
 
+Г |- t1:T1
+--------------------           T-VARIANT
+Г |- <l1=t1>:<l1:T1>
 
 Subsumption
 -----------
@@ -149,7 +175,7 @@ An alternative view is that it is safe to allow a function of one type S1->S2 to
 
 Finally, it is convenient to have a type that is a supertype of every type. We introduce a new type constant Top, plus a rule that makes Top a maximum element of the subtype relation (S-TOP). Note that the presence of the reflexivity and transitivity rules means that the subtype relation is clearly a preorder; however, because of the record permutation rule, it is not a partial order: there are many pairs of distinct types where each is a subtype of the other. The maximal type Top is not a necessary part of the simply typed lambda-calculus with subtyping; it can be removed without damaging the properties of the system. However, it is included in most presentations, for several reasons. First, it corresponds to the type Object found in most object-oriented languages. Second, Top is a convenient technical device in more sophisticated systems combining subtyping and parametric polymorphism.
 
-It is natural to ask whether we can also complete the subtype relation with a minimal element—a type Bot that is a subtype of every type. The answer is that we can: see T-BOT and S-BOT. The first thing to notice is that Bot is empty - there are no closed values of type Bot. If there were one, say v, then the subsumption rule plus S-Bot would allow us to derive |- v:Top->Top, from which the canonical forms lemma tells us that v must have the form λx:S1.t2 for some S1 and t2. On the other hand, by subsumption, we also have |- v:{}, from which the canonical forms lemma tells us that v must be a record. The syntax makes it clear that v cannot be both a function and a record, and so assuming that |- v:Bot has led us to a contradiction. The emptiness of Bot does not make it useless. On the contrary: Bot provides a very convenient way of expressing the fact that some operations (in particular, throwing an exception or invoking a continuation) are not intended to return. Giving such expressions the type Bot has two good effects: first, it signals to the programmer that no result is expected (since if the expression did return a result, it would be a value of type Bot); second, it signals to the typechecker that such an expression can safely be used in a context expecting any type of value. For example, if the exception-raising term error is given type Bot, then a term like
+It is natural to ask whether we can also complete the subtype relation with a minimal element - a type Bot that is a subtype of every type. The answer is that we can: see T-BOT and S-BOT. The first thing to notice is that Bot is empty - there are no closed values of type Bot. If there were one, say v, then the subsumption rule plus S-Bot would allow us to derive |- v:Top->Top, from which the canonical forms lemma tells us that v must have the form λx:S1.t2 for some S1 and t2. On the other hand, by subsumption, we also have |- v:{}, from which the canonical forms lemma tells us that v must be a record. The syntax makes it clear that v cannot be both a function and a record, and so assuming that |- v:Bot has led us to a contradiction. The emptiness of Bot does not make it useless. On the contrary: Bot provides a very convenient way of expressing the fact that some operations (in particular, throwing an exception or invoking a continuation) are not intended to return. Giving such expressions the type Bot has two good effects: first, it signals to the programmer that no result is expected (since if the expression did return a result, it would be a value of type Bot); second, it signals to the typechecker that such an expression can safely be used in a context expecting any type of value. For example, if the exception-raising term error is given type Bot, then a term like
 
    λx:T.
      if <check that x is reasonable> then
@@ -186,6 +212,138 @@ Properties of Subtyping and Typing
 ** Progress Theorem: If t is a closed, well-typed term, then either t is a value or else there is some t′ with t -> t′.
 
 
-The Top and Bottom Types
-------------------------
+Subtyping and Other Features
+----------------------------
 
+As we extend our simple calculus with subtyping toward a full-blown programming language, each new feature must be examined carefully to see how it interacts with subtyping.
+
+* Ascription and Casting
+
+The ascription operator t as T was introduced as a form of checked documentation, allowing the programmer to record in the text of the program the assertion that some subterm of a complex expression has some particular type. In the examples in this book, ascription is also used to control the way in which types are printed, forcing the typechecker to use a more readable abbreviated form instead of the type that it has actually calculated for a term.
+
+In languages with subtyping such as Java and C++, ascription becomes quite a bit more interesting. It is often called casting in these languages, and is written (T)t. There are actually two quite different forms of casting - so-called up-casts and down-casts. The former are straightforward; the latter, which involve dynamic type-testing, require a significant extension.
+
+Up-casts, in which a term is ascribed a supertype of the type that the typechecker would naturally assign it, are instances of the standard ascription operator. We give a term t and a type T at which we intend to "view" t. The typechecker verifies that T is indeed one of the types of t by attempting to build a derivation
+
+...         ...
+--------    ------
+Г |- t:S    S <: T
+-------------------    T-SUB
+Г |- t:T
+-------------------    T-ASCRIBE
+Г |- t as T:T
+
+Up-casts can be viewed as a form of abstraction - a way of hiding the existence of some parts of a value so that they cannot be used in some surrounding context. For example, if t is a record (or, more generally, an object), then we can use an up-cast to hide some of its fields (methods).
+
+A down-cast, on the other hand, allows us to assign types to terms that the typechecker cannot derive statically. To allow down-casts, we make a somewhat surprising change to the typing rule for as T-DOWNCAST
+
+That is, we check that t1 is well typed (i.e., that it has some type S) and then assign it type T, without making any demand about the relation between S and T. For example, using down-casting we can write a function f that takes any argument whatsoever, casts it down to a record with an a field containing a number, and returns this number:
+
+  f = λ(x:Top) (x as {a:Nat}).a;
+
+In effect, the programmer is saying to the typechecker, "I know (for reasons that are too complex to explain in terms of the typing rules) that f will always be applied to record arguments with numeric a fields; I want you to trust me on this one."
+
+Of course, blindly trusting such assertions will have a disastrous effect on the safety of our language: if the programmer somehow makes a mistake and applies f to a record that does not contain an a field, the results might (depending on the details of the compiler) be completely arbitrary! Instead, our motto should be "trust, but verify." At compile time, the typechecker simply accepts the type given in the down-cast. However, it inserts a check that, at run time, will verify that the actual value does indeed have the type claimed. In other words, the evaluation rule for ascriptions should not just discard the annotation, but should first compare the actual (run-time) type of the value with the declared type (E-DOWNCAST)
+
+For example, if we apply the function f above to the argument {a=5,b=true}, then this rule will check (successfully) that |- {a=5,b=true}:{a:Nat}. On the other hand, if we apply f to {b=true}, then the E-DOWNCAST rule will not apply and evaluation will get stuck at this point. This run-time check recovers the type preservation property.
+
+Of course, we lose progress, since a well-typed program can certainly get stuck by attempting to evaluate a bad down-cast. Languages that provide down-casts normally address this in one of two ways: either by making a failed down-cast raise a dynamic exception that can be caught and handled by the program or else by replacing the down-cast operator by a form of dynamic type test:
+
+Г |- t1:S    Г,x:T |- t2:U    Г |- t3:U
+---------------------------------------    (T-TYPETEST)
+Г |- if t1 in T then x->t2 else t3:U
+
+|- v1:T
+-------------------------------------------    (E-TYPETEST)
+if v1 in T then x->t2 else t3->[x |-> v1]t2
+
+|/- v1:T
+---------------------------------    (E-TYPETEST2)
+if v1 in T then x->t2 else t3->t3
+
+Uses of down-casts are actually quite common in languages like Java. In particular, down-casts support a kind of "poor-man's polymorphism." For example, "collection classes" such as Set and List are monomorphic in Java: instead of providing a type List T (lists containing elements of type T) for every type T, Java provides just List, the type of lists whose elements belong to the maximal type Object. Since Object is a supertype of every other type of objects in Java, this means that lists may actually contain anything at all: when we want to add an element to a list, we simply use subsumption to promote its type to Object. However, when we take an element out of a list, all the typechecker knows about it is that it has type Object. This type does not warrant calling most of the methods of the object, since the type Object mentions only a few very generic methods for printing and such, which are shared by all Java objects. In order to do anything useful with it, we must first downcast it to some expected type T.
+
+It has been argued-for example, by the designers of Pizza (Odersky and Wadler, 1997), GJ (Bracha, Odersky, Stoutamire, and Wadler, 1998), PolyJ (Myers, Bank, and Liskov, 1997), and NextGen (Cartwright and Steele, 1998)-that it is better to extend the Java type system with real polymorphism (cf. Chapter 23), which is both safer and more efficient than the down-cast idiom, requiring no run-time tests. On the other hand, such extensions add significant complexity to an already-large language, interacting with many other features of the language and type system (see Igarashi, Pierce, and Wadler, 1999, Igarashi, Pierce, and Wadler, 2001, for example); this fact supports a view that the down-cast idiom offers a reasonable pragmatic compromise between safety and complexity.
+
+Down-casts also play a critical role in Java's facilities for reflection. Using reflection, the programmer can tell the Java run-time system to dynamically load a bytecode file and create an instance of some class that it contains. Clearly, there is no way that the typechecker can statically predict the shape of the class that will be loaded at this point (the bytecode file can be obtained on demand from across the net, for example), so the best it can do is to assign the maximal type Object to the newly created instance. Again, in order to do anything useful, we must downcast the new object to some expected type T, handle the run-time exception that may result if the class provided by the bytecode file does not actually match this type, and then go ahead and use it with type T.
+
+To close the discussion of down-casts, a note about implementation is in order. It seems, from the rules we have given, that including down-casts to a language involves adding all the machinery for typechecking to the run-time system. Worse, since values are typically represented differently at run time than inside the compiler (in particular, functions are compiled into byte-codes or native machine instructions), it appears that we will need to write a different typechecker for calculating the types needed in dynamic checks. To avoid this, real languages combine down-casts with type tags-single-word tags (similar in some ways to ML's datatype constructors and the variant tags) that capture a run-time "residue" of compile-time types and that are sufficient to perform dynamic subtype tests.
+
+* Variants
+
+The subtyping rules for variants are nearly identical to the ones for records; the only difference is that the width rule S-VARIANTWIDTH allows new variants to be added, not dropped, when moving from a subtype to a supertype. The intuition is that a tagged expression <l=t> belongs to a variant type <li:Ti,i<-1..n> if its label l is one of the possible labels {Ti} listed in the type; adding more labels to this set decreases the information it gives us about its elements. A singleton variant type <l1:T1> tells us precisely what label its elements are tagged with; a two-variant type <l1:T1 , l2:T2> tells us that its elements have either label l1 or label l2, etc. Conversely, when we use variant values, it is always in the context of a case statement, which must have one branch for each variant listed by the type-listing more variants just means forcing case statements to include some unnecessary extra branches.
+
+Another consequence of combining subtyping and variants is that we can drop the annotation from the tagging construct, writing just <l=t> instead of <l=t> as <li:Ti,i<-1..n>, and changing the typing rule for tagging so that it assigns <l1=t1> the precise type <l1:T1>. We can then use subsumption plus S-VARIANTWIDTH to obtain any larger variant type.
+
+* List
+
+We have seen a number of examples of covariant type constructors (records and variants, as well as function types, on their right-hand sides) and one contravariant constructor (arrow, on the left-hand side). The List constructor is also covariant: if we have a list whose elements have type S1, and S1 <: T1, then we can safely regard our list as having elements of type T1.
+
+S1 <: T1
+------------------    S-LIST
+List S1 <: List T1
+
+* References
+
+Not all type constructors are covariant or contravariant. The Ref constructor, for example, must be taken to be invariant in order to preserve type safety.
+
+S1 <: T1    T1 <: S1
+--------------------    S-REF
+Ref S1 <: Ref T1
+
+For Ref S1 to be a subtype of Ref T1, we demand that S1 and T1 be equivalent under the subtype relation-each a subtype of the other. This gives us the flexibility to reorder the fields of records under a Ref constructor-for example, Ref {a:Bool,b:Nat} <: Ref {b:Nat,a:Bool} - but nothing more.
+
+The reason for this very restrictive subtyping rule is that a value of type Ref T1 can be used in a given context in two different ways: for both reading (!) and writing (:=). When it is used for reading, the context expects to obtain a value of type T1, so if the reference actually yields a value of type S1 then we need S1 <: T1 to avoid violating the context's expectations. On the other hand, if the same reference cell is used for writing, then the new value provided by the context will have type T1. If the actual type of the reference is Ref S1, then someone else may later read this value and use it as an S1; this will be safe only if T1 <: S1.
+
+A more refined analysis of references, first explored by Reynolds in the language Forsythe (1988), can be obtained by introducing two new type constructors, Source and Sink. Intuitively, Source T is thought of as a capability to read values of type T from a cell (but which does not permit assignment), while Sink T is a capability to write to a cell. Ref T is a combination of these two capabilities, giving permission both to read and to write.
+
+The typing rules for dereferencing and assignment are modified so that they demand only the appropriate capability.
+
+Г|E |- t1:Source T11
+----------------------    T-DEREF
+Г|E |- !t1:T11
+
+Г|E |- t1:Sink T11    Г|E |- t2:T11
+-----------------------------------    T-ASSIGN
+Г|E |- t1:=t2:Unit
+
+Now, if we have only the capability to read values from a cell and if these values are guaranteed to have type S1, then it is safe to "downgrade" this to a capability to read values of type T1, as long as S1 is a subtype of T1. That is, the Source constructor is covariant.
+
+S1 <: T1
+----------------------    S-SOURCE
+Source S1 <: Source T1
+
+Conversely, a capability to write values of type S1 to a given cell can be downgraded to a capability to write values of some smaller type T1: the Sink constructor is contravariant.
+
+T1 <: S1
+------------------    S-SINK
+Sink S1 <: Sink T1
+
+Finally, we express the intuition that Ref T1 is a combination of read and write capabilities by two subtyping rules that permit a Ref to be downgraded to either a Source or a Sink.
+
+Ref T1 <: Source T1   S-REFSOURCE
+Ref T1 <: Sink T1     S-REFSINK
+
+* Arrays
+
+Clearly, the motivations behind the invariant subtyping rule for references also apply to arrays, since the operations on arrays include forms of both dereferencing and assignment.
+
+S1 <: T1    T1 <: S1
+--------------------    S-ARRAY
+Array S1 <: Array T1
+
+Interestingly, Java actually permits covariant subtyping of arrays:
+
+S1 <: T1
+--------------------    S-ARRAYJAVA
+Array S1 <: Array T1
+
+(in Java syntax, S1[] <: T1[]). This feature was originally introduced to compensate for the lack of parametric polymorphism in the typing of some basic operations such as copying parts of arrays, but is now generally considered a flaw in the language design, since it seriously affects the performance of programs involving arrays. The reason is that the unsound subtyping rule must be compensated with a run-time check on every assignment to any array, to make sure the value being written belongs to (a subtype of) the actual type of the elements of the array.
+
+* Channels
+
+The same intuitions (and identical subtyping rules) form the basis for the treatment of channel types in recent concurrent programming languages such as Pict (Pierce and Turner, 2000; Pierce and Sangiorgi, 1993). The key observation is that, from the point of view of typing, a communication channel behaves exactly like a reference cell: it can be used for both reading and writing, and, since it is difficult to determine statically which reads correspond to which writes, the only simple way to ensure type safety is to require that all the values passed along the channel must belong to the same type. Now, if we pass someone only the capability to write to a given channel, then it is safe for them to pass this capability to someone else who promises to write values of a smaller type - the "output channel" type constructor is contravariant. Similarly, if we pass just the capability to read from a channel, then this capability can safely be downgraded to a capability for reading values of any larger type - the "input channel" constructor is covariant.
+
+* Base Types
+
+In a full-blown language with a rich set of base types, it is often convenient to introduce primitive subtype relations among these types. For example, in many languages the boolean values true and false are actually represented by the numbers 1 and 0. We can, if we like, expose this fact to the programmer by introducing a subtyping axiom Bool <: Nat. Now we can write compact expressions like 5*b instead of if b then 5 else 0.
