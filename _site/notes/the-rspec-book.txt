@@ -26,3 +26,33 @@ Rspec is specifications for objects, Cucumber is specifications for the whole ap
 
 Behavior: as(who), want(what), so(why)
 Scenario: given(context)/and, when(input), then(output)
+
+Dir Structure
+|- bin
+|- features
+   |- step_definitions
+   |- support
+      |- env.rb
+|- lib
+   |- <project_name>.rb    # require files in <project_name> dir
+   |- <project_name>
+      |- <source files...>
+|- spec
+   |- spec_helper.rb
+   |- <project_name>.rb
+   |- <project_name>
+
+
+ONE EXPECTATION PER EXAMPLE: The rationale here is that if there are two expectations in an example that should both fail given the implementation at that moment, we’ll only see the first failure. No sooner do we meet that expectation than we discover that we haven’t met the second expectation. If they live in separate exam- ples, then they’ll both fail, and that will provide us with more accurate information than if only one of them is failing.
+
+Refactoring is the process of changing a software system in such a way that it does not alter the external behaviour of the code yet improves its internal structure. - Martin Fowler
+
+
+Cucumber scenario outlines is inspired by FIT. It's kinda like fixtures for features.
+
+BDD is a design practice, not a testing practice. We need exploratory testing because just as Big Design Up Front fails to allow for discovery of features and designs that naturally emerge through iterative development, so does driving out behaviour with examples fail to unearth all of the corner cases that we’ll naturally discover by simply using the software.
+
+Refactoring step definitions and code examples, keeping in mind that expressiveness and localization are key factors in keeping them maintainable.
+
+Refactoring in the Green: only refactor when all of your examples are passing.
+
