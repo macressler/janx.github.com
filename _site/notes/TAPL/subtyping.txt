@@ -455,8 +455,45 @@ When we give a coercion semantics for a language with subtyping, there is a pote
   〚Bool <: Float〛 = λb:Bool.if b then 1.0 else 0.0
   〚Float <: String〛 = floatToString
 
-The functions intToString and floatToString are primitives that construct string representations of numbers. For the sake of the example, suppose that intToString(1) = "1", while floatToString(1.0) = "1.000". Now, suppose we are asked to evaluate the term (λx:String.x)true using the coercion semantics. This term is typable, given the axioms above for the primitive types. In fact, it is typable in two distinct ways: we can either use subsumption to promote Bool to Int and then to String, to show that true is an appropriate argument to a function of type String→String, or we can promote Bool to Float and then to String. But if we translate these derivations into λ->, we get different behaviors. If we coerce true to type Int, we get 1, from which intToString yields the string "1". But if we instead coerce true to a float and then, using floatToString, to a String (following the structure of a typing derivation in which true : String is proved by going via Float), we obtain "1.000". But "1" and "1.000" are very different strings: they do not even have the same length. In other words, the choice of how to prove ⊢ (λx:String. x) true : String affects the way the translated program behaves! But this choice is completely internal to the compiler-the programmer writes only terms, not derivations-so we have designed a language in which programmers cannot control or even predict the behavior of the programs they write.
+The functions intToString and floatToString are primitives that construct string representations of numbers. For the sake of the example, suppose that intToString(1) = "1", while floatToString(1.0) = "1.000". Now, suppose we are asked to evaluate the term (λx:String.x)true using the coercion semantics. This term is typable, given the axioms above for the primitive types. In fact, it is typable in two distinct ways: we can either use subsumption to promote Bool to Int and then to String, to show that true is an appropriate argument to a function of type String->String, or we can promote Bool to Float and then to String. But if we translate these derivations into λ->, we get different behaviors. If we coerce true to type Int, we get 1, from which intToString yields the string "1". But if we instead coerce true to a float and then, using floatToString, to a String (following the structure of a typing derivation in which true : String is proved by going via Float), we obtain "1.000". But "1" and "1.000" are very different strings: they do not even have the same length. In other words, the choice of how to prove |- (λx:String. x)true:String affects the way the translated program behaves! But this choice is completely internal to the compiler-the programmer writes only terms, not derivations-so we have designed a language in which programmers cannot control or even predict the behavior of the programs they write.
 
 The appropriate response to such problems is to impose an additional requirement, called coherence, on the definition of the translation functions: A translation 〚-〛 from typing derivations in one language to terms in another is coherent if, for every pair of derivations D1 and D2 with the same conclusion Г |- t:T, the translations 〚D1〛 and 〚D2〛 are behaviorally equivalent terms of the target language.
 
 In particular, the translations given above (with no base types) are coherent. To recover coherence when we consider base types (with the axioms above), it suffices to change the definition of the floatToString primitive so that floatToString(0.0) = "0" and floatToString(1.0) = "1".
+
+
+Intersection and Union Types
+----------------------------
+
+The inhabitants of the intersection type T1∧T2 are terms belonging to both S and T-that is, T1∧T2 is an order-theoretic meet (greatest lower bound) of T1 and T2.
+
+  T1∧T2 <: T1    (S-INTER1)
+
+  T1∧T2 <: T2    (S-INTER2)
+
+  S <: T1    S <: T2
+  ------------------    (S-INTER3)
+  S <: T1∧T2
+
+  S->T1∧S->T2 <: S->(T1∧T2)    (S-INTER4)
+
+The intuition behind this rule is that, if we know a term has the function types S→T1 and S→T2, then we can certainly pass it an S and expect to get back both a T1 and a T2.
+
+The power of intersection types is illustrated by the fact that, in a call-by-name variant of the simply typed lambda-calculus with subtyping and intersections, the set of untyped lambda-terms that can be assigned types is exactly the set of normalizing terms - i.e., a term is typable iff its evaluation terminates! This immediately implies that the type reconstruction problem for calculi with intersections is undecidable.
+
+More pragmatically, the interest of intersection types is that they support a form of finitary overloading. For example, we might assign the type (Nat->Nat->Nat)∧(Float->Float->Float) to an addition operator that can be used on both natural numbers and floats (using tag bits in the runtime representation of its arguments, for example, to select the correct instruction).
+
+Unfortunately, the power of intersection types raises some difficult pragmatic issues for language designers. So far, only one full-scale language, Forsythe (Reynolds, 1988), has included intersections in their most general form. A restricted form known as refinement types may prove more manageable (Freeman and Pfenning, 1991; Pfenning, 1993b; Davies, 1997).
+
+The dual notion of union types, T1VT2, also turns out to be quite useful. Unlike sum and variant types (which, confusingly, are sometimes also called "unions"), T1VT2 denotes the ordinary union of the set of values belonging to T1 and the set of values belonging to T2, with no added tag to identify the origin of a given element. Thus, NatVNat is actually just another name for Nat. Non-disjoint union types have long played an important role in program analysis (Palsberg and Pavlopoulou, 1998), but have featured in few programming languages (notably Algol 68; cf. van Wijngaarden et al., 1975); recently, though, they are increasingly being applied in the context of type systems for processing of "semistructured" database formats such as XML (Buneman and Pierce, 1998; Hosoya, Vouillon, and Pierce, 2001).
+
+The main formal difference between disjoint and non-disjoint union types is that the latter lack any kind of case construct: if we know only that a value v has type T1 V T2, then the only operations we can safely perform on v are ones that make sense for both T1 and T2. (For example, if T1 and T2 are records, it makes sense to project v on their common fields.) The untagged union type in C is a source of type safety violations precisely because it ignores this restriction, allowing any operation on an element of T1 V T2 that makes sense for either T1 or T2.
+
+
+o
+The idea of subtyping in programming languages goes back to the 1960s, in Simula (Birtwistle, Dahl, Myhrhaug, and Nygaard, 1979) and its relatives. The first formal treatments are due to Reynolds (1980) and Cardelli (1984).
+
+The typing and-especially-subtyping rules dealing with records are somewhat heavier than most of the other rules we have seen, involving either variable numbers of premises (one for each field) or additional mechanisms like permutations on the indices of fields. There are many other ways of writing these rules, but all either suffer from similar complexity or else avoid it by introducing informal conventions. An alternative treatment of records based on row-variable polymorphism has been developed by (Wand 1987, 1988, 1989b), Rémy (1990, 1989, 1992), and others, and forms the basis for the object-oriented features of OCaml (Rémy and Vouillon, 1998; Vouillon, 2000).
+
+The fundamental problem addressed by a type theory is to insure that programs have meaning. The fundamental problem caused by a type theory is that meaningful programs may not have meanings ascribed to them. The quest for richer type systems results from this tension.
+  - Mark Mannasse
