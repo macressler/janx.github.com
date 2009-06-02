@@ -73,3 +73,49 @@ Finally, we need to verify that the algorithmic subtype relation is total - i.e.
 Proposition of Termination: If |-> S <: T is derivable, then subtype(S, T) will return true. If not, then subtype(S, T) will return false.
 
 This theorem, together with the soundness and completeness of the algorithmic rules, essentially asserts that the subtype function is a decision procedure for the declarative subtype relation.
+
+
+Algorithmic Typing
+------------------
+
+The only non-syntax-directed typing rule is T-SUB. We cannot simply delete the subsumption rule: we must first examine where it plays a critical role in typing and enrich the other typing rules to achieve the same effects in a more syntax-directed way.
+
+Clearly, one critical use of subsumption is bridging gaps between the types expected by functions and the actual types of their arguments. A term like (λr:{x:Nat}. r.x) {x=0,y=1} is not typable without subsumption. Perhaps surprisingly, this is the only situation where subsumption plays a crucial role in typing. In every other case where subsumption is used in a typing proof, the same statement can be proved by a different derivation in which subsumption is "postponed" by moving it down the tree toward the root. To see why this works, it is instructive to experiment a little with typing derivations involving subsumption, taking each typing rule in turn and thinking about how a derivation ending with this rule can be reorganized if one of its immediate subderivations ends with T-SUB.
+
+So we see that the use of subsumption for promoting the result type of an application can be moved down past the T-APP rule, but that the use of subsumption for matching the argument type and the domain type of the function cannot be eliminated. It can be moved from one premise to the other - we can promote the type of the argument to match the domain of the function, or we can promote the type of the function (by demoting its argument type) so that it expects an argument of the type we actually plan to give it-but we cannot get rid of the subsumption altogether. This observation corresponds precisely with our intuition that this gap-bridging use of subsumption is essential to the power of the system.
+
+By applying these transformations repeatedly, we can rewrite an arbitrary typing derivation into a special form where T-SUB appears in only two places: at the end of right-hand subderivations of applications, and at the very end of the whole derivation. Moreover, if we simply delete the one at the very end, no great harm will result: we will still have a derivation assigning a type to the same term - the only difference is that the type assigned to this term may be a smaller (i.e., better!) one. This leaves just one place, applications, where uses of subsumption can still occur. To deal with this case, we can replace the application rule by a slightly more powerful one
+
+Г |- t1:T11->T12    Г |- t2:T2    T2 <: T11
+-------------------------------------------
+Г |- t1 t2:T12
+
+incorporating a single instance of subsumption as a premise. Every subderivation of the form application-preceded-by-subsumption can be replaced by a use of this rule, which leaves us with no uses of T-SUB at all. Moreover, the enriched application rule is syntax directed: the shape of the term in the conclusion prevents it from overlapping with the other rules.
+
+This transformation yields a syntax-directed set of typing rules that assigns types to the same terms as the original typing rules. These rules are summarized in the following definition. As we did for the algorithmic subtyping rules, we write the algorithmic relation with a funny turnstile, Г |-> t:T, to distinguish it from the declarative relation:
+
+The algorithmic typing relation is the least relation closed under the rules below. The premise T1 = T11->T12 in the application rule is simply an explicit reminder of the sequencing of operations during typechecking: first we calculate a type T1 for t1; then we check that T1 has the form T11->T12, etc. The rule would have exactly the same force if we dropped this premise and instead wrote the first premise as Г |-> t1:T11->T12. Similarly for TA-PROJ. Also, the subtyping premise in the application rule is written with a funny turnstile; since we know that the algorithmic and declarative presentations of subtyping are equivalent, this choice is a matter of taste.
+
+x:T <- Г
+---------    TA-VAR
+Г |-> x:T
+
+Г,x:T1 |-> t2:T2
+---------------------    TA-ABS
+Г |-> λx:T1.t2:T1->T2
+
+Г |-> t1:T1    T1=T11->T12    Г |-> t2:T2    Г |-> T2 <: T11
+------------------------------------------------------------    TA-APP
+Г |-> t1 t2:T12
+
+for each i Г |-> ti:Ti
+-------------------------------------    TA-RCD
+Г |-> {l1=t1...ln=tn}:{l1:T1...ln:Tn}
+
+Г |-> t1:R1    R1 = {l1:T1...ln:Tn}
+------------------------------------    TA-PROJ
+Г |-> t1.li:Ti
+
+The soundness property is unchanged: every typing statement that can be derived from the algorithmic rules also follows from the declarative rules: if Г |-> t:T, then Г |- t:T.
+
+Completeness, though, looks a little different. The ordinary typing relation can be used to assign many types to a term, while the algorithmic typing relation assigns at most one (as can easily be checked). So a straightforward converse of soundness property is clearly not going to hold. Instead, we can show that if a term t has a type T under the ordinary typing rules, then it has a better type S under the algorithmic rules, in the sense that S <: T. In other words, the algorithmic rules assign each typable term its smallest possible (minimal) type. The completeness theorem is often called the Minimal Typing theorem, since it amounts to showing that each typable term in the declarative system has a minimal type: if Г |- t:T, then Г |-> t:S for some S <: T.
