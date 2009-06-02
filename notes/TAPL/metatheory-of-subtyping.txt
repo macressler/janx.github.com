@@ -1,0 +1,75 @@
+Metatheory of Subtyping
+=======================
+
+The definition of the simply typed lambda-calculus with subtyping is not immediately suitable for implementation. Unlike the other calculi we have seen, the rules of this system are not syntax directed - they cannot just be "read from bottom to top" to yield a typechecking algorithm. The main culprits are the rules of subsumption (T-SUB) in the typing relation and transitivity (S-TRANS) in the subtype relation.
+
+The reason T-SUB is problematic is that the term in its conclusion is specified as a bare metavariable t:
+
+Г |- t:S    S <: T
+------------------             T-SUB
+Г |- t:T
+
+Every other typing rule specifies a term of some specific form - T-ABS applies only to lambda-abstractions, T-VAR only to variables, etc. - while T-SUB can be applied to any kind of term. This means that, if we are given a term t whose type we are trying to calculate, it will always be possible to apply either T-SUB or the other rule whose conclusion matches the shape of t.
+
+S-TRANS is problematic for the same reason—its conclusion overlaps with the conclusions of all the other rules.
+
+S <: U    U <: T
+----------------               S-TRANS
+S <: T
+
+Since S and T are bare metavariables, we can potentially use S-TRANS as the final rule in a derivation of any subtyping statement. Thus, a naive "bottom to top" implementation of the subtyping rules would never know whether to try using this rule or whether to try another rule whose more specific conclusion also matches the two types whose membership in the subtype relation we are trying to check.
+
+There is one other problem with S-TRANS. Both of its premises mention the metavariable U, which does not appear in the conclusion. If we read the rule naively from bottom to top, it says that we should guess a type U and then attempt to show that S <: U and U <: T. Since there are an infinite number of Us that we could guess, this strategy has little hope of success.
+
+The S-REFL rule also overlaps the conclusions of the other subtyping rules. This is less severe than the problems with T-SUB and S-TRANS: the reflexivity rule has no premises, so if it matches a subtyping statement we are trying to prove, we can succeed immediately. Still, it is another reason why the rules are not syntax directed.
+
+The solution to all of these problems is to replace the ordinary (or declarative) subtyping and typing relations by two new relations, called the algorithmic subtyping and algorithmic typing relations, whose sets of inference rules are syntax directed. We then justify this switch by showing that the original subtyping and typing relations actually coincide with the algorithmic presentations: the statement S <: T is derivable from the algorithmic subtyping rules iff it is derivable from the declarative rules, and a term is typable by the algorithmic typing rules iff it is typable under the declarative rules.
+
+
+Algorithmic Subtyping
+---------------------
+
+A crucial element of any implementation of a language with subtyping is an algorithm for checking whether one type is a subtype of another. This subtype checker will be called by the typechecker when, for example, it encounters an application t1 t2 where t1 has type T->U and t2 has type S. Its function is to decide whether the statement S <: T is derivable from the subtyping rules. It accomplishes this by checking whether (S, T) belongs to another relation, written |-> S <: T ("S is algorithmically a subtype of T"), which is defined in such a way that membership can be decided simply by following the structure of the types, and which contains the same pairs of types as the ordinary subtype relation. The significant difference between the declarative and algorithmic relations is that the algorithmic relation drops the S-TRANS and S-REFL rules.
+
+To begin with, we need to reorganize the declarative system a little. As we before, we need to use transitivity to "paste together" subtyping derivations for records involving combinations of depth, width, and permutation subtyping. Before we can drop S-TRANS, we must first add a rule that bundles depth, width, and permutation subtyping into one:
+
+{li,i<-1..n} belongs to {kj,j<-1..m}    kj=li implies Sj <: Ti
+--------------------------------------------------------------    (S-RCD)
+{kj:Sj,j<-1..m} <: {li:Ti,i<-1..n}
+
+Lemma: If S <: T is derivable from the subtyping rules including S-RCDDEPTH, S-RCD-WIDTH, and S-RCD-PERM (but not S-RCD), then it can also be derived using S-RCD (and not S-RCDDEPTH, S-RCD-WIDTH, or S-RCD-PERM), and vice versa.
+
+And we can prove the reflexivity and transitivity rules are inessential:
+
+Lemma: 1. S <: S can be derived for every type S without using S-REFL.
+       2. If S <: T is derivable, then it can be derived without using S-TRANS.  
+
+
+The algorithmic subtyping relation is the least relation on types closed under the rules below:
+
+|-> S <: Top    (SA-TOP)
+
+{li,i<-1..n} belongs to {kj,j<-1..m}    if kj=li then |-> Sj <: Ti
+------------------------------------------------------------------    (SA-RCD)
+|-> {kj:Sj,j<-1..m} <: {li:Ti,i<-1..n}
+
+|-> T1 <: S1    |-> S2 <: T2
+----------------------------    (SA-ARROW)
+|-> S1->S2 <: T1->T2
+
+We say that the algorithmic rules are sound because every statement that can be derived from algorithmic rules can also be derived from the declarative rules (the algorithmic rules do not prove anything new), and complete because every statement that can be derived from the declarative rules can also be derived from the algorithmic rules (the algorithmic rules prove everything that could be proved before).
+
+Proposition of Soundness and Completeness: S <: T iff |-> S <: T
+
+Now the algorithmic rules, being syntax directed, can be read directly as an algorithm for checking the algorithmic subtype relation (and hence also the declarative subtype relation). In a more conventional pseudocode notation, the algorithm looks like this:
+
+  subtype(S, T) = if T = Top, then true
+                  else if S = S1->S2 and T = T1->T2 then subtype(T1, S1) ∧ subtype(S2, T2)
+                  else if S = {kj:Sj,j<-1..m} and T = {li:Ti,i<-1..n} then  {li,i<-1..n} belongs to {kj,j<-1..m} ∧ for all i there is some j<-1..m with kj = li and subtype(Sj, Ti)
+                  else false.
+
+Finally, we need to verify that the algorithmic subtype relation is total - i.e., that the recursive function subtype derived from the algorithmic rules returns either true or false, for every pair of inputs, after a finite amount of time.
+
+Proposition of Termination: If |-> S <: T is derivable, then subtype(S, T) will return true. If not, then subtype(S, T) will return false.
+
+This theorem, together with the soundness and completeness of the algorithmic rules, essentially asserts that the subtype function is a decision procedure for the declarative subtype relation.
