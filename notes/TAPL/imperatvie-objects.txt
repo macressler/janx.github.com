@@ -1,0 +1,63 @@
+What is Object-Oriented Programming?
+------------------------------------
+
+1. Multiple representations. Perhaps the most basic characteristic of the object-oriented style is that, when an operation is invoked on an object, the object itself determines what code gets executed. Two objects responding to the same set of operations (i.e., with the same interface) may use entirely different representations, as long as each carries with it an implementation of the operations that works with its particular representation. These implementations are called the object's methods. Invoking an operation on an object-called method invocation or, more colorfully, sending it a message-involves looking up the operation's name at run time in a method table associated with the object, a process called dynamic dispatch.
+
+By contrast, a conventional abstract data type (ADT) consists of a set of values plus a single implementation of the operations on these values. (This static definition of implementations has both advantages and disadvantages over objects)
+
+2. Encapsulation. The internal representation of an object is generally hidden from view outside of the object's definition: only the object's own methods can directly inspect or manipulate its fields. This means that changes to the internal representation of an object can affect only a small, easily identifiable region of the program; this constraint greatly improves the readability and maintainability of large systems.  
+
+Abstract data types offer a similar form of encapsulation, ensuring that the concrete representation of their values is visible only within a certain scope (e.g., a module, or an ADT definition), and that code outside of this scope can manipulate these values only by invoking operations defined within this privileged scope.
+
+3. Subtyping. The type of an object - its interface - is just the set of names and types of its operations. The object's internal representation does not appear in its type, since it does not affect the set of things that we can directly do with the object.
+
+Object interfaces fit naturally into the subtype relation. If an object satisfies an interface I, then it clearly also satisfies any interface J that lists fewer operations than I, since any context that expects a J-object can invoke only J-operations on it and so providing an I-object should always be safe. (Thus, object subtyping is similar to record subtyping. Indeed, for the model of objects developed in this chapter, they will be the same thing.) The ability to ignore parts of an object's interface allows us to write a single piece of code that manipulates many different sorts of objects in a uniform way, demanding only a certain common set of operations.
+
+4. Inheritance. Objects that share parts of their interfaces will also often share some behaviors, and we would like to implement these common behaviors just once. Most object-oriented languages achieve this reuse of behaviors via structures called classes - templates from which objects can be instantiated - and a mechanism of subclassing that allows new classes to be derived from old ones by adding implementations for new methods and, when necessary, selectively overriding implementations of old methods. (Instead of classes, some object-oriented languages use a mechanism called delegation, which combines the features of objects and classes.)
+
+5. Open recursion. Another handy feature offered by most languages with objects and classes is the ability for one method body to invoke another method of the same object via a special variable called self or, in some languages, this. The special behavior of self is that it is late-bound, allowing a method defined in one class to invoke another method that is defined later, in some subclass of the first.
+
+
+Objects
+-------
+
+In its simplest form, an object is just a data structure encapsulating some internal state and offering access to this state to clients via a collection of methods. The internal state is typically organized as a number of mutable instance variables (or fields) that are shared among the methods and inaccessible to the rest of the program.
+
+Jan: state is shared between methods, so it must be *mutable*; methods is just for accessing states, remember Java Bean?
+
+Our running example throughout the chapter will be objects representing simple counters. Each counter object holds a single number and provides two methods (i.e., responds to two messages) - get, which causes it to return its current value; and inc, which increments the value.
+
+A straightforward way of obtaining this behavior using the features we have discussed in previous chapters is to use a reference cell for the object's internal state and a record of functions for the methods. A counter object whose current state is 1 looks like this:
+
+  c = let x = ref 1 in
+      {get = λ_:Unit. !x, inc = λ_:Unit. x:=succ(!x)};
+  > c : {get:Unit->Nat, inc:Unit->Unit}
+
+The method bodies are both written as functions with trivial parameters (written _ because we don't need to refer to them in the bodies). The abstractions block evaluation of the method bodies when the object is created, allowing the bodies to be evaluated repeatedly, later, by applying them over and over to the unit argument. Also, note how the state of this object is shared among the methods and inaccessible to the rest of the program: the encapsulation of the state arises directly from the lexical scope of the variable x.
+
+To invoke a method of the object c, we just extract a field of the record and apply it to an appropriate argument. For example:
+
+  c.inc unit;
+  > unit : Unit
+
+  c.get unit;
+  > 2 : Nat
+
+  (c.inc unit; c.inc unit; c.get unit);
+  > 4 : Nat
+
+The fact that the inc method returns unit allows us to use the ;-notation for sequences of increments. We could equivalently have written the last line above as:
+
+  let _ = c.inc unit in let _ = c.inc unit in c.get unit;
+
+Since we may want to create and manipulate many counters, it is convenient to introduce an abbreviation for their type:
+
+  Counter = {get:Unit->Nat, inc:Unit->Unit};
+
+Our attention in this chapter is focused on how objects are built, rather than on how they are used in organizing larger programs. However, we do want to see at least one function that uses objects, so that we can verify that it works on objects with different internal representations. Here is a trivial one (Jan: a test) - a function that takes a counter object and invokes its inc method three times:
+
+  inc3 = λc:Counter. (c.inc unit; c.inc unit; c.inc unit);
+  > inc3 : Counter->Unit
+
+  (inc3 c; c.get unit);
+  > 7 : Nat
