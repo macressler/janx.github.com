@@ -61,3 +61,110 @@ Our attention in this chapter is focused on how objects are built, rather than o
 
   (inc3 c; c.get unit);
   > 7 : Nat
+
+We have seen how to build individual counter objects, one at a time. It is equally easy to write a counter generator—a function that creates and returns a new counter every time it is called.
+
+  newCounter = λ_:Unit. let x = ref 1 in
+                        {get = λ_:Unit. !x, inc = λ_:Unit. x:=succ(!x)};
+  > newCounter : Unit->Counter
+
+One of the reasons for the popularity of object-oriented programming styles is that they permit objects of many shapes to be manipulated by the same client code. For example, suppose that, in addition to the Counter objects defined above, we also create some objects with an additional method that allows them to be reset to their initial state (say, 1) at any time.
+
+  ResetCounter = {get:Unit->Nat, inc:Unit->Unit, reset:Unit->Unit};
+  newResetCounter = λ_:Unit. let x = ref 1 in
+                             {get   = λ_:Unit. !x, inc   = λ_:Unit. x:=succ(!x), reset = λ_:Unit. x:=1};
+  > newResetCounter : Unit->ResetCounter
+
+Since ResetCounter has all the fields of Counter (plus one more), the record subtyping rule tells us that ResetCounter <: Counter. This means that client functions like inc3 that take counters as arguments can also safely be used with reset counters:
+
+  rc = newResetCounter unit;
+  > rc : ResetCounter
+
+  (inc3 rc; rc.reset unit; inc3 rc; rc.get unit);
+  > 4 : Nat
+
+So far, the states of our objects have consisted of just a single reference cell. Obviously, more interesting objects will often have several instance variables. In the sections that follow, it will be useful to be able to manipulate all of these instance variables as a single unit. To allow for this, let's change the internal representation of our counters to be a record of reference cells, and refer to instance variables in method bodies by projecting fields from this record.
+
+  c = let r = {x=ref 1} in
+      {get = λ_:Unit. !(r.x), inc = λ_:Unit. r.x:=succ(!(r.x))};
+  > c : Counter
+
+The type of this record of instance variables is called the representation type of the object.
+
+  CounterRep = {x: Ref Nat};
+
+
+Simple Classes
+--------------
+
+The definitions of newCounter and newResetCounter are identical except for the reset method in the latter. Of course, both of these definitions are so short anyway that this makes little difference, but if we imagine them stretching over many pages, as can easily happen in practice, it is clear that we would prefer to have some means for describing the common functionality in one place. The mechanism by which this is achieved in most object-oriented languages is called classes.
+
+The class mechanisms in real-world object-oriented languages tend to be complex and loaded with features-self, super, visibility annotations, static fields and methods, inner classes, friend classes, annotations such as final and Serializable, etc., etc. The main reason for all this complexity is that, in most of these languages, classes are the only large-scale structuring mechanism. Indeed, there is just one widely used language-OCaml-that provides both classes and a sophisticated module system. So classes in most languages tend to become the dumping ground for all language features that have anything to do with large-scale program structure. We'll ignore most of these here and focus our attention on the most basic aspects of classes: code reuse via inheritance, and the late binding of self. For the moment, let's consider just the former.
+
+* In its most primitive form, a class is simply a data structure holding a collection of methods that can either be instantiated to yield a fresh object or extended to yield another class. *
+
+Why can't we just reuse the methods from some counter object to build a reset counter? Simply because, in any particular counter object, the method bodies contain references to some particular record of instance variables. Clearly, if we want to be able to reuse the same code with a different record of instance variables, what we need to do is to abstract the methods with respect to the instance variables. This amounts to breaking our newCounter function above into two pieces, one that defines the method bodies with respect to an arbitrary record of instance variables,
+
+  counterClass =
+    λr:CounterRep.
+      {get = λ_:Unit. !(r.x),
+       inc = λ_:Unit. r.x:=succ(!(r.x))};
+  > counterClass : CounterRep->Counter
+
+and one that allocates a record of instance variables and supplies it to the method bodies to create an object:
+
+  newCounter = λ_:Unit. let r = {x=ref 1} in counterClass r;
+  > newCounter : Unit->Counter
+
+The method bodies from counterClass can be reused to define new classes, called subclasses. For example, we can define a class of reset counters:
+
+  resetCounterClass =
+    λr:CounterRep.
+      let super = counterClass r in
+      {get   = super.get,
+       inc   = super.inc,
+       reset = λ_:Unit. r.x:=1};
+  > resetCounterClass : CounterRep->ResetCounter
+
+Like counterClass, this function takes a record of instance variables and returns an object. Internally, it works by first using counterClass to create a counter object with the same record of instance variables r; this "parent object" is bound to the variable super. It then builds a new object by copying the get and inc fields from super and supplying a new function as the value for the reset field. Since super was built on r, all three methods share the same instance variables.
+
+To build a reset counter object, we again just allocate memory for its instance variables and call resetCounterClass, where the real work happens.
+
+  newResetCounter = λ_:Unit. let r = {x=ref 1} in resetCounterClass r;
+  > newResetCounter : Unit->ResetCounter
+
+*** We should emphasize that these classes are values, not types. *** Also we can, if we like, create many classes that generate objects of exactly the same type. In mainstream object-oriented languages like C++ and , classes have a more complex status-they are used both as compile-time types and as run-time data structures. This point is discussed further in §19.3.
+
+It happens that our counter and reset counter objects use exactly the same internal representation. However, in general a subclass may need to extend not only the methods but also the instance variables of the superclass from which it is derived. For example, suppose we want to define a class of "backup counters" whose reset method resets their state to whatever value it has when we last called the method backup, instead of resetting it to a constant value:
+
+  BackupCounter = {get:Unit->Nat, inc:Unit->Unit, reset:Unit->Unit, backup: Unit->Unit};
+
+To implement backup counters, we need an extra instance variable to store the backed-up value of the state.
+
+  BackupCounterRep = {x: Ref Nat, b: Ref Nat};
+
+Just as we derived resetCounterClass from counterClass by copying the get and inc methods and adding reset, we derive backupCounterClass from resetCounterClass by copying get and inc and providing reset and backup.
+
+  backupCounterClass =
+    λr:BackupCounterRep.
+      let super = resetCounterClass r in
+         {get    = super.get,
+          inc    = super.inc,
+          reset  = λ_:Unit. r.x:=!(r.b),
+          backup = λ_:Unit. r.b:=!(r.x)};
+  > backupCounterClass : BackupCounterRep->BackupCounter
+
+Two things are interesting about this definition. First, although the parent object super includes a method reset, we chose to write a fresh implementation because we wanted a different behavior. The new class overrides the reset method of the superclass. Second, subtyping is used in an essential way here in typing the expression that builds super: resetCounterClass expects an argument of type CounterRep, which is a supertype of the actual type, BackupCounterRep, of the argument r. In other words, we are actually providing the parent object with a larger record of instance variables than its methods require.
+
+The variable super has been used to copy functionality from superclasses into new subclasses. We can also use super in the bodies of method definitions to extend the superclass's behavior with something extra. Suppose, for instance, that we want a variant of our backupCounter class in which every call to the inc method is automatically preceded by a call to backup. (Goodness knows why such a class would be useful—it's just an example.)
+
+  funnyBackupCounterClass =
+    λr:BackupCounterRep.
+      let super = backupCounterClass r in
+         {get = super.get,
+          inc = λ_:Unit. (super.backup unit; super.inc unit),
+          reset = super.reset,
+          backup = super.backup};
+  > funnyBackupCounterClass : BackupCounterRep->BackupCounter
+
+Note how the calls to super.inc and super.backup in the new definition of inc avoid repeating the superclass's code for inc or backup here. In larger examples, the savings of duplicated functionality in such situations can be substantial.
