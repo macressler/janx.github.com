@@ -168,3 +168,65 @@ The variable super has been used to copy functionality from superclasses into ne
   > funnyBackupCounterClass : BackupCounterRep->BackupCounter
 
 Note how the calls to super.inc and super.backup in the new definition of inc avoid repeating the superclass's code for inc or backup here. In larger examples, the savings of duplicated functionality in such situations can be substantial.
+
+
+Classes with Self
+-----------------
+
+Our final extension is allowing the methods of classes to refer to each other via self. To motivate this extension, suppose that we want to implement a class of counters with a set method that can be used from the outside to set the current count to a particular number.
+
+  SetCounter = {get:Unit->Nat, set:Nat->Unit, inc:Unit->Unit};
+
+Moreover, suppose that we want the inc method in terms of set and get, rather than directly reading and assigning the instance variable x. (Imagine a much larger example in which the definitions of set and get each take many pages.) Since get, set, and inc are all defined in the same class, what we are asking for is essentially to make the methods of this class mutually recursive.
+
+We saw how to build mutually recursive records of functions using the fix operator in §11.11. We simply abstract the record of methods on a parameter that is itself a record of functions (which we call self), and then use the fix operator to "tie the knot," arranging that the very record we are constructing is the one passed as self.
+
+  setCounterClass = λr:CounterRep.
+                    fix (λself:SetCounter.{get = λ_:Unit. !(r.x), set = λi:Nat.r.x:=i, inc = λ_:Unit.self.set (succ (self.get unit))});
+  > setCounterClass : CounterRep->SetCounter
+
+This class has no parent class, so there is no need for a super variable. Instead, the body of the inc method invokes get and then set from the record of methods passed to it as self. This use of fix is entirely internal to setCounterClass. We then create set-counters in exactly the same way as usual.
+
+  newSetCounter = λ_:Unit.let r = {x=ref 1} in
+                          setCounterClass r;
+  > newSetCounter : Unit->SetCounter
+
+
+Open Recursion Through Self
+---------------------------
+
+Most object-oriented languages actually support a more general form of recursive call between methods, known as open recursion, or late-binding of self. We can achieve this more general behavior by removing the use of fix from the class definition:
+
+  setCounterClass = λr:CounterRep.
+                    λself:SetCounter.{get = λ_:Unit. !(r.x), set = λi:Nat.r.x:=i, inc = λ_:Unit.self.set(succ(self.get unit))};
+  > setCounterClass : CounterRep->SetCounter->SetCounter
+
+and instead placing it in the object creation function.
+
+  newSetCounter = λ_:Unit.let r = {x=ref 1} in
+                          fix (setCounterClass r);
+  > newSetCounter : Unit->SetCounter
+
+Notice that moving the use of fix changes the type of setCounterClass: instead of being abstracted just on a record of instance variables, it is also abstracted on a "self-object"; both are supplied at instantiation time.
+
+The reason why open recursion through self is interesting is that it allows the methods of a superclass to call the methods of a subclass, even though the subclass does not exist when the superclass is being defined. In effect, we have changed the interpretation of self so that, instead of "the methods of this class," it provides access to "the methods of the class from which the current object was instantiated [which may be a subclass of this one].
+
+For example, suppose we want to build a subclass of our set-counters that keeps track of how many times the set method has been called. The interface of this class includes one extra operation for extracting the access count,
+
+  InstrCounter = {get:Unit->Nat, set:Nat->Unit, inc:Unit->Unit, accesses:Unit->Nat};
+
+and the representation includes an instance variable for the access count:
+
+  InstrCounterRep = {x:Ref Nat, a:Ref Nat};
+
+In the definition of the instrumented counter class, the inc and get methods are copied from the setCounterClass that we defined above. The accesses method is written out in the ordinary way. In the set method, we first increment the access count and then use super to invoke the superclass's set.
+
+  instrCounterClass = λr:InstrCounterRep.
+                      λself: InstrCounter. let super = setCounterClass r self in
+                                           {get = super.get,
+                                            set = λi:Nat. (r.a:=succ(!(r.a)); super.set i),
+                                            inc = super.inc,
+                                            accesses = λ_:Unit. !(r.a)};
+  > instrCounterClass : InstrCounterRep->InstrCounter->InstrCounter
+
+Because of the open recursion through self, the call to set from the body of inc will result in the instance variable a being incremented, even though the incrementing behavior of set is defined in the subclass and the definition of inc appears in the superclass.
