@@ -230,3 +230,202 @@ In the definition of the instrumented counter class, the inc and get methods are
   > instrCounterClass : InstrCounterRep->InstrCounter->InstrCounter
 
 Because of the open recursion through self, the call to set from the body of inc will result in the instance variable a being incremented, even though the incrementing behavior of set is defined in the subclass and the definition of inc appears in the superclass.
+
+
+Open Recursion and Evaluation Order
+-----------------------------------
+
+There is one problem with our definition of instrCounterClass—we cannot use it to build instances! If we write newInstrCounter in the usual way
+
+  newInstrCounter = λ_:Unit. let r = {x=ref 1, a=ref 0} in
+                             fix (instrCounterClass r);
+  > newInstrCounter : Unit->InstrCounter
+
+and then attempt to create an instrumented counter by applying it to unit,
+
+  ic = newInstrCounter unit;
+
+the evaluator will diverge. To see how this happens, consider the sequence of evaluation steps that ensue when we start from this term.
+
+   1. We first apply newInstrCounter to unit, yielding
+
+        let r = {x=ref 1, a=ref 0} in fix (instrCounterClass r)
+
+   2. We next allocate two ref cells, package them into a record—let's call it <ivars>—and substitute <ivars> for r in the rest.
+
+        fix (instrCounterClass <ivars>)
+
+   3. We pass <ivars> to instrCounterClass. Since instrCounterClass begins with two lambda-abstractions, we immediately get back a function that is waiting for self,
+
+        fix (λself:InstrCounter. let super = setCounterClass <ivars> self in <imethods>)
+
+      where <imethods> is the record of instrumented-counter methods. Let's call this function <f> and write the current state (fix <f>).
+
+   4. We apply the evaluation rule for fix, which "unfolds" fix <f> by substituting (fix <f>) for self in the body of <f>, yielding
+
+        let super = setCounterClass <ivars> (fix <f>) in <imethods>
+
+   5. We now reduce the application of setCounterClass to <ivars>, yielding:
+
+        let super = (λself:SetCounter. <smethods>) (fix <f>) in <imethods>
+
+      where <smethods> is the record of set-counter methods.
+
+   6. By the evaluation rules for applications, we cannot reduce the application of (λself:SetCounter. <smethods>) to (fix <f>) until the latter has been reduced to a value. So the next step of evaluation again unfolds fix <f>, yielding:
+
+        let super = (λself:SetCounter. <smethods>)
+                       (let super = setCounterClass <ivars> (fix <f>)
+                        in <imethods>)
+        in <imethods>
+
+   7. Since the argument to the outer lambda-abstraction is still not a value, we must continue to work on evaluating the inner one. We perform the application of setCounterClass to <ivars>, yielding
+
+        let super = (λself:SetCounter. <smethods>)
+                       (let super = (λself:SetCounter. <smethods>)
+                                       (fix <f>)
+                        in <imethods>)
+        in <imethods>
+
+   8. Now we have created an inner application similar in form to the outer one. Just as before, this inner application cannot be reduced until its argument, fix <f>, has been fully evaluated. So our next step is again to unfold fix <f>, yielding a yet more deeply nested expression of the same form as in step 6. It should be clear at this point that we are never going to get around to evaluating the outer application.
+
+Intuitively, the problem here is that the argument to the fix operator is using its own argument, self, too early. The operational semantics of fix is defined with the expectation that, when we apply fix to some function λx.t, the body t should refer to x only in "protected" positions, such as the bodies of inner lambda-abstractions. For example, we defined iseven on page 143 by applying fix to a function of the form λie. λx. ..., where the recursive reference to ie in the body was protected by the abstraction on x. By contrast, the definition of instrCounterClass tries to use self right away in calculating the value of super.
+
+At this point, we can proceed in several ways:
+
+    * We can protect the reference to self in instrCounterClass to prevent it from being evaluated too early, for example by inserting dummy lambda-abstractions. We develop this solution below. We will see that it is not completely satisfactory, but it is straightforward to describe and understand using the mechanisms we have already seen.
+
+    * We can look for different ways of using low-level language features to model the semantics of classes. For example, instead of using fix to build the method table of a class, we could build it more explicitly using references.
+
+    * We can forget about encoding objects and classes in terms of lambda-abstraction, records, and fix, and instead take them as language primitives, with their own evaluation (and typing) rules. Then we can simply choose evaluation rules that match our intentions about how objects and classes should behave, rather than trying to work around the problems with the given rules for application and fix.
+
+Using dummy lambda-abstractions to control evaluation order is a well-known trick in the functional programming community. The idea is that an arbitrary expression t can be turned into a function λ_:Unit.t, called a thunk. This "thunked form" of t is a syntactic value; all the computation involved in evaluating t is postponed until the thunk is applied to unit. This gives us a way to pass t around in unevaluated form and, later, ask for its result.
+
+What we want to do at the moment is to delay the evaluation of self. We can do this by changing its type from an object (e.g. SetCounter) to an object thunk (Unit->SetCounter). This involves (1) changing the type of the self parameter to the class, (2) adding a dummy abstraction before we construct the result object, and (3) changing every occurrence of self in the method bodies to (self unit).
+
+  setCounterClass = λr:CounterRep.
+                      λself: Unit->SetCounter.
+                        λ_:Unit.
+                          {get = λ_:Unit. !(r.x),
+                           set = λi:Nat.  r.x:=i,
+                           inc = λ_:Unit. (self unit).set(succ((self unit).get unit))};
+  > setCounterClass : CounterRep->(Unit->SetCounter)->Unit->SetCounter
+
+Since we do not want the type of newSetCounter to change (it should still return an object), we also need to modify its definition slightly so that it passes a unit argument to the thunk that results when we form the fixed point of setCounterClass.
+
+  newSetCounter = λ_:Unit. let r = {x=ref 1} in
+                           fix (setCounterClass r) unit;
+  > newSetCounter : Unit->SetCounter
+
+Similar changes are needed in the definition of instrCounterClass. Note that none of these modifications actually require any thinking: once we have changed the type of self, every other change is dictated by the typing rules.
+
+  instrCounterClass = λr:InstrCounterRep.
+                        λself: Unit->InstrCounter.
+                          λ_:Unit.
+                            let super = setCounterClass r self unit in
+                               {get = super.get,
+                                set = λi:Nat. (r.a:=succ(!(r.a)); super.set i),
+                                inc = super.inc,
+                                accesses = λ_:Unit. !(r.a)};
+  > instrCounterClass : InstrCounterRep->(Unit->InstrCounter)->Unit->InstrCounter
+
+Finally, we change newInstrCounter so that it supplies a dummy argument to the thunk constructed by fix.
+
+  newInstrCounter = λ_:Unit. let r = {x=ref 1, a=ref 0} in
+                             fix (instrCounterClass r) unit;
+  > newInstrCounter : Unit->InstrCounter
+
+
+A More Efficient Implementation
+-------------------------------
+
+The tests above demonstrate that our implementation of classes matches the "open recursion" behavior of method calls through self in languages like Smalltalk, C++, and Java. However, we should note that the implementation is not entirely satisfactory from the point of view of efficiency. All the thunks we have inserted to make the fix calculation converge have the effect of postponing the calculation of the method tables of classes. In particular, note that all the calls to self inside method bodies have become (self unit)—that is, the methods of self are being recalculated on the fly every time we make a recursive call to one of them!
+
+We can avoid all this recalculation by using reference cells instead of fixed points to "tie the knot" in the class hierarchy when we build objects.[4] Instead of abstracting classes on a record of methods called self that will be constructed later using fix, we abstract on a reference to a record of methods, and allocate this record first. That is, we instantiate a class by first allocating a heap cell for its methods (initialized with a dummy value), then constructing the real methods (passing them a pointer to this heap cell, which they can use to make recursive calls), and finally back-patching the cell to contain the real methods. For example, here is setCounterClass again.
+
+  setCounterClass =
+    λr:CounterRep. λself: Ref SetCounter.
+      {get = λ_:Unit. !(r.x),
+       set = λi:Nat. r.x:=i,
+       inc = λ_:Unit. (!self).set (succ ((!self).get unit))};
+  > setCounterClass : CounterRep->(Ref SetCounter)->SetCounter
+
+The self parameter is a pointer to the cell that contains the methods of the current object. When setCounterClass is called, this cell is initialized with a dummy value:
+
+  dummySetCounter =
+    {get = λ_:Unit. 0,
+     set = λi:Nat. unit,
+     inc = λ_:Unit. unit};
+  > dummySetCounter : SetCounter
+
+  newSetCounter =
+    λ_:Unit.
+      let r = {x=ref 1} in
+      let cAux = ref dummySetCounter in
+      (cAux := (setCounterClass r cAux); !cAux);
+  > newSetCounter : Unit->SetCounter
+
+However, since all of the dereference operations (!self) are protected by lambda-abstractions, the cell will not actually be dereferenced until after it has been back-patched by newSetCounter.
+
+To support building subclasses of setCounterClass, we need to make one further refinement in its type. Each class expects its self parameter to have the same type as the record of methods that it constructs. That is, if we define a subclass of instrumented counters, then the self parameter of this class will be a pointer to a record of instrumented counter methods. But, as we saw before, the types Ref SetCounter and Ref InstrCounter are incompatible—it is unsound to promote the latter to the former. This will lead to trouble (i.e., a parameter type mismatch) when we try to create super in the definition of instrCounterClass.
+
+  instrCounterClass =
+    λr:InstrCounterRep. λself: Ref InstrCounter.
+    let super = setCounterClass r self in
+    {get = super.get,
+     set = λi:Nat. (r.a:=succ(!(r.a)); super.set i),
+     inc = super.inc,
+     accesses = λ_:Unit. !(r.a)};
+  > Error: parameter type mismatch
+
+The way out of this difficulty is to replace the Ref constructor in the type of self by Source—i.e., to pass to the class just the capability to read from the method pointer, not the capability to write to it (which it does not need anyway). As we saw in §15.5, Source permits covariant subtyping—i.e., we have Ref InstrCounter <: Ref SetCounter—so the creation of super in instrCounterClass becomes well typed.
+
+  setCounterClass =
+    λr:CounterRep. λself: Source SetCounter.
+      {get = λ_:Unit. !(r.x),
+       set = λi:Nat. r.x:=i,
+       inc = λ_:Unit. (!self).set (succ ((!self).get unit))};
+  > setCounterClass : CounterRep->(Source SetCounter)->SetCounter
+
+  instrCounterClass =
+    λr:InstrCounterRep. λself: Source InstrCounter.
+    let super = setCounterClass r self in
+    {get = super.get,
+     set = λi:Nat. (r.a:=succ(!(r.a)); super.set i),
+     inc = super.inc,
+     accesses = λ_:Unit. !(r.a)};
+  > instrCounterClass : InstrCounterRep->(Source InstrCounter)->InstrCounter
+
+To build an instrumented counter object, we first define a dummy collection of instrumented counter methods, as before, to serve as the initial value of the self pointer.
+
+  dummyInstrCounter =
+    {get = λ_:Unit. 0,
+     set = λi:Nat.  unit,
+     inc = λ_:Unit. unit,
+     accesses = λ_:Unit. 0};
+  > dummyInstrCounter : InstrCounter
+
+We then create an object by allocating heap space for the instance variables and methods, calling instrCounterClass to construct the actual methods, and back-patching the reference cell.
+
+  newInstrCounter =
+    λ_:Unit.
+      let r = {x=ref 1, a=ref 0} in
+      let cAux = ref dummyInstrCounter in
+      (cAux := (instrCounterClass r cAux); !cAux);
+  > newInstrCounter : Unit->InstrCounter
+
+The code for constructing the method table (in instrCounterClass and counterClass) is now called once per object creation, rather than once per method invocation. This achieves what we set out to do, but it is still not quite as efficient as we might wish: after all the method table that we construct for each instrumented counter object is always exactly the same, so it would seem we should be able to compute this method table just once, when the class is defined, and never again. We will see how this can be accomplished using the bounded quantification in future.
+
+
+Recap
+-----
+
+   1. Multiple representations. All of the objects that we have seen in this chapter are counters-i.e., they belong to the type Counter. But their representations vary widely, from single reference cells in §18.2 to records containing several references in §18.9. Each object is a record of functions, providing implementations of the Counter methods (and perhaps others) appropriate to its own internal representation.
+
+   2. Encapsulation. The fact that the instance variables of an object are accessible only from its methods follows directly from the way we build objects, building the methods by passing the record of instance variables to a constructor function. It is obvious that the instance variables can be named only from inside the methods.
+
+   3. Subtyping. In this setting, subtyping between object types is just ordinary subtyping between types of records of functions.
+
+   4. Inheritance. We modeled inheritance by copying implementations of methods from an existing superclass to a newly defined subclass. There were a few interesting technicalities here: strictly speaking, both the superclass and the new subclass are functions from instance variables to records of methods. The subclass waits for its instance variables, then instantiates the superclass with the instance variables it is given, forming a record of superclass methods operating on the same variables.
+
+   5. Open recursion. The open recursion provided by self (or this) in real-world object-oriented languages is modeled here by abstracting classes not only on instance variables but also on a self parameter, which can be used in methods to refer to other methods of the same object. This parameter is resolved at object-creation time by using fix to "tie the knot."
+
