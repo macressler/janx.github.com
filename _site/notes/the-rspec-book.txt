@@ -197,3 +197,40 @@ We can share examples by using share_examples_for() and it_should_behave_like() 
 Inner group in nested example groups is subclass of outer group which is subclass of Spec::Example::ExampleGroup. So all helpers, before/after and modules in outer group can be used in inner group too, and you can share states (instance variables) between them. The order of before/after is outer before -> inner before -> example -> inner after -> outer after.
 
 We need balance the use of describe() and before(). Someone prefer setup all environment in before, someone prefer never setup environment in before, and someone prefer use nested describes to document and it() only express expectation. Anyway, we need a balance between them I think.
+
+
+Expectations
+------------
+
+Rspec add should() and should_not() methods to Object class, so all objects have these two methods.
+
+object.should expect(value)
+  - expect(value) will create a new matcher object
+  - should will do matcher.matches?(self)
+  - if matches? returns true, then we step to next line in example; if it returns false, an ExpectationNotMetException is raised with a message returned by matcher.failure_message_for_should(). should_not() works the opposite way (with message returned by matcher.failure_message_for_should_not).
+
+"should eat_cheese" is an expectation, eat_cheese is a matcher.
+
+* Equality: object equivalence and object identity
+
+  Ruby has four constructs that deal with equality:
+
+    a == b
+    a === b
+    a.eql? b
+    a.equal? b
+
+  It's a complicated system so rspec just copy it:
+
+    a.should == b         # value equality, a and b can be instance of different class, depends on concrete class
+    a.should === b
+    a.should eql(b)       # a should be same class and same value with b
+    a.should equal(b)     # object identity
+
+* Predicate matcher: any methods ending with a ? is a predicate in ruby. Rspec hacks method_missing to add predicate matcher for all predications. You can do array.should be_empty since empty? is a method of array. Valid predicate matcher can start with "be_", "be_a_" or "be_an_"
+
+* Have matcher: There's 3 use of have matcher in rspec: (the collection below refers to any object responds to size or length message)
+
+  1. collection.should have(1).anything # here collection is a collection and 'anything' is just syntax sugar, will be ignored
+  2. something.should have(1).anything(args) # here 'something' is not a collection but an object owns a collection, and 'anything' will return the collection
+  3. Rspec uses method_missing to turn any matcher start with "have_" to a predicate on the target object beginning with "has_": hash.should have_key(:id) # => hash.has_key?(:id).should be_true
