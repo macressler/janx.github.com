@@ -19,7 +19,21 @@ And this is where the Test in TDD becomes a problem. Specifically, it is the ide
 
 This sort of detail in a test creates a dependency in the test on the internal structure of the object being tested. This dependency means that if other requirements guide us to changing the Array to a Hash, this test will fail, even though the behaviour of the object hasn’t changed. This brittleness can make test suites much more expensive to maintain, and is the primary reason for test suites to become ignored and, ultimately, discarded."
 
+Three Practises of BDD:
 
+  * Acceptance Test Driven Planning - extension of Acceptance Test Driven Development. The difference between the two is simple. ATDD specifies that we write acceptance tests before we write code, but it doesn’t otherwise specify when in the process we should write them.  ATDP specifies that the acceptance tests are agreed on during or possi- bly before, but no later than, an interation planning meeting. This lets us consider the acceptance criteria in our estimates, which improves our ability to plan iterations, hence the the name Acceptance Test Driven Planning.
+
+  * Domain Driven Design
+
+  * Test Driven Development
+
+User stories are a planning tool, it must:
+
+  * have business value
+  * be testable
+  * be small enough to implement in one iteration
+
+Use role+action format for feature title, like 'code-breaker starts game'
 
 
 Rspec is specifications for objects, Cucumber is specifications for the whole application.
@@ -121,3 +135,65 @@ Common pitfalls when using doubles
 
 Brittle examples: The biggest pitfall of over-use of mocks is that examples can become brittle. The more we specify about interactions with dependencies in an example, the more likely that example will be impacted by changes to other code in the system. This is the same impact that any highly coupled code has on a system.  This brittleness is more likely to emerge when back-filling examples onto existing code that is already highly coupled. Mocks can be helpful in this situation if we listen to them. If mocks are painful to set up, it’s a red flag that the design might be too highly coupled.  When we’re using mocks as intended, to discover new roles and APIs, there is a natural tendency for them to be simple and usable because we’re working from the client perspective. This becomes somewhat of a self-fulfilling prophecy. We want our mocks to be simple to set up, and so they are. And when they are simple to set up, the resulting code is generally more highly decoupled.
 
+
+
+
+
+Rspec and Cucumber
+==================
+
+subject code: The code whose behaviour we are specifying with RSpec.
+
+expectation (assertion in TDD): An expression of how the subject code is expected to behave.
+
+code example (test method in TDD): An executable example of how the subject code can be used, and its expected behaviour (expressed with expectations) in a given context. In BDD, we write the code examples before the subject code they document. The example terminology started with Brian Marick, whose website is even named http://exampler.com. Using “example” instead of “test” reminds us that the writing them is a design and documentation practice, even though once they are written and the code is developed against them they become regression tests.
+
+example group (test case in TDD): A group of code examples.
+
+spec, a.k.a. spec file: A file that contains one or more example groups.
+
+
+Describe it!
+------------
+
+Imagine a conversation between you and a customer/another developer:
+
+  You: Describe a new account
+  Somebody else: It should have a balance of zero
+
+translate to rspec dsl:
+
+  describe "A new Account" do
+    it "should have a balance of 0" do
+      account = Account.new
+      account.balance.should == Money.new(0, :USD)
+    end
+  end
+
+in fact it's the same as:
+
+  class NewAccount < Spec::Example::ExampleGroup
+    def should_have_a_balance_of_zero
+      account = Account.new
+      account.balance.should == Money.new(0, :USD)
+    end
+  end
+
+
+* The describe() method: it can take an arbitrary number of arguments and a block, and returns a subclass of Spec::Example::ExampleGroup. describe() can be nested.
+
+The first argument can be either a reference to a Class or Module, or a String. The second argument is optional, and should be a String. Using the class/module for the first argument provides an interesting benefit: when we wrap the ExampleGroup in a module, we’ll see that module’s name in the output. 
+
+
+Examples
+--------
+
+There's 3 ways to pending examples: it() without block, put pending in example, pending in example with block
+
+We can define helper method in example group, just as defining ordinary methods. We can define helper method in a module and include the module in example groups to share, or include the module by config.include directive in rspec configs to share it globally.
+
+We can share examples by using share_examples_for() and it_should_behave_like() methods, or by share_as() and ruby include.
+
+Inner group in nested example groups is subclass of outer group which is subclass of Spec::Example::ExampleGroup. So all helpers, before/after and modules in outer group can be used in inner group too, and you can share states (instance variables) between them. The order of before/after is outer before -> inner before -> example -> inner after -> outer after.
+
+We need balance the use of describe() and before(). Someone prefer setup all environment in before, someone prefer never setup environment in before, and someone prefer use nested describes to document and it() only express expectation. Anyway, we need a balance between them I think.
