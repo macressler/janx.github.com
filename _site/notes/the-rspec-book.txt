@@ -275,3 +275,30 @@ The subject of an example is the object being described. You can setup it in bef
     it { should be_happy }
   end
 
+
+Spec command
+------------
+
+spec <filename> # when run 1 spec, spec and ruby command is almost the same
+
+spec <dirname> # run all *_spec.rb files under this dir and its subdir, you can config to use other pattern
+
+spec --diff <specs> # show result difference in diff format, require diff-lcs gem
+
+spec --format <format>[:<report path>] <specs>
+              * progress
+              * specdoc
+              * nested: for nested example groups
+              * html
+              * profile: just like progress, but also outputs 10 slowest examples
+
+spec --require <rspec extension> <specs>
+
+spec --backtrace <specs>
+
+spec --color <specs>
+
+spec --options <options file> <specs>
+spec --generate-options <options file> <options> # generate option file for --options
+
+spec --heckle <object> <specs>
