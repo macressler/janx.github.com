@@ -198,11 +198,15 @@ Inner group in nested example groups is subclass of outer group which is subclas
 
 We need balance the use of describe() and before(). Someone prefer setup all environment in before, someone prefer never setup environment in before, and someone prefer use nested describes to document and it() only express expectation. Anyway, we need a balance between them I think.
 
+We can use specify() method to create an example (specify() without argument), when we want rspec to generate description for us. specify() and it() are both alias of example(), which creates an example.
+
 
 Expectations
 ------------
 
 Rspec add should() and should_not() methods to Object class, so all objects have these two methods.
+
+Each rspec's matchers generate a description of itself. If the example/it/specify method doesn't receive a docstring, it uses the last matcher generated description.
 
 object.should expect(value)
   - expect(value) will create a new matcher object
@@ -229,8 +233,45 @@ object.should expect(value)
 
 * Predicate matcher: any methods ending with a ? is a predicate in ruby. Rspec hacks method_missing to add predicate matcher for all predications. You can do array.should be_empty since empty? is a method of array. Valid predicate matcher can start with "be_", "be_a_" or "be_an_"
 
-* Have matcher: There's 3 use of have matcher in rspec: (the collection below refers to any object responds to size or length message)
+* Have matcher: There's 4 use of have matcher in rspec: (the collection below refers to any object responds to size or length message)
 
   1. collection.should have(1).anything # here collection is a collection and 'anything' is just syntax sugar, will be ignored
   2. something.should have(1).anything(args) # here 'something' is not a collection but an object owns a collection, and 'anything' will return the collection
   3. Rspec uses method_missing to turn any matcher start with "have_" to a predicate on the target object beginning with "has_": hash.should have_key(:id) # => hash.has_key?(:id).should be_true
+  4. there's have_exactly (alias of have), have_at_least and have_at_most matchers
+
+* Operator matchers:
+
+  result.should == 3
+  result.should =~ /some regexp/
+  result.should be < 7
+  result.should be <= 7
+  result.should be > 7
+  result.should be >= 7
+
+
+Subject ivity
+-------------
+
+The subject of an example is the object being described. You can setup it in before(), but Rspec also provides a subject() method.
+
+* explicit subject
+
+  describe Person do
+    subject { Person.new(:birthdate => 19.years.ago) }
+    specify { subject.should be_eligible_to_vote }
+  end
+
+* delegation to subject
+
+  describe Person do
+    subject { Person.new(:birthdate => 19.years.ago) }
+    it { should be_eligible_to_vote }
+  end
+
+* implicit subject
+
+  describe RSpecUser do
+    it { should be_happy }
+  end
+
