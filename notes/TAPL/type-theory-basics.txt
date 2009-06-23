@@ -34,7 +34,7 @@ Suppose R is a binary relation on a set S and P is a predicate on S. We say that
 Ordered Sets
 ------------
 
-A binary relation R on a set S is reflexive if R relates every element of S to itself - that is, s R s (or (s, s) belongs to R) for all s belongs to S. R is symmetric if s R t implies t R s, for all s and t in S. R is transitive if s R t and t R u together imply s R u. R is antisymmetric if s R t and t R s together imply that s = t.
+A binary relation R on a set S is reflexive if R relates every element of S to itself - that is, s R s (or (s, s) belongs to R) for all s belongs to S. R is symmetric if s R t implies t R s, for all s and t in S. R is transitive if s R t and t R u together imply s R u. R is antisymmetric if s R t and t R s together imply that s = t. (jan: antisymmetric means no cycle in the relationship)
 
 A reflexive and transitive relation R on a set S is called a preorder on S. (When we speak of a "preordered set S", we always have in mind some particular preorder R on S). Preorders are usually written using symbols like <=. We write s < t ("s is strictly less than t") to means s <= t and s /= t.
 
