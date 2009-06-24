@@ -302,3 +302,196 @@ spec --options <options file> <specs>
 spec --generate-options <options file> <options> # generate option file for --options
 
 spec --heckle <object> <specs>
+
+
+Global Configuration
+--------------------
+
+Spec::Runner.configure {|config| ...}
+
+We can use following methods:
+
+  * before # alias of append_before
+  * append_before # :each, :all, :suite
+  * prepend_before
+  * after # alias of prepend_after
+  * prepend_after
+  * append_after
+  * include
+  * extend
+  * mock_with
+
+
+Custom Example Group
+--------------------
+
+module Spec
+  module Example
+    class ExampleGroup
+      extend Spec::Example::ExampleGroupMethods
+      include Spec::Example::ExampleMethods
+    end
+  end
+end
+
+So we have 3 ways to custom example group:
+
+  1. subclass Spec::Example::ExampleGroup
+  2. write one from scratch and extend/include the modules
+  3. reopen some class and extend/include the modules
+
+To use our custom example group, we need to register it:
+
+Spec::Example::ExampleGroupFactory.default(CustomExampleGroup)
+Spec::Example::ExampleGroupFactory.register(:key, custom_class)
+
+Registration will make:
+
+  1. describe() always creates sublcass of your custom example group
+  2. Spec::ExampleGroup always reference your custom example group
+
+Once registered we can use the custom group in two ways:
+
+  1. describe something, :type => :key do ...
+  2. encode type in example file path, like spec/controllers, here 'controllers' will be converted to :controllers and rspec will check whether there's a example group registered with :controllers
+
+If there's no :type information found, describe() will create instance of default group.
+
+
+Custome Matcher
+---------------
+
+* Using matcher DSL
+
+# for joe.should report_to(beatrice), we define the matcher report_to:
+Spec::Matchers.define :report_to do |boss|
+  match do |employee| # the match block should return a bool value
+    employee.reports_to?(boss)
+  end
+
+  failure_message_for_should do |employee|
+    "expected the team run by #{boss} to include #{employee}"
+  end
+
+  failure_message_for_should_not do |employee|
+    "expected the team run by #{boss} to exclude #{employee}"
+  end
+
+  description do # the description when you don't provide one for example (it with no string)
+    "expected a member of the team run by #{boss}"
+  end
+end
+
+In the event of a failure, the matcher generates a message from its name and the expected and actual values if you don't custom messages by failure_message_for_should/failure_message_for_should_not. In this example the message would be something like this:
+
+  expected <Employee: Joe> to report to <Employee: Beatrice>
+  expected <Employee: Joe> not to report to <Employee: Beatrice>
+
+The representation of the employee objects depends on how to_s( ) is implemented on the Employee class, but the matcher gleans “report to” from the Symbol passed to define( ).
+
+* Using matcher protocol
+
+A matcher in RSpec is any object that responds to a specific set of messages. The simplest matchers only need to respond to these two:
+
+  matches?
+  failure_message_for_should
+
+optionals:
+
+  failure_message_for_should_not
+  description
+  does_not_match? # should_not will try this first, it this doesn't exist, should_not will try matches?
+
+example:
+
+class ReportTo
+  def initialize(manager)
+    @manager = manager
+  end
+
+  def matches?(employee)
+    @employee = employee
+    employee.reports_to?(@manager)
+  end
+
+  def failure_message_for_should
+    "expected #{@employee} to report to #{@manager}"
+  end
+end
+
+def report_to(manager)
+  ReportTo.new(manager)
+end
+
+
+Macro
+-----
+
+(jan: Macros are more implemented with the power of ruby, instead of support from rspec)
+
+example:
+
+module ControllerMacros
+ def should_render(template)
+    it "should render the #{template} template" do
+      do_request
+      response.should render_template(template)
+    end
+ end
+ 
+ def should_assign(hash)
+    variable_name = hash.keys.first
+    model, method = hash[variable_name]
+    model_access_method = [model, method].join('.' )
+    it "should assign @#{variable_name} => #{model_access_method}" do
+      expected = "the value returned by #{model_access_method}"
+      model.should_receive(method).and_return(expected)
+      do_request
+      assigns[variable_name].should == expected
+    end
+  end
+
+  def get(action)
+    define_method :do_request do
+      get action
+    end
+    yield
+  end
+end
+
+Spec::Runner.configure do |config|
+  config.use_transactional_fixtures = true
+  config.use_instantiated_fixtures = false
+  config.fixture_path = RAILS_ROOT + '/spec/fixtures/'
+  config.extend(ControllerMacros, :type => :controller)
+end
+
+describe ProjectsController do
+  get :index do
+    should_render "index"
+    should_assign :projects => [Project, :all]
+  end
+end
+
+
+Formatter
+---------
+
+To custom output report, define a subclass of Spec::Runner::Formatter::BaseFormatter, hooks are:
+
+  initialize
+  start
+  example_group_started
+  example_started
+  example_pending
+  example_failed
+  example_passed
+  start_dump
+  dump_failure
+  dump_summary
+  dump_pending
+  close
+
+To run your custom formatter:
+
+  spec spec --require formatters/pdf_formatter --format PdfFormatter:report.pdf
