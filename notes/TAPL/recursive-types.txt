@@ -1,0 +1,207 @@
+Recursive Types
+===============
+
+List, queue, binary tree, label tree, abstract syntax tree etc. are representations of a large class of common structures that may grow to arbitrary size, but that have a simple, regular structure.
+
+Clearly, it does not make sense to provide every one of these structures as a separate, primitive language feature. Instead, we need a general mechanism with which they can be defined from simpler elements, as needed. This mechanism is called recursive types.
+
+We can consider a list of numbers as:
+
+  NatList = <nil:Unit, cons:{Nat,NatList}>
+
+it is convenient to make this equation into a proper definition by moving the "loop" over to the right-hand side of the =. We do this by introducing an explicit recursion operator μ for types:
+
+  NatList = μX. <nil:Unit, cons:{Nat,X}>
+
+Intuitively, this definition is read, "Let NatList be the infinite type satisfying the equation X = <nil:Unit, cons:{Nat,X}>. There are actually two somewhat different ways of formalizing recursive types - the so-called equi-recursive and iso-recursive presentations - differing in the amount of help that the programmer is expected to give to the typechecker in the form of type annotations. 
+
+To define a List, we need nil, cons, isnil, hd and tl. We've defined these as built-in operations before, now we'll define them from simper parts:
+
+    nil = <nil=unit> as NatList;
+
+    cons = λn:Nat. λl:NatList. <cons={n,l}> as NatList;
+
+    isnil = λl:NatList. case l of
+                        <nil=u> => true
+                      | <cons=p> => false;
+
+    hd = λl:NatList. case l of <nil=u> => 0 | <cons=p> => p.1;
+
+    tl = λl:NatList. case l of <nil=u> => l | <cons=p> => p.2;
+
+We've arbitrarily decided to define hd of an empty list to be 0 and tl of the empty list to be the empty list. We might alternatively have raised exceptions in these cases.
+
+
+Hungry
+------
+
+Another example illustrating a somewhat trickier use of recursive types is a type of "hungry functions" that can accept any number of numeric arguments and always return a new function that is hungry for more:
+
+  Hungry = μA. Nat->A;
+
+An element of this type can be defined using the fix operator:
+
+    f = fix (λf: Nat->Hungry. λn:Nat. f);
+    > f : Hungry
+
+    f 0 1 2 3 4 5;
+    > <fun> : Hungry
+
+
+Stream
+------
+
+A more useful variant of the Hungry type above is the type Stream of functions that can consume an arbitrary number of unit values, each time returning a pair of a number and a new stream.
+
+  Stream = μA. Unit->{Nat,A};
+
+We can define two "destructors" for streams; if s is a stream, then hd s is the first number it returns when we pass it unit.
+
+  hd = λs:Stream. (s unit).1;
+  > hd : Stream -> Nat
+
+Similarly, tl s is the new stream that we obtain when we pass unit to s.
+
+  tl = λs:Stream. (s unit).2;
+  > tl : Stream -> Stream
+
+To construct a stream, we use fix as above:
+
+  upfrom0 = fix (λf: Nat->Stream. λn:Nat. λ_:Unit. {n,f (succ n)}) 0;
+  > upfrom0 : Stream
+
+  hd upfrom0;
+  > 0 : Nat
+
+  hd (tl (tl (tl upfrom0)));
+  > 3 : Nat
+
+
+Process
+-------
+
+Streams can be further generalized to a simple form of processes-functions that accept a number and return a number and a new process.
+
+  Process = μA. Nat->{Nat,A};
+
+For example, here is a process that, at each step, returns the sum of all the numbers it has been given so far:
+
+  p = fix (λf: Nat->Process. λacc:Nat. λn:Nat.
+                             let newacc = plus acc n in
+                             {newacc, f newacc}) 0;
+  > p : Process
+
+As we did for streams, we can define auxiliary functions for interacting with processes:
+
+  curr = λs:Process. (s 0).1;
+  > curr : Process -> Nat
+
+  send = λn:Nat. λs:Process. (s n).2;
+  > send : Nat -> Process -> Process
+
+If we send the process p the numbers 5, 3, and 20, the number it returns in response to the last interaction is 28.
+
+  curr (send 20 (send 3 (send 5 p)));
+  > 28 : Nat
+
+
+Objects
+-------
+
+A slight rearrangement of the last example gives us another familiar idiom of interacting with data: objects. For instance, here is the type of counter objects that keep track of a number and allow us to either query or increment it:
+
+  Counter = μC. {get:Nat, inc:Unit->C};
+
+Note that our treatment of objects here is purely functional: sending a counter object the inc message does not cause this object to mutate its state internally; instead, the operation returns a new counter object with incremented internal state. The use of recursive types here allows us to specify that the returned object has exactly the same type as the original.
+
+The only difference between these objects and the processes discussed above is that an object is a recursively defined record (containing a function), whereas a process was a recursively defined function (returning a tuple). The reason this change in point of view is useful is that we can extend our record to include more than one function-for example, a decrement operation:
+
+  Counter = μC. {get:Nat, inc:Unit->C, dec:Unit->C};
+
+To create a counter object, we use the fixed-point combinator, as we did above.
+
+  c = let create = fix (λf: {x:Nat}->Counter. λs: {x:Nat}.
+                                              {get = s.x, inc = λ_:Unit. f {x=succ(s.x)}, dec = λ_:Unit. f {x=pred(s.x)} })
+      in create {x=0};
+  > c : Counter
+
+
+Recursive Values From Recursive Types
+-------------------------------------
+
+A more surprising use of recursive types-and one that clearly reveals their expressive power-is a well-typed implementation of the fixed-point combinator. For any type T, we can define a fixed-point constructor for functions on T as follows.
+
+  fixT  = λf:T->T. (λx:(μA.A->T). f (x x)) (λx:(μA.A->T). f (x x));
+  > fixT : (T->T) -> T
+
+Note that, if we erase types, this term is precisely the untyped fixed point combinator that we saw before.
+
+The key trick here is using a recursive type to type the two occurrences of the subexpression x x. As we observed before, typing this term requires that x have an arrow type whose domain is the type of x itself. Clearly, there is no finite type with this property, but the infinite type μA.A->T does the job perfectly.
+
+A corollary of this example is that the presence of recursive types breaks the strong normalization property: we can use the fixT combinator to write a well-typed term whose evaluation (when applied to unit) will diverge.
+
+  divergeT = λ_:Unit. fixT (λx:T. x);
+  > divergeT : Unit -> T
+
+Moreover, since we can can obtain such terms for every type, it follows that every type in this system is inhabited.
+
+
+Untyped Lambda-Calculus, Redux
+------------------------------
+
+Perhaps the best illustration of the power of recursive types is the fact that we can embed the whole untyped lambda-calculus-in a well-typed way-into a statically typed language with recursive types. This fact makes systems with recursive types useless as logics: if we interpret types as logical propositions following the Curry-Howard correspondence and read "type T is inhabited" as "proposition T is provable," then the fact that every type is inhabited means that every proposition in the logic is provable-that is, the logic is inconsistent. (Jan: I don't understand this paragraph - what does 'the logic is inconsistent' mean?)
+
+Let D be the following type:
+
+  D = μX.X->X;
+
+Define an "injection function" lam mapping functions from D to D into elements of D as follows:
+
+  lam = λf:D->D. f as D;
+  > lam : D
+
+To apply one element of D to another, we simply unfold the type of the first, yielding a function, and apply this to the second:
+
+  ap = λf:D. λa:D. f a;
+  > ap : D
+
+Now, suppose M is a closed lambda-term involving just variables, abstractions, and applications. Then we can construct an element of D representing M, written M*, in a uniform way as follows:
+
+  x*        =  x
+  (λx.M)*   =  lam (λx:D. M*)
+  (MN)*     =  ap M* N*
+
+For example, here is the untyped fixed point combinator expressed as an element of D:
+
+  fixD = lam (λf:D. ap (lam (λx:D. ap f (ap x x))) (lam (λx:D. ap f (ap x x))));
+  > fixD : D
+
+This embedding of the pure lambda-calculus can be extended to include features such as numbers. We change the definition of D to a variant type with one tag for numbers and one for functions:
+
+  D = μX. <nat:Nat, fn:X->X>;
+
+That is, an element of D is either a number or a function from D to D, tagged nat or fn, respectively. The implementation of the lam constructor is essentially the same as before:
+
+  lam = λf:D->D. <fn=f> as D;
+  > lam : (D->D) -> D
+
+The implementation of ap, though, is different in an interesting way:
+
+  ap = λf:D. λa:D.  case f of
+                    <nat=n> => divergeD unit
+                  | <fn=f> => f a;
+  > ap : D -> D -> D
+
+Before we can apply f to a, we need to extract a function from f with a case. This forces us to specify how application behaves when f is not a function. (In this example, we just diverge; we could also raise an exception.) Note how closely the tag-checking here resembles the run-time tag checking in an implementation of a dynamically typed language such as Scheme. In this sense, typed computation may be said to "include" untyped or dynamically typed computation.
+
+Similar tag checking is needed in order to define the successor function on elements of D:
+
+  suc = λf:D. case f of
+              <nat=n> => (<nat=succ n> as D)
+            | <fn=f> => divergeD unit;
+  > suc : D -> D
+
+The injection of 0 into D is trivial:
+
+  zro = <nat=0> as D;
+  >  zro : D
