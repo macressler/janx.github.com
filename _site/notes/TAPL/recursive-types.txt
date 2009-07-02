@@ -205,3 +205,103 @@ The injection of 0 into D is trivial:
 
   zro = <nat=0> as D;
   >  zro : D
+
+
+Formalities
+-----------
+
+There're two basic approaches to recursive types. The essential difference between them is captured in their response to a simple question: What is the relation between the type μX.T and its one-step unfolding? For example, what is the relation between NatList and <nil:Unit,cons:{Nat,NatList}>?
+
+1. The equi-recursive approach takes these two type expressions as definitionally equal—interchangeable in all contexts - since they stand for the same infinite tree. It is the typechecker's responsibility to make sure that a term of one type will be allowed as an argument to a function expecting the other, etc.
+
+The pleasant thing about the equi-recursive treatment is that allowing type expressions to be infinite is the only alteration to the declarative presentations of the systems we already understand. Existing definitions, safety theorems, and proofs remain unchanged, as long as they do not depend on induction on type expressions (which naturally no longer works).
+
+Of course, the implementation of equi-recursive types requires some work, since typechecking algorithms cannot work directly with infinite structures.
+
+2. The iso-recursive approach, on the other hand, takes a recursive type and its unfolding as different, but isomorphic.
+
+Formally, the unfolding of a recursive type μX.T is the type obtained by taking the body T and replacing all occurrences of X by the whole recursive type - i.e., using the standard notation for substitution, it is [X |-> (μX.T)]T. For example, the type NatList, i.e.,
+
+  μX.<nil:Unit,cons:{Nat,X}>,
+
+unfolds to
+
+  <nil:Unit, cons:{Nat, μX.<nil:Unit,cons:{Nat,X}>}>.
+
+In a system with iso-recursive types, we introduce, for each recursive type μX.T, a pair of functions
+
+  unfold[μX.T]   :  μX.T -> [X |-> μX.T]T
+  fold[μX.T]     :  [X |-> μX.T]T -> μX.T
+
+that "witness the isomorphism" by mapping values back and forth between the two types. The fold and unfold maps are provided as primitives by the language. The fact that they form an isomorphism is captured by the evaluation rule E-UNFLDFLD, which annihilates a fold when it meets a corresponding unfold. (The evaluation rule does not require the type annotations on the fold and the unfold to be the same, since we would have to invoke the typechecker at run time to verify such a constraint. However, in the evaluation of a well-typed program, these two type annotations will be equal whenever E-UNFLDFLD is applied.)
+
+μ                               extends lambda
+----------------------------------------------
+t ::= ...                       terms
+      fold[T] t                 folding
+      unfold[T] t               unfolding
+
+v ::= ...                       values
+      fold[T] v                 folding
+
+T ::= ...                       types
+      X                         type variable
+      μX.T                      recursive type
+
+unfold[S] (fold[T] v1) -> v1    E-UNFLDFLD
+
+t1 -> t1'
+-------------------------       E-FLD
+fold[T] t1 -> fold[T] t1'
+
+t1 -> t1'
+-----------------------------   E-UNFLD
+unfold[T] t1 -> unfold[T] t1'
+
+U = μX.T1    Г |- t1:[X |-> U]T1
+--------------------------------    T-FLD
+Г |- fold[U] t1:U
+
+U = μX.T1    Г |- t1:U
+-----------------------------   T-UNFLD
+Г |- unfold[U] t1:[X |-> U]T1
+
+Both approaches are widely used in both theoretical studies and programming language designs. The equi-recursive style is arguably more intuitive, but places stronger demands on the typechecker, which must effectively infer the points where fold and unfold annotations should occur. Moreover, the interactions between equi-recursive types and other advanced typing features such as bounded quantification and type operators can be quite complex, leading to significant theoretical difficulties or even undecidable typechecking problems.
+
+The iso-recursive style is notationally somewhat heavier, requiring programs to be decorated with fold and unfold instructions wherever recursive types are used. In practice, however, these annotations can often be "hidden" by coalescing them with other annotations. In languages in the ML family, for example, every datatype definition implicitly introduces a recursive type. Each use of one of the constructors to build a value of the datatype implicitly includes a fold, and each constructor appearing in a pattern match implicitly forces an unfold. Similarly, in Java each class definition implicitly introduces a recursive type, and invoking a method on an object involves an implicit unfold. This felicitous overlap of mechanisms makes the iso-recursive style quite palatable in practice.
+
+For example, here is the NatList example in iso-recursive form. First, it is convenient to define an abbreviation for the unfolded form of NatList:
+
+  NLBody = <nil:Unit, cons:{Nat,NatList}>;
+
+Now, nil is defined by building a variant, of type NLBody, and then folding it up as a NatList; cons is similar.
+
+  nil = fold [NatList] (<nil=unit> as NLBody);
+  cons = λn:Nat. λl:NatList. fold [NatList] <cons={n,l}> as NLBody;
+
+Conversely, the definitions of the isnil, hd, and tl operations need to take a NatList and consider it as a variant so that they can perform a case analysis on its tag. This is achieved by unfolding the argument l:
+
+  isnil = λl:NatList. case unfold [NatList] l of
+                           <nil=u> => true
+                         | <cons=p> => false;
+
+  hd = λl:NatList. case unfold [NatList] l of
+                        <nil=u> => 0
+                      | <cons=p> => p.1;
+
+  tl = λl:NatList. case unfold [NatList] l of
+                        <nil=u> => l
+                      | <cons=p> => p.2;
+
+
+Subtyping
+---------
+
+The final question that we need to address in this chapter concerns the combination of recursive types with the other major refinement of the simply typed lambda-calculus that we have seen so far-subtyping. For example, supposing that the type Even is a subtype of Nat, what should be the relation between the types μX.Nat->(Even × X) and μX.Even->(Nat × X)? (× is type of Pair, see simple-type-extensions.txt)
+
+The simplest way to think through such questions is to view them "in the limit"-i.e., using an equi-recursive treatment of recursive types. In the present example, the elements inhabiting both types can be thought of as simple reactive processes (see above, processes is CPS): given a number, they return another number plus a new process that is ready to receive a number, and so on. So those two type become:
+
+  f1:Nat->{Even, μX.Nat->(Even × X)}
+  f2:Even->{Nat, μX.Even->(Nat × X)}
+
+Processes belonging to the first type always yield even numbers and are capable of accepting arbitrary numbers. Those belonging to the second type yield arbitrary numbers, but expect always to be given even numbers. The constraints both on what arguments the function must accept and on what results it may return are more demanding for the first type, so intuitively we expect the first to be a subtype of the second. 
