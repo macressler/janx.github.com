@@ -186,6 +186,25 @@ example group (test case in TDD): A group of code examples.
 
 spec, a.k.a. spec file: A file that contains one or more example groups.
 
+Cucumber actions:
+
+  visit <url>
+  click_link <title, id, text>
+  fill_in <id, name, label>, :with => <value>
+  check
+  uncheck
+  choose
+  select <option>, [:from => <select>]
+  select_date <time>, [:id_prefix => <prefix>]
+  select_time
+  select_datetime
+  attach_file <name>, <path>, [<mime type>]
+  set_hidden_field
+  click_button
+  submit_form
+  reload
+
+Cucumber matchers
 
 Describe it!
 ------------
