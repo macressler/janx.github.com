@@ -1,0 +1,41 @@
+Metatheory of Recursive Types
+=============================
+
+
+Induction and Coinduction
+-------------------------
+
+Assume we have fixed some universal set U as the domain of discourse for our inductive and coinductive definitions. U represents the set of "everything in the world," and the role of an inductive or coinductive definition will be to pick out some subset of U. (Later on, we are going to choose U to be the set of all pairs of types, so that subsets of U are relations on types. For the present discussion, an arbitrary set U will do.)
+
+A function F : P(U) -> P(U) is monotone if X belongs to Y implies F(X) belongs to F(Y). (Recall that P(U) is the set of all subsets of U.) In the following, we assume that F is some monotone function on P(U). We often refer to F as a generating function.
+
+Let X be a subset of U.
+
+  1. X is F-closed if F(X) belongs to X
+  2. X is F-consistent if X belongs to F(X).
+  3. X is a fixed point of F if F(X) = X.
+
+A useful intuition for these definitions is to think of the elements of U as some sort of statements or assertions, and of F as representing a "justification" relation that, given some set of statements (premises), tells us what new statements (conclusions) follow from them. An F-closed set, then, is one that cannot be made any bigger by adding elements justified by F-it already contains all the conclusions that are justified by its members. An F-consistent set, on the other hand, is one that is "self-justifying": every assertion in it is justified by other assertions that are also in it. A fixed point of F is a set that is both closed and consistent: it includes all the justifications required by its members, all the conclusions that follow from its members, and nothing else.
+
+Consider the following generating function on the three-element universe U = {a, b, c}:
+
+  E1(ø) = {c}      E1({a,b}) = {c}      E1 ({a}) = {c}       E1({a,c}) = {b,c}
+  E1({b}) = {c}    E1({b,c}) = {a,b,c}  E1({c}) = {b,c}      E1({a,b,c}) = {a,b,c}
+  
+There is just one E1-closed set-{a,b,c} - and four E1-consistent sets-ø, {c}, {b, c}, {a, b, c}.
+
+Knaster-Tarski Theorem:
+
+  1. The intersection of all F-closed sets is the least fixed point of F.
+  2. The union of all F-consistent sets is the greatest fixed point of F.
+
+The least fixed point of F is written μF. The greatest fixed point of F is written vF. For the sample generating function E1 shown above, we have μE1 = vE1 = {a, b, c}.
+
+Note that μF itself is F-closed (hence, it is the smallest F-closed set) and that vF is F-consistent (hence, it is the largest F-consistent set). This observation gives us a pair of fundamental reasoning tools:
+
+  1. Principle of induction: If X is F-closed, then μF belongs to X.
+  2. Principle of coinduction: If X is F-consistent, then X belongs to vF.
+
+The intuition behind these principles comes from thinking of the set X as a predicate, represented as its characteristic set-the subset of U for which the predicate is true; showing that property X holds of an element x is the same as showing that x is in the set X. Now, the induction principle says that any property whose characteristic set is closed under F (i.e., the property is preserved by F) is true of all the elements of the inductively defined set μF.
+
+The coinduction principle, on the other hand, gives us a method for establishing that an element x is in the coinductively defined set vF. To show x <- vF, it suffices to find a set X such that x <- X and X is F-consistent. Although it is a little less familiar than induction, the principle of coinduction is central to many areas of computer science; for example, it is the main proof technique in theories of concurrency based on bisimulation, and it lies at the heart of many model checking algorithms.
