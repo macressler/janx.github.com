@@ -186,11 +186,13 @@ example group (test case in TDD): A group of code examples.
 
 spec, a.k.a. spec file: A file that contains one or more example groups.
 
-Cucumber actions:
+Webrat simulates a browser by building on the functionality of the Rails integration testing API, providing an expressive language to describe manipulating a web application.
+
+Webrat actions:
 
   visit <url>
-  click_link <title, id, text>
-  fill_in <id, name, label>, :with => <value>
+  click_link <title|id|text>
+  fill_in <id|name|label>, :with => <value>
   check
   uncheck
   choose
@@ -204,7 +206,29 @@ Cucumber actions:
   submit_form
   reload
 
-Cucumber matchers
+Webrat matchers:
+
+  contain <string|regexp>
+  have_selector <selector>[, <:count|:content|attributes hash>] [do ... end]
+  have_xpath
+
+All CSS selectors can be expressed as XPath, but not all XPath selectors can be expressed as CSS. So webrat in fact translates have_selector to have_xpath.
+
+Webrat advances:
+
+  within <selector> do ... end
+  field_labeled
+  field_named
+  field_with_id
+  <field object>.value
+  <field object>.checked?
+  current_url
+  header
+  http_accept
+  basic_auth
+  save_and_open_page
+
+
 
 Describe it!
 ------------
