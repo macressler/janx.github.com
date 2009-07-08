@@ -39,3 +39,86 @@ Note that μF itself is F-closed (hence, it is the smallest F-closed set) and th
 The intuition behind these principles comes from thinking of the set X as a predicate, represented as its characteristic set-the subset of U for which the predicate is true; showing that property X holds of an element x is the same as showing that x is in the set X. Now, the induction principle says that any property whose characteristic set is closed under F (i.e., the property is preserved by F) is true of all the elements of the inductively defined set μF.
 
 The coinduction principle, on the other hand, gives us a method for establishing that an element x is in the coinductively defined set vF. To show x <- vF, it suffices to find a set X such that x <- X and X is F-consistent. Although it is a little less familiar than induction, the principle of coinduction is central to many areas of computer science; for example, it is the main proof technique in theories of concurrency based on bisimulation, and it lies at the heart of many model checking algorithms.
+
+
+Finite and Infinite Types
+-------------------------
+
+We are going to instantiate the general definitions of greatest fixed points and the coinductive proof method with the specifics of subtyping. Before we can do this, though, we need to show precisely how to view types as (finite or infinite) trees.
+
+For brevity, we deal in this chapter with just three type constructors: ->, ×, and Top. We represent types as (possibly infinite) trees with nodes labeled by one of the symbols ->, ×, or Top. The definition is specialized to our present needs.
+
+We write {1, 2}* for the set of sequences of 1s and 2s. Recall that the empty sequence is written *, and i^k stands for k copies of i. If π and σ are sequences, then π,σ denotes the concatenation of π and σ.
+
+Definition:
+
+A tree type (or, simply, a tree) is a partial function T : {1, 2}* -> {->, ×, Top} satisfying the following constraints:
+
+    * T(*) is defined;
+    * if T(π,σ) is defined then T(π) is defined;
+    * if T(π) = -> or T(π) = × then T(π,1) and T(π,2) are defined;
+    * if T(π) = Top then T(π,1) and T(π,2) are undefined.
+
+A tree type T is finite if dom(T) is finite. The set of all tree types is written T ; the subset of all finite tree types is written Tf.
+
+(Jan: {1,2}* represents the path to leaf, {->,x} represents the value of internal node, {Top} represents value of leaf. so T is a function that defined a type for every path)
+
+For notational convenience, we write Top for the tree T with T(*) = Top. When T1 and T2 are trees, we write T1 × T2 for the tree with (T1 × T2)(*) = × and (T1 × T2)(i, π) = Ti(π) and T1 -> T2 for the tree with (T1 -> T2)(*) = -> and (T1 -> T2)(i,π) = Ti(π), for i = 1,2. For example, (Top × Top) -> Top denotes the finite tree type T defined by the function with T(*) = -> and T(1) = × and T(2) = T(1,1) = T(1,2) = Top. We use ellipses informally for describing non-finite tree types. For example, Top->(Top->(Top->...)) corresponds to the type T defined by T(2^k) = ->, for all k ≥ 0, and T(2^k,1) = Top, for all k ≥ 0.
+
+The set of finite tree types can be defined more compactly by a grammar:
+
+  T  ::=  Top
+          T × T
+          T -> T
+
+Formally, Tf is the least fixed point of the generating function described by the grammar. The universe of this generating function is the set of all finite and infinite trees labeled with Top, ->, and × (i.e., the set formed by generalizing Definition 21.2.1 by dropping its two last conditions). The whole set T can be derived from the same generating function by taking the greatest fixed point instead of the least.
+
+
+Subtyping
+---------
+
+We define subtype relations on finite tree types and on tree types in general as least and greatest fixed points, respectively, of monotone functions on certain universes. For subtyping on finite tree types the universe is the set Tf × Tf of pairs of finite tree types; our generating function will map subsets of this universe - that is, relations on Tf - to other subsets, and their fixed points will also be relations on Tf. For subtyping on arbitrary (finite or infinite) trees, the universe is T × T.
+
+* Definition of Finite Subtyping
+
+Two finite tree types S and T are in the subtype relation ("S is a subtype of T") if (S, T) <- μSf , where the monotone function Sf : P(Tf × Tf) -> P(Tf × Tf) is defined by
+
+    Sf(R) = {(T, Top) | T <- Tf}
+          U {(S1 × S2, T1 × T2) | (S1, T1), (S2, T2) <- R}
+          U {(S1 -> S2, T1 -> T2) | (T1, S1), (S2, T2) <- R}.
+
+This generating function precisely captures the effect of the standard definition of the subtype relation by a collection of inference rules:
+
+--------
+T <: Top
+
+S1 <: T1    S2 <: T2
+--------------------
+S1 x S2 <: T1 x T2
+
+T1 <: S1    S2 <: T2
+--------------------
+S1 -> S2 <: T1 -> T2
+
+The statement S <: T above the line in the second and third rules should be read as "if the pair (S, T) is in the argument to Sf" and below the line as "then (S, T) is in the result."
+
+* Definition of Infinite Subtyping
+
+Two (finite or infinite) tree types S and T are in the subtype relation if (S, T) <- vS, where S : P(T × T) -> P(T × T) is defined by:
+
+  *  S(R) = {(T, Top) | T <- T}
+          U {(S1 × S2, T1 × T2) | (S1, T1), (S2, T2) <- R}
+          U {(S1 -> S2, T1 -> T2) | (T1, S1), (S2, T2) <- R}.
+
+Note that the inference rule presentation of this relation is precisely the same as for the inductive relation above: all that changes is that we consider a larger universe of types and take a greatest instead of a least fixed point.
+
+
+One fundamental property of the subtype relation on infinite tree types - the fact that it is transitive - should be verified right away. (We have already seen before that subtyping on finite types is transitive.) If the subtype relation were not transitive, the critical property of preservation of types under evaluation would immediately fail. To see this, suppose that there were types S, T, and U with S<:T and T<:U but not S<:U. Let s be a value of type S and f a function of type U→Top. Then the term (λx:T. f x) s could be typed, using the rule of subsumption once for each application, but this term reduces in one step to the ill-typed term f s.
+
+* Definition
+
+A relation R belongs to U × U is transitive if R is closed under the monotone function TR(R) = {(x, y) | $z <- U. (x, z), (z, y) <- R} - i.e., if TR(R) belongs to R.
+
+Lemma: Let F : P(U×U) -> P(U×U) be a monotone function. If TR(F(R)) belongs to F(TR(R)) for any R belongs to U × U, then vF is transitive.
+
+Theorem: vS is transitive.
