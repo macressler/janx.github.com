@@ -53,6 +53,8 @@ Stream
 
 A more useful variant of the Hungry type above is the type Stream of functions that can consume an arbitrary number of unit values, each time returning a pair of a number and a new stream.
 
+(Jan: Stream is the opposite side of Hungry. Hungry is like a blackhole while Stream is a whitehole, or you can see them as /dev/null and /dev/urandom)
+
   Stream = μA. Unit->{Nat,A};
 
 We can define two "destructors" for streams; if s is a stream, then hd s is the first number it returns when we pass it unit.
@@ -81,6 +83,8 @@ Process
 -------
 
 Streams can be further generalized to a simple form of processes-functions that accept a number and return a number and a new process.
+
+(Jan: Process is some like Hungry+Stream, or Continuation)
 
   Process = μA. Nat->{Nat,A};
 
@@ -149,7 +153,7 @@ Moreover, since we can can obtain such terms for every type, it follows that eve
 Untyped Lambda-Calculus, Redux
 ------------------------------
 
-Perhaps the best illustration of the power of recursive types is the fact that we can embed the whole untyped lambda-calculus-in a well-typed way-into a statically typed language with recursive types. This fact makes systems with recursive types useless as logics: if we interpret types as logical propositions following the Curry-Howard correspondence and read "type T is inhabited" as "proposition T is provable," then the fact that every type is inhabited means that every proposition in the logic is provable-that is, the logic is inconsistent. (Jan: I don't understand this paragraph - what does 'the logic is inconsistent' mean?)
+Perhaps the best illustration of the power of recursive types is the fact that we can embed the whole untyped lambda-calculus-in a well-typed way-into a statically typed language with recursive types. This fact makes systems with recursive types useless as logics: if we interpret types as logical propositions following the Curry-Howard correspondence and read "type T is inhabited" as "proposition T is provable," then the fact that every type is inhabited means that every proposition in the logic is provable-that is, the logic is inconsistent.
 
 Let D be the following type:
 
