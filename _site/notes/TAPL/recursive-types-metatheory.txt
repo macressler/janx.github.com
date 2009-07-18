@@ -7,7 +7,7 @@ Induction and Coinduction
 
 Assume we have fixed some universal set U as the domain of discourse for our inductive and coinductive definitions. U represents the set of "everything in the world," and the role of an inductive or coinductive definition will be to pick out some subset of U. (Later on, we are going to choose U to be the set of all pairs of types, so that subsets of U are relations on types. For the present discussion, an arbitrary set U will do.)
 
-A function F : P(U) -> P(U) is monotone if X belongs to Y implies F(X) belongs to F(Y). (Recall that P(U) is the set of all subsets of U.) In the following, we assume that F is some monotone function on P(U). We often refer to F as a generating function.
+A function F := P(U) -> P(U) is monotone if X belongs to Y implies F(X) belongs to F(Y). (Recall that P(U) is the set of all subsets of U.) In the following, we assume that F is some monotone function on P(U). We often refer to F as a generating function.
 
 Let X be a subset of U.
 
@@ -52,14 +52,14 @@ We write {1, 2}* for the set of sequences of 1s and 2s. Recall that the empty se
 
 Definition:
 
-A tree type (or, simply, a tree) is a partial function T : {1, 2}* -> {->, ×, Top} satisfying the following constraints:
+A tree type (or, simply, a tree) is a partial function T := {1, 2}* -> {->, ×, Top} satisfying the following constraints:
 
     * T(*) is defined;
     * if T(π,σ) is defined then T(π) is defined;
     * if T(π) = -> or T(π) = × then T(π,1) and T(π,2) are defined;
     * if T(π) = Top then T(π,1) and T(π,2) are undefined.
 
-A tree type T is finite if dom(T) is finite. The set of all tree types is written T ; the subset of all finite tree types is written Tf.
+A tree type T is finite if dom(T) is finite. The set of all tree types is written (italic)T ; the subset of all finite tree types is written (italic)Tf.
 
 (Jan: {1,2}* represents the path to leaf, {->,x} represents the value of internal node, {Top} represents value of leaf. so T is a function that defined a type for every path)
 
@@ -81,13 +81,15 @@ We define subtype relations on finite tree types and on tree types in general as
 
 * Definition of Finite Subtyping
 
-Two finite tree types S and T are in the subtype relation ("S is a subtype of T") if (S, T) <- μSf , where the monotone function Sf : P(Tf × Tf) -> P(Tf × Tf) is defined by
+Two finite tree types S and T are in the subtype relation ("S is a subtype of T") if (S, T) <- μSf , where the monotone function Sf := P(Tf × Tf) -> P(Tf × Tf) is defined by
 
     Sf(R) = {(T, Top) | T <- Tf}
           U {(S1 × S2, T1 × T2) | (S1, T1), (S2, T2) <- R}
           U {(S1 -> S2, T1 -> T2) | (T1, S1), (S2, T2) <- R}.
 
 This generating function precisely captures the effect of the standard definition of the subtype relation by a collection of inference rules:
+
+(Jan: S is an induction function, that get all inducted subtyping relations based on known subtyping relations)
 
 --------
 T <: Top
@@ -104,7 +106,7 @@ The statement S <: T above the line in the second and third rules should be read
 
 * Definition of Infinite Subtyping
 
-Two (finite or infinite) tree types S and T are in the subtype relation if (S, T) <- vS, where S : P(T × T) -> P(T × T) is defined by:
+Two (finite or infinite) tree types S and T are in the subtype relation if (S, T) <- vS, where S := P(T × T) -> P(T × T) is defined by:
 
   *  S(R) = {(T, Top) | T <- T}
           U {(S1 × S2, T1 × T2) | (S1, T1), (S2, T2) <- R}
@@ -113,12 +115,33 @@ Two (finite or infinite) tree types S and T are in the subtype relation if (S, T
 Note that the inference rule presentation of this relation is precisely the same as for the inductive relation above: all that changes is that we consider a larger universe of types and take a greatest instead of a least fixed point.
 
 
-One fundamental property of the subtype relation on infinite tree types - the fact that it is transitive - should be verified right away. (We have already seen before that subtyping on finite types is transitive.) If the subtype relation were not transitive, the critical property of preservation of types under evaluation would immediately fail. To see this, suppose that there were types S, T, and U with S<:T and T<:U but not S<:U. Let s be a value of type S and f a function of type U→Top. Then the term (λx:T. f x) s could be typed, using the rule of subsumption once for each application, but this term reduces in one step to the ill-typed term f s.
+One fundamental property of the subtype relation on infinite tree types - the fact that it is transitive - should be verified right away. (We have already seen before that subtyping on finite types is transitive.) If the subtype relation were not transitive, the critical property of preservation of types under evaluation would immediately fail. To see this, suppose that there were types S, T, and U with S<:T and T<:U but not S<:U. Let s be a value of type S and f a function of type U->Top. Then the term (λx:T. f x) s could be typed, using the rule of subsumption once for each application, but this term reduces in one step to the ill-typed term f s.
 
 * Definition
 
 A relation R belongs to U × U is transitive if R is closed under the monotone function TR(R) = {(x, y) | $z <- U. (x, z), (z, y) <- R} - i.e., if TR(R) belongs to R.
 
-Lemma: Let F : P(U×U) -> P(U×U) be a monotone function. If TR(F(R)) belongs to F(TR(R)) for any R belongs to U × U, then vF is transitive.
+Lemma: Let F := P(U×U) -> P(U×U) be a monotone function. If TR(F(R)) belongs to F(TR(R)) for any R belongs to U × U, then vF is transitive.
 
 Theorem: vS is transitive.
+
+
+Transitivity
+------------
+
+(Jan: I don't understand this paragraph)
+
+We saw before that standard formulations of inductively defined subtype relations generally come in two forms: a declarative presentation that is optimized for readability and an algorithmic presentation that corresponds more or less directly to an implementation. In simple systems, the two presentations are fairly similar; in more complex systems, they can be quite different, and proving that they define the same relation on types can pose a significant challenge. (We will see an example of this in Chapter 28; many others have been studied.)
+
+One of the most distinctive differences between declarative and algorithmic presentations is that declarative presentations include an explicit rule of transitivity—if S<:U and U<:T then S<:T—while algorithmic systems do not. This rule is useless in an algorithm, since applying it in a goal-directed manner would involve guessing U.
+
+The rule of transitivity plays two useful roles in declarative systems. First, it makes it obvious to the reader that the subtype relation is, indeed, transitive. Second, transitivity often allows other rules to be stated in simpler, more primitive forms; in algorithmic presentations, these simple rules need to be combined into heavier mega-rules that take into account all possible combinations of the simpler ones. For example, in the presence of transitivity, the rules for "depth subtyping" within record fields, "width subtyping" by adding new fields, and "permutation" of fields can be stated separately, making them all easier to understand, as we did before. Without transitivity, the three rules must be merged into a single one that takes width, depth, and permutation into account all at once, as we did in §16.1.
+
+Somewhat surprisingly, the possibility of giving a declarative presentation with the rule of transitivity turns out to be a consequence of a "trick" that can be played with inductive, but not coinductive, definitions. To see why, observe that the property of transitivity is a closure property—it demands that the subtype relation be closed under the transitivity rule. Since the subtype relation for finite types is itself defined as the closure of a set of rules, we can achieve closure under transitivity simply by adding it to the other rules. This is a general property of inductive definitions and closure properties: the union of two sets of rules, when applied inductively, generates the least relation that is closed under both sets of rules separately. This fact can be formulated more abstractly in terms of generating functions:
+
+Proposition: Suppose F and G are monotone functions, and let H(X) = F(X)ÈG(X). Then μH is the smallest set that is both F-closed and G-closed.
+
+Proof: First, we show that μH is closed under both F and G. By definition, μH = H(μH) = F(μH) È G(μH), so F(μH) ⊆ μH and G(μH) ⊆ μH. Second, we show that μH is the least set closed under both F and G. Suppose there is some set X such that F(X) ⊆ X and G(X) ⊆ X. Then H(X) = F(X)ÈG(X) È X, that is, X is H-closed. Since μH is the least H-closed set (by the Knaster-Tarski theorem), we have μH ⊆ X.
+
+Unfortunately, this trick for achieving transitive closure does not work when we are dealing with coinductive definitions. As the following exercise shows, adding transitivity to the rules generating a coinductively defined relation always gives us a degenerate relation.
+

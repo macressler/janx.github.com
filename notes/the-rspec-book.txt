@@ -173,8 +173,8 @@ Lastly, for features that produce many edge cases, it can be useful to drive a f
 
 
 
-Rspec and Cucumber
-==================
+Rspec and Cucumber and Webrat
+=============================
 
 subject code: The code whose behaviour we are specifying with RSpec.
 
@@ -214,6 +214,15 @@ Webrat matchers:
 
 All CSS selectors can be expressed as XPath, but not all XPath selectors can be expressed as CSS. So webrat in fact translates have_selector to have_xpath.
 
+example:
+
+  Then /^the Vacation photo should be third in the album$/ do
+    response.should have_selector("#album li:nth-child(3)" ) do |li|
+      li.should have_selector("img" , :src => photo_path(@vacation_photo))
+      li.should contain("Vacation Photo" )
+    end
+  end
+
 Webrat advances:
 
   within <selector> do ... end
@@ -227,6 +236,44 @@ Webrat advances:
   http_accept
   basic_auth
   save_and_open_page
+
+Use webrat helpers in views specs:
+
+  config.include Webrat::Matchers, :type => :views
+
+example:
+
+  require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper' )
+  describe "messages/show.html.erb" do
+    before(:each) do
+      @message = stub("Message" )
+      assigns[:message] = @message
+    end
+    it "should display the text of the message" do
+      @message.stub!(:text).and_return "Hello world!"
+      render "messages/show.html.erb"
+      response.should contain("Hello world!" )
+    end
+  end
+
+Rspec views helpers:
+
+  assigns
+  render
+  stub
+  mock_model
+  stub_model
+
+Custom matcher example:
+
+  def have_button(href)
+    simple_matcher("a button to #{href}" ) do |response|
+      response.should have_selector("a.button" , :href => href)
+    end
+  end
+
+View specs should focus on semantics, not syntactic details.
+
 
 
 
