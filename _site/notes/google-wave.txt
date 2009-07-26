@@ -1,0 +1,32 @@
+Google Wave API
+===============
+
+Four concepts: wave, wavelet, blip, document
+
+Extension
+---------
+
+* Manifest:
+
+<extension location="Toolbar">
+   <info text="Are You In?"
+         description="Click to insert the Are You In? gadget."
+         imageUrl="http://wave-api.appspot.com/public/gadgets/areyouin/icon.png"/>
+   <insertGadget url="http://wave-api.appspot.com/public/gadgets/areyouin/gadget.xml"/>
+</extension>
+
+<extension location="NewWaveMenu">
+   <info text="New Twave" description="Creates a new Twitter wave."/>
+   <createNewWave>
+       <participant id="tweety-wave@appspot.com"></participant>
+   </createNewWave>
+</extension>
+
+Currently location has only 2 options: Toolbar and NewWaveMenu. Different location has different context associated with it, like insertGadget can only be used in Toolbar context while createNewWave can only be used with NewWaveMenu context.
+
+Schema definition: http://gadget-doc-examples.googlecode.com/svn/trunk/wave/extensions.xsd
+
+Installing an Extension
+
+Every user account contains a special wave that contains all of your currently registered extensions. Currently, this is handled by referencing unique extensions through a URL. As this implies, your extension manifests must be hosted publicly for the Wave client to use it. Though you can edit this wave directly, it is not necessary. Instead, you can use the Extension Installer element to install your extensions (and share them with others!).
+
