@@ -223,3 +223,50 @@ An element y <- U is reachable from an element x if y <- reachable(x).
 An invertible generating function F is said to be finite state if reachable(x) is finite for each x <- U. For a finite-state generating function, the search space explored by gfp is finite and gfp always terminates:
 
 Theorem: If reachableF(X) is finite, then gfpF(X) is defined. Consequently, if F is finite state, then gfpF(X) terminates for any finite X included by U.
+
+
+More Efficient Algorithm
+------------------------
+
+We can refine the algorithm to eliminate this redundant recomputation by maintaining a set A of assumptions whose support sets have already been considered and a set X of goals whose support has not yet been considered.
+
+Suppose F is an invertible generating function. Define the function gfpaF (or just gfpa) as follows (the superscript "a" is for "assumptions"):
+
+    gfpa(A, X) = if support(X) ↑, then false 
+                 else if X = ø, then true
+                 else gfpa(A U X, support(X) \ (A È X)).
+
+In order to check x <- vF, compute gfpa(ø, {x}).
+
+Theorem: 1. If supportF(A) included by A U X and gfpaF(A, X) = true, then A U X included by vF.
+         2. If gfpaF(A, X) = false, then X is not included by vF.
+
+
+Regular Trees
+-------------
+
+At this point, we have developed generic algorithms for checking membership in a set defined as the greatest fixed point of a generating function F, assuming that F is invertible and finite state; separately, we have shown how to define subtyping between infinite trees as the greatest fixed point of a particular generating function S. The obvious next step is to instantiate one of our algorithms with S. Of course, this concrete algorithm will not terminate on all inputs, since in general the set of states reachable from a given pair of infinite types can be infinite. But, as we shall see in this section, if we restrict ourselves to infinite types of a certain well-behaved form, so-called regular types, then the sets of reachable states will be guaranteed to remain finite and the subtype checking algorithm will always terminate.
+
+A tree type S is a subtree of a tree type T if S = λσ. T(π,σ) for some π - that is, if the function S from paths to symbols can be obtained from the function T by adding some constant prefix π to the argument paths we give to T; the prefix π corresponds to the path from the root of T to the root of S. We write subtrees(T) for the set of all subtrees of T.
+
+A tree type T Î T is regular if subtrees(T) is finite-i.e., if T has finitely many distinct subtrees. The set of regular tree types is written Tr.
+
+Examples:
+
+  1. Every finite tree type is regular; the number of distinct subtrees is at most the number of nodes. The number of distinct subtrees of a tree type can be strictly less than the number of nodes. For example, T = Top→(Top × Top) has five nodes but only three distinct subtrees (T itself, Top × Top, and Top).
+
+  2. Some infinite tree types are regular. For example, the tree
+
+    T = Top × (Top × (Top × ...))
+
+  has just two distinct subtrees (T itself and Top).
+
+  3. The tree type
+
+    T = B × (A × (B × (A × (A × (B × (A × (A × (A × (B × ...)
+
+  where pairs of consecutive Bs are separated by increasingly many As, is not regular. Because T is irregular, the set reachables(T, T) containing all the subtyping pairs needed to justify the statement T<:T is infinite.
+
+The restriction Sr of the generating function S to regular tree types is finite state.
+
+This means that we can obtain a decision procedure for the subtype relation on regular tree types by instantiating one of the membership algorithms with S. Naturally, for this to work in a practical implementation, regular trees must be represented by some finite structures. One such representation is μ-notation.
