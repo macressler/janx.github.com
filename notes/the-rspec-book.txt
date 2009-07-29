@@ -292,6 +292,12 @@ Should I spec model associations?
 A good rule of thumb is to spec associations when you introduce behaviour beyond what Rails provides by default. Usually, an association is added to a model to serve the
 behaviour of code you are working on. When this is the case you’re not introducing behaviour, you’re supporting behaviour, so there is no need to spec the association directly. For example, you may be spec’ing the amount( ) method on the Order model to ensure it returns the sum of line item amounts. To satisfy the spec you need to introduce a has_many :items association. Since the association is being added to support the behaviour of amount( ) there is no need to spec it directly, it’s being covered through the examples on amount. This also applies to the available association options. For example, using the :foreign_key or the :class_name options aren’t introducing behaviour, they’re just wiring up the association, so they are poor candidates to drive with a spec. However, options like :conditions, :dependent, and :finder_sql are capable of introducing behaviour, so they are good candidates to drive with a spec. Not every situation you will encounter will be so cut and dry. When in doubt the above rule of thumb can be a good baseline to determine when to spec an association.
 
+Rspec model matchers:
+
+  error_on
+  errors_on
+  have(1).record
+  have(n).records
 
 Describe it!
 ------------
