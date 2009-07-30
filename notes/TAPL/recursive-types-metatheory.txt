@@ -270,3 +270,76 @@ Examples:
 The restriction Sr of the generating function S to regular tree types is finite state.
 
 This means that we can obtain a decision procedure for the subtype relation on regular tree types by instantiating one of the membership algorithms with S. Naturally, for this to work in a practical implementation, regular trees must be represented by some finite structures. One such representation is μ-notation.
+
+
+μ-Types
+-------
+
+This section develops the finite μ-notation, defines subtyping on μ-expressions, and establishes the correspondence between this notion of subtyping and the subtyping on tree types.
+
+Let X range over a fixed countable set {X1, X2,...} of type variables. The set of raw μ-types is the set of expressions defined by the following grammar:
+
+  T ::= X
+        Top
+        T × T
+        T -> T
+        μX.T
+
+The syntactic operator μ is a binder, and gives rise, in the standard way, to notions of bound and free variables, closed raw μ-types, and equivalence of raw μ-types up to renaming of bound variables. FV(T) denotes the set of free variables of a raw μ-type T. The capture-avoiding substitution [X|->S]T of a raw μ-type S for free occurrences of X in a raw μ-type T is defined as usual.
+
+Raw μ-types have to be restricted a little to achieve a tight correspondence with regular trees: we want to be able to "read off" a tree type as the infinite unfolding of a given μ-type, but there are raw μ-types that cannot be reasonably interpreted as representations of tree types. These types have subexpressions of the form μX.μX1...μXn.X, where the variables X1 through Xn are distinct from X. For example, consider T = μX.X. Unfolding of T gives T again, so we cannot read off any tree by unfolding T. This leads us to the following restriction.
+
+A raw μ-type T is contractive if, for any subexpression of T of the form μX.μX1...μXn.S, the body S is not X. Equivalently, a raw μ-type is contractive if every occurrence of a μ-bound variable in the body is separated from its binder by at least one -> or ×.
+
+A raw μ-type is called simply a μ-type if it is contractive. The set of μ-types is written Tm.
+
+When T is a μ-type, we write μ-height(T) for the number of μ-bindings at the front of T.
+
+The common understanding of μ-types as finite notation for infinite regular tree types is formalized by the following function.
+
+The function treeof, mapping closed μ-types to tree types, is defined inductively as follows:
+
+  treeof (Top)(*) = Top 
+  treeof (T1->T2)(*) = ->
+  treeof (T1->T2)(i,π) = treeof(Ti)(π)
+  treeof(T1 × T2)(*) = ×
+  treeof (T1 × T2)(i,π) = treeof(Ti)(π)
+  treeof (μX.T)(π) = treeof([X |-> μX.T]T)(π)
+
+To verify that this definition is proper (i.e., exhaustive and terminating), note the following:
+
+  1. Every recursive use of treeof on the right-hand side reduces the lexicographic size of the pair(|π|, μ-height(T)): the cases for S->T and S × T reduce |π| and the case for μX.T preserves |π| but reduces μ-height(T).
+
+  2. All recursive calls preserve contractiveness and closure of the argument types. In particular, the type μX.T is contractive and closed iff its unfolding [X |-> μX.]T is. This justifies the unfolding step in the definition of treeof (μX.T).
+
+The treeof function is lifted to pairs of types by defining treeof (S, T) = (treeof (S), treeof (T)).
+
+The subtype relation for tree types was defined before as the greatest fixed point of the generating function S. In the present section, we extended the syntax of types with μ-types, whose behavior is intuitively described by the rules of (right and left, correspondingly) μ-folding:
+
+  S <: [X |-> μX.T]T
+  ------------------
+  S <: μX.T
+
+  [X |-> μX.S]S <: T
+  ------------------
+  μX.S <: T
+  
+Formally, we define subtyping for μ-types by giving a generating function Sm, with three clauses identical to the definition of S and two additional clauses corresponding to the μ-folding rules.
+
+Two μ-types S and T are said to be in the subtype relation if (S, T) <- vSm, where the monotone function Sm :: P(Tm × Tm) -> P(Tm × Tm) is defined by:
+
+  Sm(R) = {(S, Top) | S <- Tm}
+        U {(S1 × S2, T1 × T2) | (S1, T1), (S2, T2) <- R}
+        U {S1->S2, T1->T2) | (T1, S1), (S2, T2) <- R}
+        U {S, μX.T) | (S, [X |-> μX.T]T) <- R}
+        U {(μX.S, T) | ([X |-> μX.S]S, T) <- R, T ≠ Top, and T ≠ μY.T1}.
+
+Note that this definition does not embody precisely the μ-folding rules above: we have introduced an asymmetry between its final and penultimate clauses to make it invertible (otherwise, the clauses would overlap). However, as the next exercise shows, Sm generates the same subtype relation as the more natural generating function[4] Sd whose clauses exactly correspond to the inference rules.
+
+Lemma: Suppose that R included by Tm × Tm is Sm-consistent. For any (S, T) <- R, there is some (S′, T′) <- R such that treeof(S′, T′) = treeof(S, T) and neither S′ nor T′ starts with μ.
+
+Theorem: Let (S, T) <- Tm × Tm. Then (S, T) <- vSm iff treeof(S, T) <- vS.
+
+The correspondence established by the theorem is a statement of soundness and completeness of subtyping between μ-types, as defined in this section, with respect to the ordinary subtype relation between infinite tree types, restricted to those tree types that can be represented by finite μ-expressions.
+
+(The "d" in Sd is a reminder that the function is based on the "declarative" inference rules for μ-folding, in contrast to the "algorithmic" versions used in Sm.)
