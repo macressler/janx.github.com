@@ -1,0 +1,199 @@
+Type Reconstruction
+===================
+
+The typechecking algorithms for the calculi we have seen so far all depend on explicit type annotations-in particular, they require that lambda-abstractions be annotated with their argument types. In this chapter, we develop a more powerful type reconstruction algorithm, capable of calculating a principal type for a term in which some or all of these annotations are left unspecified. 
+
+Combining type reconstruction with other language features is often a somewhat delicate matter. In particular, both records and subtyping pose significant challenges.
+
+
+Type Variables and Substitutions
+--------------------------------
+
+In some of the calculi in previous chapters, we have assumed that the set of types includes an infinite collection of uninterpreted base types. Unlike interpreted base types such as Bool and Nat, these types come with no operations for introducing or eliminating terms; intuitively, they are just placeholders for some particular types whose exact identities we do not care about. In this chapter, we will be asking questions like "if we instantiate the placeholder X in the term t with the concrete type Bool, do we obtain a typable term?" In other words, we will treat our uninterpreted base types as type variables, which can be substituted or instantiated with other types.
+
+For the technical development in this chapter, it is convenient to separate the operation of substituting types for type variables into two parts: describing a mapping σ from type variables to types, called a type substitution, and applying this mapping to a particular type T to obtain an instance σT. For example, we might define σ = [X |-> Bool] and then apply σ to the type X->X to obtain σ(X->X) = Bool->Bool.
+
+Formally, a type substitution (or just substitution, when it's clear that we're talking about types) is a finite mapping from type variables to types. We write dom(σ) for the set of type variables appearing on the left-hand sides of pairs in σ, and range(σ) for the set of types appearing on the right-hand sides. Note that the same variable may occur in both the domain and the range of a substitution. Like term substitutions, the intention in such cases is that all the clauses of the substitution are applied simultaneously; for example, [X |-> Bool, Y |-> X->X] maps X to Bool and Y to X->X, not Bool->Bool.
+
+Application of a substitution to a type is defined in the obvious way:
+
+  σ(X) = T if (X |-> T) <- σ, X if X is not in dom(σ)
+  σ(Nat) = Nat
+  σ(Bool) = Bool
+  σ(T1->T2) = σ(T1)->σ(T2)
+
+Note that we do not need to make any special provisions to avoid variable capture during type substitution, because there are no constructs in the language of type expressions that bind type variables.
+
+Type substitution is extended pointwise to contexts by defining
+
+  σ(x1:T1,...,xn:Tn) = (x1:σT1,...,xn:σTn).
+
+Similarly, a substitution is applied to a term t by applying it to all types appearing in annotations in t.
+
+If σ and γ are substitutions, we write σ.γ for the substitution formed by composing them as follows:
+
+  σ.γ = X |-> σ(T), for each (X |-> T) <- γ
+        X |-> T, for each (X |-> T) <- σ with X </- dom(γ)
+
+Note that (σ.γ)S = σ(γS).
+
+A crucial property of type substitutions is that they preserve the validity of typing statements: if a term involving variables is well typed, then so are all of its substitution instances.
+
+Preservation of Typing Under Type Substitution: If σ is any type substitution and Г |- t : T, then σГ |- σt : σ T.
+
+
+Two Views of Type Variables
+---------------------------
+
+Suppose that t is a term containing type variables and Г is an associated context (possibly also containing type variables). There are two quite different questions that we can ask about t:
+
+  1. "Are all substitution instances of t well typed?" That is, for every σ, do we have σГ |- σt:T for some T?
+  2. "Is some substitution instance of t well typed?" That is, can we find a σ such that σГ |- σt : T for some T?
+
+According to the first view, type variables should be held abstract during typechecking, thus ensuring that a well-typed term will behave properly no matter what concrete types are later substituted for its type variables. For example, the term
+
+  λf:X->X. λa:X. f (f a);
+
+has type (X->X)->X->X, and, whenever we replace X by a concrete type T, the instance
+
+  λf:T->T. λa:T. f (f a);
+
+is well typed. Holding type variables abstract in this way leads us to parametric polymorphism, where type variables are used to encode the fact that a term can be used in many concrete contexts with different concrete types. 
+
+On the second view, the original term t may not even be well typed; what we want to know is whether it can be instantiated to a well typed term by choosing appropriate values for some of its type variables. For example, the term
+
+  λf:Y. λa:X. f (f a);
+
+is not typable as it stands, but if we replace Y by Nat->Nat and X by Nat, we obtain
+
+  λf:Nat->Nat. λa:Nat. f (f a);
+
+of type (Nat->Nat)->Nat->Nat. Or, if we simply replace Y by X->X, we obtain the term
+
+  λf:X->X. λa:X. f (f a);
+
+which is well typed even though it contains variables. Indeed, this term is a most general instance of λf:Y. λa:X. f (f a), in the sense that it makes the smallest commitment about the values of type variables that yields a well-typed term.
+
+Looking for valid instantiations of type variables leads to the idea of type reconstruction (sometimes called type inference), in which the compiler helps fill in type information that has been left out by the programmer. In the limit, we may, as in ML, allow the programmer to leave out all type annotations and write in the syntax of the bare, untyped lambda-calculus. During parsing, we annotate each bare lambda-abstraction λx.t with a type variable, λx:X.t, choosing X to be different from the type variables on all the other abstractions in the program. We then perform type reconstruction to find the most general values for all these variables that make the term typecheck. 
+
+To formalize type reconstruction, we will need a concise way of talking about the possible ways that type variables can be substituted by types, in a term and its associated context, to obtain a valid typing statement. (Figure 22-1 Constraint Typing Rules)
+
+Definition: Let Г be a context and t a term. A solution for (Г,t) is a pair (σ T) such that σГ |- σ(t):T.
+
+
+Constraint-Based Typing
+-----------------------
+
+We now present an algorithm that, given a term t and a context Г, calculates a set of constraints-equations between type expressions (possibly involving type variables) - that must be satisfied by any solution for (Г, t). The intuition behind this algorithm is essentially the same as the ordinary typechecking algorithm; the only difference is that, instead of checking constraints, it simply records them for later consideration. For example, when presented with an application t1 t2 with Г |- t1:T1 and Г |- t2:T2, rather than checking that t1 has the form T2->T12 and returning T12 as the type of the application, it instead chooses a fresh type variable X, records the constraint T1 = T2->X, and returns X as the type of the application.
+
+A constraint set C is a set of equations {Si = Ti, i<-1..n}. A substitution σ is said to unify an equation S = T if the substitution instances σS and σT are identical. We say that σ unifies (or satisfies) C if it unifies every equation in C.
+
+The constraint typing relation Г |- t:T |x C is defined by the rules below. Informally, Г |- t:T |x C can be read "term t has type T under assumptions Г whenever constraints C are satisfied." In rule T-APP, we write FV(T) for the set of all type variables mentioned in T.
+
+x:T <- Г
+--------------    CT-VAR
+Г |- x:T |o {}
+
+Г, x:T1 |- t2:T2 |x C
+---------------------------    CT-ABS
+Г |- λx:T1.t2 : T1->T2 |x C
+
+Г |- t1:T1 |x1 C1    Г |- t2:T2 |x2 C2
+X1 `join` X2 = X1 `join` FV(T2) = X2 `join` FV(T1) = empty set
+X not belongs to X1, X2, T1, T2, C1, C2, Г, t1 or t2
+C = C1 U C2 U {T1 = T2->X}
+--------------------------------------    CT-APP
+Г |- t1 t2 : X |(x1 U x2 U [x]) C'
+
+Г |- 0:Nat |o {}    CT-ZERO
+
+Г |- t1:T |x C
+C' = C U {T=Nat}
+------------------------    CT-SUCC
+Г |- succ t1 : Nat |x C'
+
+Г |- t1:T |x C
+C' = C U {T=Nat}
+------------------------    CT-PRED
+Г |- pred t1 : Nat |x C'
+
+Г |-t1:T |x C
+C' = C U {T=Nat}
+---------------------------    CT-ISZERO
+Г |- iszero t1 : Bool |x C'
+
+Г |- true:Bool |o {}    CT-TRUE
+
+Г |- false:Bool |o {}    CT-FALSE
+
+Г |- t1:T1 |x1 C1
+Г |- t2:T2 |x2 C2
+Г |- t3:T3 |x3 C3
+X1,X2,X3 nonoverlapping
+C' = C1 U C2 U C3 U {T1=Bool,T2=T3}
+--------------------------------------------------    CT-IF
+Г |- if t1 then t2 else t3 : T2 |(x1 U x2 U x3) C'
+
+
+The X subscripts are used to track the type variables introduced in each subderivation and make sure that the fresh variables created in different subderivations are actually distinct. On a first reading of the rules, it may be helpful to ignore these subscripts and all the premises involving them. On the next reading, observe that these annotations and premises ensure two things. First, whenever a type variable is chosen by the final rule in some derivation, it must be different from any variables chosen in subderivations. Second, whenever a rule involves two or more subderivations, the sets of variables chosen by these subderivations must be disjoint. Also, note that these conditions never prevent us from building some derivation for a given term; they merely prevent us from building a derivation in which the same variable is used "fresh" in two different places. Since there is an infinite supply of type variable names, we can always find a way of satisfying the freshness requirements.
+
+When read from bottom to top, the constraint typing rules determine a straightforward procedure that, given Г and t, calculates T and C (and X) such that Г |- t:T |x C. However, unlike the ordinary typing algorithm for the simply typed lambda-calculus, this one never fails, in the sense that for every Г and t there are always some T and C such that Г |- t:T |x C, and moreover that T and C are uniquely determined by Г and t. To lighten the notation in the following discussion, we sometimes elide the X and write just Г |- t:T | C.
+
+The idea of the constraint typing relation is that, given a term t and a context Г, we can check whether t is typable under Г by first collecting the constraints C that must be satisfied in order for t to have a type, together with a result type S, sharing variables with C, that characterizes the possible types of t in terms of these variables. Then, to find solutions for t, we just look for substitutions σ that satisfy C (i.e., that make all the equations in C into identities); for each such σ, the type σS is a possible type of t. If we find that there are no substitutions that satisfy C, then we know that t cannot be instantiated in such a way as to make it typable.
+
+Suppose that Г |- t:S | C. A solution for (Г, t, S, C) is a pair (σ, T) such that σ satisfies C and σS = T.
+
+So now we know, given a context Г and a term t, we have two different ways of characterizing the possible ways of instantiating type variables in Г and t to produce a valid typing:
+
+  1. [DECLARATIVE] as the set of all solutions for (Г, t) in the sense of Definition on line #81 or
+  2. [ALGORITHMIC] via the constraint typing relation, by finding S and C such that Г |- t:S | C and then taking the set of solutions for (Г, t, S, C).
+
+The two different ways is in fact identical, we can prove this by two theorems below:
+
+Theorem [Soundness of Constraint Typing]: Suppose that Г |- t:S | C. If (σ, T) is a solution for (Г, t, S, C), then it is also a solution for (Г, t). (For this direction of the argument, the fresh variable sets X are secondary and can be elided.)
+
+Definition: Write σ\X for the substitution that is undefined for all the variables in X and otherwise behaves like σ.
+
+Theorem [Completeness of Constraint Typing]: Suppose Г |- t:S |x C. If (σ, T) is a solution for (Г, t) and dom(σ) ∩ X = , then there is some solution (σ′, T) for (Г, t,S, C) such that σ′\X = σ.
+
+Corollary: Suppose Г |- t:S | C. There is some solution for (Г, t) iff there is some solution for (Г, t, S, C).
+
+
+Unification
+-----------
+
+To calculate solutions to constraint sets, we use the idea of using unification to check that the set of solutions is nonempty and, if so, to find a "best" element, in the sense that all solutions can be generated straightforwardly from this one.
+
+A substitution σ is less specific (or more general) than a substitution σ′, written σ ⊑ σ′, if σ′ = γ.σ for some substitution γ.
+
+A principal unifier (or sometimes most general unifier) for a constraint set C is a substitution σ that satisfies C and such that σ ⊑ σ′ for every substitution σ′ satisfying C. (Jan: fix point?)
+
+The unification algorithm for types is defined below. The phrase "let {S = T} U C′ = C" in the second line should be read as "choose a constraint S=T from the set C and let C′ denote the remaining constraints from C.
+
+
+unify(C) = if C = emptyset, then []
+           else let {S = T} U C' = C
+             if S = T
+               then unify(C')
+             else if S = X and X is not belongs to FV(T)
+               then unify([X |-> T]C') . [X |-> T]
+             else if T = X and X is not belongs to FV(S)
+               then unify([X |-> S]C') . [X |-> S]
+             else if S = S1->S2 and T = T1->T2
+               then unify(C' U [S1 |-> T1, S2 |-> T2])
+             else
+               fail
+
+
+The side conditions X is not belongs to FV(T) in the fifth line and X is not belongs to FV(S) in the seventh are known as the occur check. Their effect is to prevent the algorithm from generating a solution involving a cyclic substitution like X |-> X->X, which makes no sense if we are talking about finite type expressions. If we expand our language to include infinite type expressions then the occur check can be omitted.
+
+Theorem: The algorithm unify always terminates, failing when given a non-unifiable constraint set as input and otherwise returning a principal unifier. More formally:
+
+  1. unify(C) halts, either by failing or by returning a substitution, for all C;
+  2. if unify(C) = σ, then σ is a unifier for C;
+  3. if δ is a unifier for C, then unify(C) = σ with σ ⊑ δ.
+
+If unify(C) fails it can happen in only two ways: either S is Nat and T is an arrow type (or vice versa), or else S = X and X <- T (or vice versa). The first case obviously contradicts the assumption that C is unifiable. To see that the second does too, recall that, by assumption, δS = δT; if X occurred in T, then δT would always be strictly larger than δSS. Thus, if unify(C) fails, then C is not unifiable, contradicting our assumption that δ is a unifier for C; so this case cannot occur.
+
+Note that nothing in this algorithm depends on the fact that we are unifying type expressions as opposed to some other sort of expressions; the same algorithm can be used to solve equality constraints between any kind of (first-order) expressions.
+
