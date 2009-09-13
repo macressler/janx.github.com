@@ -197,3 +197,175 @@ If unify(C) fails it can happen in only two ways: either S is Nat and T is an ar
 
 Note that nothing in this algorithm depends on the fact that we are unifying type expressions as opposed to some other sort of expressions; the same algorithm can be used to solve equality constraints between any kind of (first-order) expressions.
 
+
+Principle Types
+---------------
+
+A principal solution for (Г, t,S, C) is a solution (σ, T) such that, whenever (σ′, T′) is also a solution for (Г, t, S, C), we have σ ⊑ σ′. When (σ, T) is a principal solution, we call T a principal type of t under Г.
+
+Theorem: If (Г t, S, C) has any solution, then it has a principal one. The unification algorithm above can be used to determine whether (Г, t, S, C) has a solution and, if so, to calculate a principal one.
+
+Corollary: It is decidable whether (Г, t) has a solution.
+
+The idea of principal types can be used to build a type reconstruction algorithm that works more incrementally than the one we have developed here. Instead of generating all the constraints first and then trying to solve them, we can interleave generation and solving, so that the type reconstruction algorithm actually returns a principal type at each step. The fact that the types are always principal ensures that the algorithm never needs to re-analyze a subterm: it makes only the minimum commitments needed to achieve typability at each step. One major advantage of such an algorithm is that it can pinpoint errors in the user's program much more precisely.
+
+
+Implicit Type Annotations
+-------------------------
+
+Languages supporting type reconstruction typically allow programmers to completely omit type annotations on lambda-abstractions. One way to achieve this is simply to make the parser fill in omitted annotations with freshly generated type variables. A better alternative is to add un-annotated abstractions to the syntax of terms and a corresponding rule to the constraint typing relation.
+
+X is not belongs to X'    Г,x:X |- t1:T |X' C
+---------------------------------------------
+Г |- λx.t1:X->T |X'U[X] C
+
+This account of un-annotated abstractions is a bit more direct than regarding them as syntactic sugar. It is also more expressive, in a small but useful way: if we make several copies of an un-annotated abstraction, the CT-ABSINF rule will allow us to choose a different variable as the argument type of each copy. By contrast, if we regard a bare abstraction as being annotated with an invisible type variable, then making copies will yield several expressions sharing the same argument type. This difference is important for the discussion of let-polymorphism in the following section.
+
+
+Let-Polymorphism
+----------------
+
+The term polymorphism refers to a range of language mechanisms that allow a single part of a program to be used with different types in different contexts. The type reconstruction algorithm shown above can be generalized to provide a simple form of polymorphism known as let-polymorphism (also ML-style or Damas-Milner polymorphism). This feature was introduced in the original dialect of ML and has been incorporated in a number of successful language designs, where it forms the basis of powerful generic libraries of commonly used structures (lists, arrays, trees, hash tables, streams, user-interface widgets, etc.).
+
+The motivation for let-polymorphism arises from examples like the following. Suppose we define and use a simple function double, which applies its first argument twice in succession to its second:
+
+  let double = λf:Nat->Nat. λa:Nat. f(f(a)) in
+  double (λx:Nat. succ (succ x)) 2;
+
+Because we want to apply double to a function of type Nat->Nat, we choose type annotations that give it type (Nat->Nat)->(Nat->Nat). We can alternatively define double so that it can be used to double a boolean function:
+
+  let double = λf:Bool->Bool. λa:Bool. f(f(a)) in
+  double (λx:Bool. x) false;
+
+What we cannot do is use the same double function with both booleans and numbers: if we need both in the same program, we must define two versions that are identical except for type annotations.
+
+  let doubleNat = λf:Nat->Nat. λa:Nat. f(f(a)) in
+  let doubleBool = λf:Bool->Bool. λa:Bool. f(f(a)) in
+  let a = doubleNat (λx:Nat. succ (succ x)) 1 in
+  let b = doubleBool (λx:Bool. x) false in ...
+
+Even annotating the abstractions in double with a type variable
+
+  let double = λf:X->X. λa:X. f(f(a)) in ...
+
+does not help. For example, if we write
+
+  let double = λf:X->X. λa:X. f(f(a)) in
+  let a = double (λx:Nat. succ (succ x)) 1 in
+  let b = double (λx:Bool. x) false in ...
+
+then the use of double in the definition of a generates the constraint X->X = Nat->Nat, while the use of double in the definition of b generates the constraint X->X = Bool->Bool. These constraints place unsatisfiable demands on X, making the whole program untypable.
+
+What went wrong here? The variable X plays two distinct roles in the example. First, it captures the constraint that the first argument to double in the calculation of a must be a function whose domain and range types are the same as the type (Nat) of the other argument to double. Second, it captures the constraint that the arguments to double in the calculation of b must be similarly related. Unfortunately, because the same variable X is used in both cases, we also end up with the spurious constraint that the second arguments to the two uses of double must have the same type.
+
+What we'd like is to break this last connection-i.e., to associate a different variable X with each use of double. Fortunately, this is easily accomplished. The first step is to change the ordinary typing rule for let so that, instead of calculating a type for the right-hand side t1 and then using this as the type of the bound variable x while calculating a type for the body t2,
+
+Г |- t1:T1    Г,x:T1 |- t2:T2
+-----------------------------    (T-LET)
+Г |- let x=t1 in t2:T2
+
+it instead substitutes t1 for x in the body, and then typechecks this expanded expression:
+
+Г |- [x |-> t1]t2:T2
+-----------------------------    (T-LETPOLY)
+Г |- let x=t1 in t2:T2
+
+We write a constraint-typing rule for let in a similar way:
+
+Г |- [x |-> t1]t2:T2 |X' C
+-----------------------------    (CT-LETPOLY)
+Г |- let x=t1 in t2:T2 |X' C
+
+In essence, what we've done is to change the typing rules for let so that they perform a step of evaluation
+
+let x=v1 in t2 -> [x|->v1]t2    (E-LETV)
+
+before calculating types.
+
+The second step is to rewrite the definition of double using the implicitly annotated lambda-abstractions.
+
+  let double = λf. λa. f(f(a)) in
+  let a = double (λx:Nat. succ (succ x)) 1 in
+  let b = double (λx:Bool. x) false in ...
+
+The combination of the constraint typing rules for let (CT-LETPOLY) and the implicitly annotated lambda-abstraction (CT-ABSINF) gives us exactly what we need: CT-LETPOLY makes two copies of the definition of double, and CT-ABSINF assigns each of the abstractions a different type variable. The ordinary process of constraint solving does the rest.
+
+However, this scheme has some flaws that need to be addressed before we can use it in practice. One obvious one is that, if we don't happen to actually use the let-bound variable in the body of the let, then the definition will never actually be typechecked. For example, a program like
+
+  let x = <utter garbage> in 5
+
+will pass the typechecker. This can be repaired by adding a premise to the typing rule
+
+Г |- [x |-> t1]t2:T2    Г |- t1:T1
+----------------------------------    (T-LETPOLY)
+Г |- let x=t1 in t2:T2
+
+and a corresponding premise to CT-LETPOLY, ensuring that t1 is well typed.
+
+A related problem is that, if the body of the let contains many occurrences of the let-bound variable, then the whole right-hand side of the let-definition will be checked once per occurrence, whether or not it contains any implicitly annotated lambda-abstractions. Since the right-hand side itself can contain let-bindings, this typing rule can cause the typechecker to perform an amount of work that is exponential in the size of the original term!
+
+To avoid this re-typechecking, practical implementations of languages with let-polymorphism actually use a more clever (though formally equivalent) re-formulation of the typing rules. In outline, the typechecking of a term let x=t1 in t2 in a context Г proceeds as follows:
+
+  1. We use the constraint typing rules to calculate a type S1 and a set C1 of associated constraints for the right-hand side t1.
+
+  2. We use unification to find a most general solution σ to the constraints C1 and apply σ to S1 (and Г) to obtain t1's principal type T1.
+
+  3. We generalize any variables remaining in T1. If X1...Xn are the remaining variables, we write "X1...Xn.T1 for the principal type scheme of t1. One caveat is here that we need to be careful not to generalize variables T1 that are also mentioned in Г, since these correspond to real constraints between t1 and its environment. For example, in 
+
+     λf:X->X. λx:X. let g=f in g(x);
+
+  we should not generalize the variable X in the type X->X of g, since doing so would allow us to type wrong programs like this one:
+
+     (λf:X->X. λx:X. let g=f in g(0))
+       (λx:Bool. if x then true else false)
+       true;
+
+  4. We extend the context to record the type scheme "X1...Xn.T1 for the bound variable x, and start typechecking the body t2. In general, the context now associates each free variable with a type scheme, not just a type.
+
+  5. each time we encounter an occurrence of x in t2, we look up its type scheme "x1...xn.t1. we now generate fresh type variables y1 ...yn and use them to instantiate the type scheme, yielding [x1 |-> y1, ..., xn |-> yn]t1, which we use as the type of x.
+
+this algorithm is much more efficient than the simplistic approach of substituting away let expressions before typechecking. indeed, decades of experience have shown that in practice it appears "essentially linear" in the size of the input program. it therefore came as a significant surprise when showed that its worst-case complexity is still exponential! the example they constructed involves using deeply nested sequences of lets in the right-hand sides of other lets-rather than in their bodies, where nesting of lets is common-to build expressions whose types grow exponentially larger than the expressions themselves. for example, the following ocaml program is well typed but takes a very long time to typecheck.
+
+     let f0 = fun x -> (x,x) in
+       let f1 = fun y -> f0(f0 y) in
+         let f2 = fun y -> f1(f1 y) in
+           let f3 = fun y -> f2(f2 y) in
+             let f4 = fun y -> f3(f3 y) in
+               let f5 = fun y -> f4(f4 y) in
+                 f5 (fun z -> z)
+
+to see why, try entering f0, f1, etc., one at a time, into the ocaml top-level.
+
+A final point worth mentioning is that, in designing full-blown programming languages with let-polymorphism, we need to be a bit careful of the interaction of polymorphism and side-effecting features such as mutable storage cells. A simple example illustrates the danger:
+
+  let r = ref (λx. x) in
+    (r:=(λx:Nat. succ x); (!r)true);
+
+Using the algorithm sketched above, we calculate Ref(X->X) as the principal type of the right-hand side of the let; since X appears nowhere else, this type can be generalized to "X.Ref(X->X), and we assign this type scheme to r when we add it to the context. When typechecking the assignment in the second line, we instantiate this type to Ref(Nat->Nat). When typechecking the third line, we instantiate it to Ref(Bool->Bool). But this is unsound, since when the term is evaluated it will end up applying succ to true.
+
+The problem here is that the typing rules have gotten out of sync with the evaluation rules. The typing rules introduced in this section tell us that, when we see a let expression, we should immediately substitute the right-hand side into the body. But the evaluation rules tell us that we may perform this substitution only after the right-hand side has been reduced to a value. The typing rules see two uses of the ref constructor, and analyze them under different assumptions, but at run time only one ref is actually allocated.
+
+We can correct this mismatch in two ways-by adjusting evaluation or typing. In the former case, the evaluation rule for let would become
+
+let x=t1 in t2 -> [x|->t1]t2    (E-LET)
+
+Under this strategy, the first step in evaluating our dangerous example from above would replace r by its definition, yielding
+
+  (ref (λx. x)) := (λx:Nat. succ x) in
+    (!(ref (λx. x))) true;
+
+which is perfectly safe! The first line creates a reference cell initially containing the identity function, and stores (λx:Nat. succ x) into it. The second creates another reference containing the identity, extracts its contents, and applies it to true. However, this calculation also demonstrates that changing the evaluation rule to fit the typing rule gives us a language with a rather strange semantics that no longer matches standard intuitions about call-by-value evaluation order. (Imperative languages with non-CBV evaluation strategies are not unheard-of, but they have never become popular because of the difficulty of understanding and controlling the ordering of side effects at run time.)
+
+It is better to change the typing rule to match the evaluation rule. Fortunately, this is easy: we just impose the restriction (often called the value restriction) that a let-binding can be treated polymorphically-i.e., its free typevariables can be generalized-only if its right-hand side is a syntactic value. This means that, in the dangerous example, the type assigned to r when we add it to the context will be X->X, not "X.X->X. The constraints imposed by the second line will force X to be Nat, and this will cause the typechecking of the third line to fail, since Nat cannot be unified with Bool.
+
+The value restriction solves our problem with type safety, at some cost in expressiveness: we can no longer write programs in which the right-hand sides of let expressions can both perform some interesting computation and be assigned a polymorphic type scheme. What is surprising is that this restriction makes hardly any difference in practice. Wright (1995) settled this point by analyzing a huge corpus of code written in an ML dialect-the 1990 definition of Standard ML (Milner, Tofte, and Harper, 1990)-that provided a more flexible let-typing rule based on weak type variables and observing that all but a tiny handful of right-hand sides were syntactic values anyway. This observation more or less closed the argument, and all major languages with ML-style let-polymorphism now adopt the value restriction.
+
+The difference between a lambda-abstraction that is explicitly annotated with a type variable and an un-annotated abstraction for which the constraint generation algorithm creates a variable becomes moot once we introduce generalization and instantiation. Either way, the right-hand side of a let is assigned a type involving a variable, which is generalized before being added to the context and replaced by a fresh variable every time it is instantiated.
+
+Principal types should not be confused with the similar notion of principal typings. The difference is that, when we calculate principal types, the context Г and term t are considered as inputs to the algorithm, while the principal type T is the output. An algorithm for calculating principal typings takes just t as input and yields both Г and T as outputs—i.e., it calculates the minimal assumptions about the types of the free variables in t. Principal typings are useful in supporting separate compilation and "smartest recompilation," performing incremental type inference, and pinpointing type errors. Unfortunately, many languages, in particular ML, have principal types but not principal typings.
+
+For the combination of subtyping with ML-style type reconstruction, some promising initial results have been reported, but practical checkers have yet to see widespread use.
+
+Extending ML-style type reconstruction to handle recursive types has been shown not to pose significant difficulties. The only significant difference from the algorithms presented in this chapter appears in the definition of unification, where we omit the occur check (which ordinarily ensures that the substitution returned by the unification algorithm is acyclic). Having done this, to ensure termination we also need to modify the representation used by the unification algorithm so that it maintains sharing, e.g., using by destructive operations on (potentially cyclic) pointer structures. Such representations are common in high-performance implementations.
+
+The mixture of type reconstruction with recursively defined terms, on the other hand, raises one tricky problem, known as polymorphic recursion. A simple (and unproblematic) typing rule for recursive function definitions in ML specifies that a recursive function can be used within the body of its definition only monomorphically (i.e., all recursive calls must have identically typed arguments and results), while occurrences in the rest of the program may be used polymorphically (with arguments and results of different types). Mycroft (1984) and Meertens (1983) proposed a polymorphic typing rule for recursive definitions that allows recursive calls to a recursive function from its own body to be instantiated with different types. This extension, often called the Milner-Mycroft Calculus, was shown to have an undecidable reconstruction problem by Henglein (1993) and independently by Kfoury, Tiuryn, and Urzyczyn (1993a); both of these proofs depend on the undecidability of the (unrestricted) semi-unification problem, shown by Kfoury, Tiuryn, and Urzyczyn (1993b).
