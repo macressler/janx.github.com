@@ -1,0 +1,36 @@
+Universal Types
+===============
+
+In this chapter, we consider a more general form of polymorphism in the setting of a powerful calculus known as System F.
+
+In many case we need define many similar functions, each of these functions is applicable to a different type of argument, but all share precisely the same behavior (indeed, they share precisely the same program text, aside from the typing annotations). We can write slightly different version for each types but this kind of cut-and-paste programming violates a basic dictum of software engineering:
+
+  ABSTRACTION PRINCIPLE: Each significant piece of functionality in a program should be implemented in just one place in the source code. Where similar functions are carried out by distinct pieces of code, it is generally beneficial to combine them into one by abstracting out the varying parts.
+
+Here, the varying parts are the types! What we need, then, are facilities for abstracting out a type from a term and later instantiating this abstract term with concrete type annotations.
+
+
+Varieties of Polymorphism
+-------------------------
+
+Type systems that allow a single piece of code to be used with multiple types are collectively known as polymorphic systems (poly = many, morph = form). Several varieties of polymorphism can be found in modern languages (this classification comes from Strachey, 1967, and Cardelli and Wegner, 1985).
+
+Parametric polymorphism, the topic of this chapter, allows a single piece of code to be typed "generically," using variables in place of actual types, and then instantiated with particular types as needed. Parametric definitions are uniform: all of their instances behave the same.
+
+The most powerful form of parametric polymorphism is the impredicative or first-class polymorphism developed in this chapter. More common in practice is the form known as ML-style or let-polymorphism, which restricts polymorphism to top-level let-bindings, disallowing functions that take polymorphic values as arguments, and obtains in return a convenient and natural form of automatic type reconstruction. First-class parametric polymorphism is also becoming popular in programming languages, and forms the technical foundation for the powerful module systems of languages like ML (see Harper and Stone, 2000).
+
+Ad-hoc polymorphism, by contrast, allows a polymorphic value to exhibit different behaviors when "viewed" at different types. The most common example of ad-hoc polymorphism is overloading, which associates a single function symbol with many implementations; the compiler (or the runtime system, depending on whether overloading resolution is static or dynamic) chooses an appropriate implementation for each application of the function, based on the types of the arguments.
+
+A generalization of function overloading forms the basis for multi-method dispatch in languages such as CLOS (Bobrow et al., 1988; Kiczales et al., 1991) and Cecil (Chambers, 1992; Chambers and Leavens, 1994). This mechanism has been formalized in the λ-& calculus of Castagna, Ghelli, and Longo (1995; cf. Castagna, 1997).
+
+A more powerful form of ad-hoc polymorphism known as intensional polymorphism (Harper and Morrisett, 1995; Crary, Weirich, and Morrisett, 1998) permits restricted computation over types at run time. Intensional polymorphism is an enabling technology for a variety of advanced implementation techniques for polymorphic languages, including tag-free garbage collection, "unboxed" function arguments, polymorphic marshaling, and space-efficient "flattened" data structures.
+
+Yet more powerful forms of ad-hoc polymorphism can be built from a typecase primitive, which permits arbitrary pattern-matching on type information at run time (Abadi, Cardelli, Pierce, and Rémy, 1995; Abadi, Cardelli, Pierce, and Plotkin, 1991b; Henglein, 1994; Leroy and Mauny, 1991; Thatte, 1990). Language features such as Java's instanceof test can be viewed as restricted forms of typecase.
+
+(Jan: intensional polymorphism and typecase primitive looks like duck typing in Ruby)
+
+The subtype polymorphism gives a single term many types using the rule of subsumption, allowing us to selectively "forget" information about the term's behavior.
+
+These categories are not exclusive: different forms of polymorphism can be mixed in the same language. For example, Standard ML offers both parametric polymorphism and simple overloading of built-in arithmetic operations, but not subtyping, while Java includes subtyping, overloading, and simple ad-hoc polymorphism (instanceof), but not (at the time of this writing) parametric polymorphism. There are several proposals for adding parametric polymorphism to Java; the best known of these is GJ (Bracha, Odersky, Stoutamire, and Wadler, 1998).
+
+The unqualified term "polymorphism" causes a certain amount of confusion between programming language communities. Among functional programers (i.e., those who use or design languages like ML, Haskell, etc.), it almost always refers to parametric polymorphism. Among object-oriented programmers, on the other hand, it almost always means subtype polymorphism, while the term genericity (or generics) is used for parametric polymorphism.
