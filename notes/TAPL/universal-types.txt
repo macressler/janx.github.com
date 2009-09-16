@@ -34,3 +34,320 @@ The subtype polymorphism gives a single term many types using the rule of subsum
 These categories are not exclusive: different forms of polymorphism can be mixed in the same language. For example, Standard ML offers both parametric polymorphism and simple overloading of built-in arithmetic operations, but not subtyping, while Java includes subtyping, overloading, and simple ad-hoc polymorphism (instanceof), but not (at the time of this writing) parametric polymorphism. There are several proposals for adding parametric polymorphism to Java; the best known of these is GJ (Bracha, Odersky, Stoutamire, and Wadler, 1998).
 
 The unqualified term "polymorphism" causes a certain amount of confusion between programming language communities. Among functional programers (i.e., those who use or design languages like ML, Haskell, etc.), it almost always refers to parametric polymorphism. Among object-oriented programmers, on the other hand, it almost always means subtype polymorphism, while the term genericity (or generics) is used for parametric polymorphism.
+
+
+System F
+--------
+
+The system we will be studying in this chapter, commonly called System F, was first discovered by Jean-Yves Girard (1972), in the context of proof theory in logic. A little later, a type system with essentially the same power was developed, independently, by a computer scientist, John Reynolds (1974), who called it the polymorphic lambda-calculus. This system has been used extensively as a research vehicle for foundational work on polymorphism and as the basis for numerous programming language designs. It is also sometimes called the second-order lambda-calculus, because it corresponds, via the Curry-Howard correspondence, to second-order intuitionistic logic, which allows quantification not only over individuals [terms], but also over predicates [types].
+
+The definition of System F is a straightforward extension of λ->, the simply typed lambda-calculus. In λ->, lambda-abstraction is used to abstract terms out of terms, and application is used to supply values for the abstracted parts. Since we want here a mechanism for abstracting types out of terms and filling them in later, we introduce a new form of abstraction, written λX.t, whose parameter is a type, and a new form of application, t [T], in which the argument is a type expression. We call our new abstractions type abstractions and the new application construct type application or instantiation.
+
+When, during evaluation, a type abstraction meets a type application, the pair forms a redex, just as in lgr;->. We add a reduction rule
+
+  (λX.t12) [T2] -> [X |-> T2]t12    (E-TAPPTABS)
+
+analogous to the ordinary reduction rule for abstractions and applications.
+
+  (λx:T11.t12) v2 -> [x |-> v2]t12    (E-APPABS)
+
+For example, when the polymorphic identity function
+
+  id = λX. λx:X. x;
+
+is applied to Nat by writing id [Nat], the result is [X |-> Nat](λx:X.x), i.e., λx:Nat.x, the identity function on natural numbers.
+
+Finally, we need to specify the type of a polymorphic abstraction. We use types like Nat->Nat for classifying ordinary functions like λx:Nat.x; we now need a different form of "arrow type" whose domain is a type, for classifying polymorphic functions like id. Notice that, for each argument T to which it is applied, id yields a function of type T->T; that is, the type of the result of id depends on the actual type that we pass it as argument. To capture this dependency, we write the type of id as "X.X->X. The typing rules for polymorphic abstraction and application are analogous to the rules for term-level abstraction and application.
+
+  Г,X |- t2:T2
+  ------------------    (T-TABS)
+  Г |- λX.t2 : VX.T2
+
+  Г |- t1:VX.T12
+  ----------------------------    (T-TAPP)
+  Г |- t1 [T2] : [X |-> T2]T12
+
+Note that we include the type variable X in the context used by the subderivation for t. We continue the convention that the names of (term or type) variables should be chosen so as to be different from all the names already bound by Г and that lambda-bound type variables may be renamed at will in order to satisfy this condition. (In some presentations of System F, this freshness condition is given as an explicit side condition on the T-TABS rule, instead of being built into the rules about how contexts are constructed, as we are doing here.) For the moment, the only role of type variables in contexts is to keep track of scopes and make sure that the same type variable is not added twice to a context. In later chapters, we will annotate type variables with information of various kinds, such as bounds and kinds.
+
+Figure below shows the complete definition of the polymorphic lambda-calculus, with differences from λ-> highlighted. As usual, this summary defines just the pure calculus, omitting other type constructors such as records, base types such as Nat and Bool, and term-language extensions such as let and fix. These extra constructs can be added straightforwardly to the pure system, and we will use them freely in the examples that follow.
+
+Polymorphic Lambda-Calculus (System F) (based on λ->)
+---------------------------------------------------------
+t ::=                             terms
+      x                           variable
+      λx:T.t                      abstraction
+      t t                         application
+      λX.t                        type abstraction
+      t [T]                       type application
+
+v ::=                             values
+      λx:T.t                      abstraction value
+      λX.t                        type abstraction value
+
+T ::=                             types
+      X                           type variable
+      T->T                        type of functions
+      VX.T                        universal type
+
+Г ::=                             contexts
+      O                           empty context
+      Г,x:T                       term variable binding
+      Г,X                         type variable binding
+
+Evaluation                        (t->t')
+
+t1 -> t1'
+---------------                   E-APP1
+t1 t2 -> t1' t2
+
+t2 -> t2'
+---------------                   E-APP2
+v1 t2 -> v1 t2'
+
+(λx:T11.t12)v2 -> [x |-> v2]t12   E-APPABS
+
+t1 -> t1'
+-------------------               E-TAPP
+t1 [T2] -> t1' [T2]
+
+(λX.t12)[T2] -> [X |-> T2]t12     E-TAPPTABS
+
+Typing                            (Г |- t:T)
+
+x:T <- Г
+--------                          T-VAR
+Г |- x:T
+
+Г,x:T1 |- t2:T2
+----------------------            T-ABS
+Г |- λx:T1.t2 : T1->T2
+
+Г |- t1:T11->T12    Г |- t2:T11
+-------------------------------   T-APP
+Г |- t1 t2 : T12
+
+Г,X |- t2:T2
+------------------                T-TABS
+Г |- λX.t2 : VX.T2
+
+Г |- t1:VX.T12
+----------------------------      T-TAPP
+Г |- t1 [T2] : [X |-> T2]T12
+
+
+Examples
+--------
+
+We have seen already how type abstraction and application can be used to define a single polymorphic identity function
+
+  id = λX. λx:X. x;
+  > id : "X. X->X
+
+and instantiate it to yield any concrete identity function that may be required:
+
+  id [Nat];
+  > <fun> : Nat->Nat
+
+  id [Nat] 0;
+  > 0 : Nat
+
+A more useful example is the polymorphic doubling function:
+
+  double = λX. λf:X->X. λa:X. f (f a);
+  > double : "X. (X->X)->X->X
+
+The abstraction on the type X allows us to obtain doubling functions for specific types by instantiating double with different type arguments:
+
+  doubleNat = double [Nat];
+  > doubleNat : (Nat->Nat)->Nat->Nat
+
+  doubleNatArrowNat = double [Nat->Nat];
+  > doubleNatArrowNat : ((Nat->Nat)->Nat->Nat)->(Nat->Nat)->Nat->Nat
+
+Once instantiated with a type argument, double can be further applied to an actual function and argument of appropriate types:
+
+  double [Nat] (λx:Nat. succ(succ(x))) 3;
+  > 7 : Nat
+
+Here is a slightly trickier example: polymorphic self-application. Recall that, in the simply typed lambda-calculus, there is no way to type the untyped term λx. x x. In System F, on the other hand, this term becomes typable if we give x a polymorphic type and instantiate it appropriately:
+
+  selfApp = λx:"X.X->X. x ["X.X->X] x;
+  > selfApp : ("X. X->X)->("X. X->X)
+
+As a (slightly) more useful example of self application, we can apply the polymorphic double function to itself, yielding a polymorphic quadrupling function:
+
+  quadruple = λX. double [X->X] (double [X]);
+  > quadruple : "X. (X->X)->X->X
+
+
+Polymorphic Lists
+-----------------
+
+Most real-world programming with polymorphism is much more pedestrian than the tricky examples above. As an example of straightforward polymorphic programming, suppose our programming language is equipped with a type constructor List and term constructors for the usual list manipulation primitives, with the following types.
+
+  nil : "X. List X
+  cons : "X. X -> List X -> List X
+  isnil : "X. List X -> Bool
+  head : "X. List X -> X
+  tail : "X. List X -> List X
+
+When we first introduced lists in simple typed lambda calculus, we used "custom" inference rules to allow the operations to be applied to lists with elements of any type. Here, we can give the operations polymorphic types expressing exactly the same constraints—that is, lists no longer need to be "baked into" the core language, but can simply be considered as a library providing several constants with particular polymorphic types. The same holds for the Ref type and the primitive operations on reference cells in Chapter 13, and many other common data and control structures.
+
+We can use these primitives to define our own polymorphic operations on lists. For example, here is a polymorphic map function that takes a function from X to Y and a list of Xs and returns a list of Ys.
+
+  map = λX. λY.
+         λf: X->Y.
+          (fix (λm: (List X) -> (List Y).
+                  λl: List X.
+                   if isnil [X] l
+                     then nil [Y]
+                     else cons [Y] (f (head [X] l))
+                                   (m (tail [X] l))));
+  > map : "X. "Y. (X->Y) -> List X -> List Y
+
+  l = cons [Nat] 4 (cons [Nat] 3 (cons [Nat] 2 (nil [Nat])));
+  > l : List Nat
+
+  head [Nat] (map [Nat] [Nat] (λx:Nat. succ x) l);
+  > 5 : Nat
+
+
+Church Encodings
+----------------
+
+We saw before that a variety of primitive data values such as booleans, numbers, and lists can be encoded as functions in the pure untyped lambda-calculus. In this section, we show how these Church encodings can also be carried out in System F.
+
+These encodings are interesting for two reasons. First, they give our understanding of type abstraction and application a good workout. Second, they demonstrate that System F, like the pure untyped lambda-calculus, is computationally a very rich language, in the sense that the pure system can express a large range of data and control structures. This means that, if we later design a full-scale programming language with System F as its core, we can add these features as primitives (for efficiency, and so that we can equip them with more convenient concrete syntax) without disturbing the fundamental properties of the core language. This will not be true of all interesting high-level language features, of course. For example, adding references to System F, as we did for λ-> before, represents a real change in the fundamental computational nature of the system.
+
+Let us begin with the Church booleans. Recall that, in the untyped lambda-calculus, we represented the boolean constants true and false by lambda-terms tru and fls defined like this:
+
+  tru = λt. λf. t;
+  fls = λt. λf. f;
+
+Each of these terms takes two arguments and returns one of them. If we want to assign a common type to tru and fls, we had better assume that the two arguments have the same type (since the caller will not know whether it is interacting with tru or fls), but this type may be arbitrary (since tru and fls do not need to do anything with their arguments except return one of them). This leads us to the following type for tru and fls.
+
+  CBool = "X.X->X->X;
+
+The System-F terms tru and fls are obtained by adding appropriate type annotations to the untyped versions above.
+
+  tru = λX. λt:X. λf:X. t;
+  > tru : CBool
+
+  fls = λX. λt:X. λf:X. f;
+  > fls : CBool
+
+We can write common boolean operations like not by constructing a new boolean that uses an existing one to decide which of its arguments to return:
+
+  not = λb:CBool. λX. λt:X. λf:X. b [X] f t;
+  > not : CBool -> CBool
+
+
+We can play a similar game with numbers. The Church numerals encode each natural number n as a function that take two arguments s and z and applies s to z, n times:
+
+  c0 = λs. λz. z;
+  c1 = λs. λz. s z;
+  c2 = λs. λz. s (s z);
+  c3 = λs. λz. s (s (s z));
+
+Clearly, the z argument should have the same type as the domain of s, and the result returned by s should again have the same type. This leads us to the following type for Church numerals in System F:
+
+  CNat = "X. (X->X)->X->X;
+
+The elements of this type are obtained by adding appropriate annotations to the untyped Church numerals:
+
+  c0  =  λX. λs:X->X. λz:X. z;
+  > c0 : CNat
+
+A typed successor function on Church numerals can be defined as follows.
+
+  csucc = λn:CNat. λX. λs:X->X. λz:X. s (n [X] s z);
+  > csucc : CNat -> CNat
+
+That is, csucc n returns an element of CNat that, given s and z, applies s to z, n times (by applying n to s and z), and then once more. Other arithmetic operations can be defined similarly. For example, addition can be defined either in terms of successor,
+
+  cplus = λm:CNat. λn:CNat. m [CNat] csucc n;
+  > cplus : CNat -> CNat -> CNat
+
+or more directly:
+
+  cplus = λm:CNat. λn:CNat.  λX. λs:X->X. λz:X. m [X] s (n [X] s z);
+  > cplus : CNat -> CNat -> CNat
+
+If our language also includes primitive numbers, then we can convert from Church numerals to ordinary ones using the following function:
+
+  cnat2nat = λm:CNat. m [Nat] (λx:Nat. succ(x)) 0;
+  > cnat2nat : CNat -> Nat
+
+This allows us to verify that our operations on Church numerals actually compute the desired arithmetic functions:
+
+  cnat2nat (cplus (csucc c0) (csucc (csucc c0)));
+  > 3 : Nat
+
+
+Encoding Lists
+--------------
+
+As a final example, let us extend the Church encodings of numbers to lists. This is a nice demonstration of the expressive power of pure System F, since it shows that all of the programming examples in the subsection above on polymorphic list manipulation can actually be expressed in the pure language. (For convenience, we do use the fix construct for defining general recursive functions, but essentially the same constructions can be carried out without it)
+
+Lists can be encoded in the untyped lambda-calculus in a fashion quite similar to the encoding of natural numbers. In effect, a number in unary notation is like a list of dummy elements. Generalizing this idea to elements of any type, we arrive at a Church encoding for lists, where a list with elements x, y, and z is represented as a function that, given any function f and starting value v, calculates f x (f y (f z v)). In OCaml terminology, a list is represented as its own fold_right function.
+
+The type List X of lists with elements of type X is defined as follows:
+
+  List X = "R. (X->R->R)->R->R;
+
+The nil value for this representation of lists easy to write.
+
+  nil = λX. (λR. λc:X->R->R. λn:R. n) as List X;
+  > nil : "X. List X
+
+The as annotation here helps the typechecker print the type of nil in a readable form. All the typecheckers we build before perform a simple abbreviation-collapsing step before printing types, but the collapsing function is not smart enough to deal automatically with "parametric abbreviations" like List.
+
+The cons and isnil operations are also easy:
+
+  cons = λX. λhd:X. λtl:List X. (λR. λc:X->R->R. λn:R. c hd (tl [R] c n)) as List X;
+  > cons : "X. X -> List X -> List X
+
+  isnil = λX. λl:List X. l [Bool] (λhd:X. λtl:Bool. false) true;
+  > isnil : "X. List X -> Bool
+
+For the head operation, we need to work a little harder. The first difficulty is what to do about head of the empty list. We can address this by recalling that, if we have a general fixed point operator in the language, we can use it to construct an expression of any type. In fact, using type abstraction, we can go further and write a single, uniform function that, given a type X, yields a function from Unit to X that diverges when applied to unit.
+
+  diverge = λX. λ_:Unit. fix (λx:X. x);
+  > diverge : "X. Unit -> X
+
+Now we can use diverge [X] unit as the "result" of head [X] nil.
+
+  head = λX. λl:List X. l [X] (λhd:X. λtl:X. hd) (diverge [X] unit);
+  > head : "X. List X -> X
+
+Unfortunately, this definition is not yet quite what we want: it will always diverge, even when applied to non-empty lists. To get the right behavior, we need to reorganize it a little so that diverge[X] is not actually passed its Unit argument when it is supplied as an argument to l. This is accomplished by removing the unit argument and changing the type of the first argument to l correspondingly:
+
+  head = λX. λl:List X. (l [Unit->X] (λhd:X. λtl:Unit->X. λ_:Unit. hd) (diverge [X])) unit;
+  > head : "X. List X -> X
+
+That is, l is applied to a function of type X->(Unit->X)->(Unit->X) and a base value of type Unit->X, and it constructs a function of type Unit→X. In the case where l represents the empty list, this result will be diverge[X]; but in the case where l represents a non-empty list, the result will be a function that takes unit and returns the head element of l. The result from l is applied to unit at the end to get the actual head element (or, if we are unlucky, diverge), so that head has the type we expect.
+
+For the tail function, we use the abbreviation Pair X Y for the Church encoding of pairs with first component of type X and second component of type Y:
+
+  Pair X Y = "R. (X->Y->R) -> R;
+
+The operations on pairs are simple generalizations of the operations on the type PairNat above:
+
+  pair : "X. "Y. X -> Y -> Pair X Y
+  fst : "X. "Y. Pair X Y -> X
+  snd : "X. "Y. Pair X Y -> Y
+
+Now the tail function can be written like this:
+
+  tail =
+    λX. λl: List X.
+      (fst [List X] [List X] (
+         l [Pair (List X) (List X)]
+           (λhd: X. λtl: Pair (List X) (List X).
+             pair [List X] [List X]
+               (snd [List X] [List X] tl)
+               (cons [X] hd (snd [List X] [List X] tl)))
+           (pair [List X] [List X] (nil [X]) (nil [X]))));
+  > tail : "X. List X → List X
+
+
