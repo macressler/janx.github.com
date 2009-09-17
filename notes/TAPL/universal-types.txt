@@ -191,7 +191,7 @@ Most real-world programming with polymorphism is much more pedestrian than the t
   head : "X. List X -> X
   tail : "X. List X -> List X
 
-When we first introduced lists in simple typed lambda calculus, we used "custom" inference rules to allow the operations to be applied to lists with elements of any type. Here, we can give the operations polymorphic types expressing exactly the same constraints—that is, lists no longer need to be "baked into" the core language, but can simply be considered as a library providing several constants with particular polymorphic types. The same holds for the Ref type and the primitive operations on reference cells in Chapter 13, and many other common data and control structures.
+When we first introduced lists in simple typed lambda calculus, we used "custom" inference rules to allow the operations to be applied to lists with elements of any type. Here, we can give the operations polymorphic types expressing exactly the same constraints—that is, lists no longer need to be "baked into" the core language, but can simply be considered as a library providing several constants with particular polymorphic types. The same holds for the Ref type and the primitive operations on reference cells, and many other common data and control structures.
 
 We can use these primitives to define our own polymorphic operations on lists. For example, here is a polymorphic map function that takes a function from X to Y and a list of Xs and returns a list of Ys.
 
@@ -351,3 +351,53 @@ Now the tail function can be written like this:
   > tail : "X. List X → List X
 
 
+Basic Properties
+----------------
+
+Theorem [Preservation]: If Г |- t:T and t -> t′, then Г |- t′:T.
+
+Theorem [Progress]: If t is a closed, well-typed term, then either t is a value or else there is some t′ with t -> t′.
+
+System F also shares with λ-> the property of normalization - the fact that the evaluation of every well-typed program terminates. Unlike the type safety theorems above, normalization is quite diffcult to prove (indeed, it is somewhat astonishing that it holds at all, considering that we can code things like sorting functions in the pure language without resorting to fix). This proof was a major achievement of Girard's doctoral thesis (1972; also see Girard, Lafont, and Taylor, 1989). Since then, his proof technique has been analyzed and reworked by many others.
+
+Theorem [Normalization]: Well-typed System F terms are normalizing.
+
+Indeed, presentations of System F with more permissive operational semantics based on full beta-reduction have the strong normalization property: every reduction path starting from a well-typed term is guaranteed to terminate.
+
+
+Erasure, Typability and Type Reconstruction
+-------------------------------------------
+
+We can define a type erasure function mapping System F terms to untyped lambda-terms by stripping out all their type annotations (including all type abstractions and applications):
+
+  erase(x) = x
+  erase(λx:T1 . t2) = λx. erase(t2)
+  erase(t1 t2) = erase(t1) erase(t2) 
+  erase(λX. t2) = erase(t2) 
+  erase(t1 [T2]) = erase(t1)
+
+A term M in the untyped lambda-calculus is said to be typable in System F if there is some well-typed term t such that erase(t) = m. The type reconstruction problem then asks, given an untyped term m, whether we can find some well-typed term that erases to m.
+
+Type reconstruction for System F was one of the longest-standing problems in the programming languages literature, remaining open from the early 1970s until it was finally settled (negatively) by Wells in the early 1990s.
+
+Theorem: It is undecidable whether, given a closed term m of the untyped lambda-calculus, there is some well-typed term t in System F such that erase(t) = m.
+
+Not only full type reconstruction but also various forms of partial type reconstruction are known to be undecidable for System F. For example, consider the following "partial erasure" function, which leaves intact all typing annotations except the arguments to type applications:
+
+  erasep(x) = x 
+  erasep(λx:T1 . t2) = λx:T1 . erasep(t2)
+  erasep(t1 t2) = erasep(t1) erasep(t2)
+  erasep(λX. t2) = λX. erasep(t2)
+  erasep(t1 [T2]) = erasep(t1) []
+
+Note that type applications are still marked (with empty square brackets) in the erased terms; we can see where they must occur, but not what type must be supplied.
+
+Theorem: It is undecidable whether, given a closed term s in which type applications are marked but the arguments are omitted, there is some well-typed System F term t such that erasep(t) = s.
+
+Boehm showed that this form of type reconstruction was just as hard as higher-order unification, hence undecidable. Interestingly, this negative result led directly to a useful partial type reconstruction technique (Pfenning, 1988, 1993a) based on Huet's earlier work on effcient semi-algorithms for higher-order unification (Huet, 1975). Later improvements in this line of development have included using a more refined algorithm for higher-order constraint solving (Dowek, Hardin, Kirchner, and Pfenning, 1996), eliminating the troublesome possibilities of nontermination or generation of non-unique solutions. Experience with related algorithms in languages such as LEAP (Pfenning and Lee, 1991), Elf (Pfenning, 1989), and FX (O'Toole and Gifford, 1989) has shown them to be quite well behaved in practice.
+
+A different approach to partial type reconstruction was sparked by Perry's observation that first-class existential types can be integrated with ML's datatype mechanism (Perry, 1990); the idea was further developed by Läufer and Odersky (Läufer, 1992; Läufer and Odersky, 1994). In essence, datatype constructors and destructors can be regarded as explicit type annotations, marking where values must be injected into and projected from disjoint union types, where recursive types must be folded and unfolded, and (when existentials are added) where packing and unpacking must occur. This idea was extended to include first-class (impredicative) universal quantifiers by Rémy (1994). A more recent proposal by Odersky and Läufer (1996), further developed by Garrigue and Rémy (1997), conservatively extends ML-style type reconstruction by allowing programmers to explicitly annotate function arguments with types, which may (unlike the annotations that can be inferred automatically) contain embedded universal quantifiers, thus partly bridging the gap between ML and more powerful impredicative systems. This family of approaches to type reconstruction has the advantage of relative simplicity and clean integration with the polymorphism of ML.
+
+A pragmatic approach to partial type reconstruction for systems involving both subtyping and impredicative polymorphism, called local type inference (or local type reconstruction), was proposed by Pierce and Turner (1998; also see Pierce and Turner, 1997; Hosoya and Pierce, 1999). Local type inference has appeared in several recent language designs, including GJ (Bracha, Odersky, Stoutamire, and Wadler, 1998) and Funnel (Odersky and Zenger, 2001), the latter introducing a more powerful form called colored local type inference (Odersky, Zenger, and Zenger, 2001).
+
+A simpler but less predictable greedy type inference algorithm was proposed by Cardelli (1993); similar algorithms have also been used in proof-checkers for dependent type theories, such as NuPrl (Howe, 1988) and Lego (Pollack, 1990). The idea here is that any type annotation may be omitted by the programmer: a fresh unification variable X will be generated for each one by the parser. During typechecking, the subtype-checking algorithm may be asked to check whether some type S is a subtype T, where both S and T may contain unification variables. Subtype-checking proceeds as usual until a subgoal of the form X <: T or T <: X is encountered, at which point X is instantiated to T, thus satisfying the immediate constraint in the simplest possible way. However, setting X to T may not be the best possible choice, and this may cause later subtype-checks for types involving X to fail when a different choice would have allowed them to succeed; but, again, practical experience with this algorithm in Cardelli's implementation and in an early version of the Pict language (Pierce and Turner, 2000) shows that the algorithm's greedy choice is correct in nearly all cases. However, when it goes wrong, the greedy algorithm's behavior can be quite puzzling to the programmer, yielding mysterious errors far from the point where a suboptimal instantiation is made.
