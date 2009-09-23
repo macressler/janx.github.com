@@ -61,9 +61,9 @@ Finally, we need to specify the type of a polymorphic abstraction. We use types 
 
   Г,X |- t2:T2
   ------------------    (T-TABS)
-  Г |- λX.t2 : VX.T2
+  Г |- λX.t2 : "X.T2
 
-  Г |- t1:VX.T12
+  Г |- t1:"X.T12
   ----------------------------    (T-TAPP)
   Г |- t1 [T2] : [X |-> T2]T12
 
@@ -87,7 +87,7 @@ v ::=                             values
 T ::=                             types
       X                           type variable
       T->T                        type of functions
-      VX.T                        universal type
+      "X.T                        universal type
 
 Г ::=                             contexts
       O                           empty context
@@ -128,9 +128,9 @@ x:T <- Г
 
 Г,X |- t2:T2
 ------------------                T-TABS
-Г |- λX.t2 : VX.T2
+Г |- λX.t2 : "X.T2
 
-Г |- t1:VX.T12
+Г |- t1:"X.T12
 ----------------------------      T-TAPP
 Г |- t1 [T2] : [X |-> T2]T12
 
@@ -325,7 +325,7 @@ Unfortunately, this definition is not yet quite what we want: it will always div
   head = λX. λl:List X. (l [Unit->X] (λhd:X. λtl:Unit->X. λ_:Unit. hd) (diverge [X])) unit;
   > head : "X. List X -> X
 
-That is, l is applied to a function of type X->(Unit->X)->(Unit->X) and a base value of type Unit->X, and it constructs a function of type Unit→X. In the case where l represents the empty list, this result will be diverge[X]; but in the case where l represents a non-empty list, the result will be a function that takes unit and returns the head element of l. The result from l is applied to unit at the end to get the actual head element (or, if we are unlucky, diverge), so that head has the type we expect.
+That is, l is applied to a function of type X->(Unit->X)->(Unit->X) and a base value of type Unit->X, and it constructs a function of type Unit->X. In the case where l represents the empty list, this result will be diverge[X]; but in the case where l represents a non-empty list, the result will be a function that takes unit and returns the head element of l. The result from l is applied to unit at the end to get the actual head element (or, if we are unlucky, diverge), so that head has the type we expect.
 
 For the tail function, we use the abbreviation Pair X Y for the Church encoding of pairs with first component of type X and second component of type Y:
 
@@ -401,3 +401,85 @@ A different approach to partial type reconstruction was sparked by Perry's obser
 A pragmatic approach to partial type reconstruction for systems involving both subtyping and impredicative polymorphism, called local type inference (or local type reconstruction), was proposed by Pierce and Turner (1998; also see Pierce and Turner, 1997; Hosoya and Pierce, 1999). Local type inference has appeared in several recent language designs, including GJ (Bracha, Odersky, Stoutamire, and Wadler, 1998) and Funnel (Odersky and Zenger, 2001), the latter introducing a more powerful form called colored local type inference (Odersky, Zenger, and Zenger, 2001).
 
 A simpler but less predictable greedy type inference algorithm was proposed by Cardelli (1993); similar algorithms have also been used in proof-checkers for dependent type theories, such as NuPrl (Howe, 1988) and Lego (Pollack, 1990). The idea here is that any type annotation may be omitted by the programmer: a fresh unification variable X will be generated for each one by the parser. During typechecking, the subtype-checking algorithm may be asked to check whether some type S is a subtype T, where both S and T may contain unification variables. Subtype-checking proceeds as usual until a subgoal of the form X <: T or T <: X is encountered, at which point X is instantiated to T, thus satisfying the immediate constraint in the simplest possible way. However, setting X to T may not be the best possible choice, and this may cause later subtype-checks for types involving X to fail when a different choice would have allowed them to succeed; but, again, practical experience with this algorithm in Cardelli's implementation and in an early version of the Pict language (Pierce and Turner, 2000) shows that the algorithm's greedy choice is correct in nearly all cases. However, when it goes wrong, the greedy algorithm's behavior can be quite puzzling to the programmer, yielding mysterious errors far from the point where a suboptimal instantiation is made.
+
+
+Erasure and Evaluation Order
+----------------------------
+
+The operational semantics given to System F is a type-passing semantics: when a polymorphic function meets a type argument, the type is actually substituted into the body of the function.
+
+In a more realistic interpreter or compiler for a programming language based on System F, this manipulation of types at run time could impose a significant cost. Moreover, it is easy to see that type annotations play no significant role at run time, in the sense that no run-time decisions are made on the basis of types: we can take a well-typed program, rewrite its type annotations in an arbitrary way, and obtain a program that behaves just the same. For these reasons, many polymorphic languages instead adopt a type-erasure semantics, where, after the typechecking phase, all the types are erased and the resulting untyped terms are interpreted or compiled to machine code.
+
+However, in a full-blown programming language, which may include side-effecting features such as mutable reference cells or exceptions, the type-erasure function needs to be defined a little more delicately than the full erasure function. For example, if we extend System F with an exceptionraising primitive error, then the term
+
+  let f = (λX.error) in 0;
+
+evaluates to 0 because λX.error is a syntactic value and the error in its body is never evaluated, while its erasure
+
+  let f = error in 0;
+
+raises an exception when evaluated. What this shows is that type abstractions do play a significant semantic role, since they stop evaluation under a call-by-value evaluation strategy and hence can postpone or prevent the evaluation of side-effecting primitives.
+
+We can repair this discrepancy by introducing a new form of erasure appropriate for call-by-value evaluation, in which we erase a type abstraction to a term-abstraction
+
+  erasev(x) = x
+  erasev(λx:T1 . t2) = λx. erasev(t2)
+  erasev(t1 t2) = erasev(t1) erasev(t2)
+  erasev(λX. t2) = λ_. erasev(t2)
+  erasev(t1 [T2]) = erasev(t1) dummyv
+
+where dummyv is some arbitrary untyped value, such as unit. The appropriateness of this new erasure function is expressed by the observation that it "commutes" with untyped evaluation, in the sense that erasure and evaluation can be performed in either order.
+
+In contrast, the value restriction that we imposed in order to recover soundness of ML-style type reconstruction in the presence of side effects in §22.7 does erase type-abstractions—generalizing a type variable is essentially the opposite of erasing a type abstraction—but ensures soundness by permitting such generalizations only when the inferred type abstraction would occur immediately adjacent to a term abstraction or other syntactic value-constructor, since these also stop evaluation.
+
+Theorem: If erasev(t) = u, then either (1) both t and u are normal forms according to their respective evaluation relations, or (2) t -> t′ and u -> u′, with erasev(t′) = u′.
+
+In some languages, the presence of features like casts forces a type-passing implementation. High-performance implementations of these languages typically attempt to maintain only a vestigial form of type information at run time, e.g., passing types only to polymorphic functions where they may actually be used.
+
+
+Fragments of System F
+---------------------
+
+The elegance and power of System F have earned it a central role in theoretical studies of polymorphism. For language design, however, the loss of type reconstruction is sometimes considered to be too heavy a price to pay for a feature whose full power is seldom used. This has led to various proposals for restricted fragments of System F with more tractable reconstruction problems.
+
+The most popular of these is the let-polymorphism of ML, which is sometimes called prenex polymorphism because it can be viewed as a fragment of System F in which type variables range only over quantifier-free types (monotypes) and in which quantified types (polytypes, or type schemes) are not allowed to appear on the left-hand sides of arrows. The special role of let in ML makes the correspondence slightly tricky to state precisely; see Jim (1995) for details.
+
+Another well-studied restriction of System F is rank-2 polymorphism, introduced by Leivant (1983) and further investigated by many others (see Jim, 1995, 1996). A type is said to be of rank 2 if no path from its root to a " quantifier passes to the left of 2 or more arrows, when the type is drawn as a tree. For example, ("X.X->X)->Nat is of rank 2, as are Nat->Nat and Nat->("X.X->X)->Nat->Nat, but (("X.X->X)->Nat)->Nat is not. In the rank-2 system, all types are restricted to be of rank 2. This system is slightly more powerful than the prenex (ML) fragment, in the sense that it can assign types to more untyped lambda-terms.
+
+Kfoury and Tiuryn (1990) proved that the complexity of type reconstruction for the rank-2 fragment of System F is identical to that of ML (i.e., DEXPTIME-complete). Kfoury and Wells (1999) gave the first correct type reconstruction algorithm for the rank 2 system and showed that type reconstruction for ranks 3 and higher of System F is undecidable.
+
+The rank-2 restriction can be applied to other powerful type constructors besides quantifiers. For example, intersection types can be restricted to rank 2 by excluding types in which an intersection appears to the left of 2 or more arrows (Kfoury, Mairson, Turbak, and Wells, 1999). The rank-2 fragments of System F and of the first-order intersection type system are closely related. Indeed, Jim (1995) showed that they can type exactly the same untyped terms.
+
+
+Parametricity
+-------------
+
+Recall from above how we defined the type CBool of Church booleans
+
+  CBool = "X.X->X->X;
+
+and the constants tru and fls:
+
+  tru = λX. λt:X. λf:X. t;
+  > tru : CBool
+
+  fls = λX. λt:X. λf:X. f;
+  > fls : CBool
+
+Given the type CBool, we can actually write the definitions of tru and fls rather mechanically, simply by looking at the structure of the type. Since CBool begins with a ", any value of type CBool must be a type abstraction, so tru and fls must both begin with a λX. Then, since the body of CBool is an arrow type X->X->X, every value of this type must take two arguments of type X—i.e., the bodies of tru and fls must each begin λt:X.λf:X. Finally, since the result type of CBool is X, any value of type CBool must return an element of type X. But since X is a parameter, the only values of this type that we can possibly return are the bound variables t and f—we have no other way of obtaining or constructing values of this type ourselves. In other words, tru and fls are essentially the only inhabitants of the type CBool. Strictly speaking, CBool contains some other terms like (λb:CBool.b) tru, but it is intuitively clear that every one of them must behave like either tru or fls.
+
+This observation is a simple consequence of a powerful principle known as parametricity, which formalizes the uniform behavior of polymorphic programs. Parametricity was introduced by Reynolds (1974, 1983) and has been further explored, along with related notions, by Reynolds (1984, Reynolds and Plotkin, 1993), Bainbridge et al. (1990), Ma (1992), Mitchell (1986), Mitchell and Meyer (1985), Hasegawa (1991), Pitts (1987, 1989, 2000), Abadi, Cardelli, Curien, and Plotkin (Abadi, Cardelli, and Curien, 1993; Plotkin and Abadi, 1993; Plotkin, Abadi, and Cardelli, 1994), Wadler (1989, 2001), and others. See Wadler (1989) for an expository introduction.
+
+
+Impredicativity
+---------------
+
+(Jan: this section is really hard to understand ..)
+
+The polymorphism of System F is often called impredicative. In general, a definition (of a set, a type, etc.) is called "impredicative" if it involves a quantifier whose domain includes the very thing being defined. For example, in System F, the type variable X in the type T = "X.X->X ranges over all types, including T itself (so that, for example, we can instantiate a term of type T at type T, yielding a function from T to T). The polymorphism found in ML, on the other hand, is often called predicative (or stratified), because the range of type variables is restricted to monotypes, which do not contain quantifiers.
+
+The terms "predicative" and "impredicative" originate in logic. Quine (1987) offers a lucid summary of their history:
+
+In exchanges with Henri Poincaré...Russell attributed [Russell's] paradox tentatively to what he called a vicious-circle fallacy. The "fallacy" consisted in specifying a class by a membership condition that makes reference directly or indirectly to a range of classes one of which is the very class that is being specified. For instance the membership condition behind Russell's Paradox is non-self-membership: x not a member of x. The paradox comes of letting the x of the membership condition be, among other things, the very class that is being defined by the membership condition. Russell and Poincaré came to call such a membership condition impredicative, and disqualified it as a means of specifying a class. The paradoxes of set theory, Russell's and others, were thus dismantled...
+
+Speaking of terminology, whence "predicative" and "impredicative"? Our tattered platitude about classes and membership conditions was, in Russell's phrase, that every predicate determines a class; and then he accommodates the tattering of the platitude by withdrawing the title of predicate from such membership conditions as were no longer to be seen as determining classes. "Predicative" thus did not connote the hierarchical approach in particular, or the metaphor of progressive construction; that was just Russell and Poincaré's particular proposal of what membership conditions to accept as class-productive, or "predicative." But the tail soon came to wag the dog. Today predicative set theory is constructive set theory, and impredicative definition is strictly as explained in the foregoing paragraph, regardless of what membership conditions one may choose to regard as determining classes.
