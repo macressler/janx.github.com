@@ -1,0 +1,9 @@
+Function definition start with 'def', end with ':', () is must-have even if you don't have params.
+
+Function will return None by default, if you don't have any return statement in function.
+
+Triple quotes signify a multi-line string.
+
+A doc string, if it exists, must be the first thing defined in a function(the first thing after the colon). Triple quotes are often used to define doc string. Doc string is available at runtime as an attribute of the function.
+
+A function, like everything else in python, is an object. 
