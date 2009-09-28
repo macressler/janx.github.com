@@ -1,0 +1,127 @@
+Exsitential Types
+=================
+
+Existential types are fundamentally no more complicated than universal types (in fact, we will see that existentials can straightforwardly be encoded in terms of universals). However, the introduction and elimination forms for existential types are syntactically a bit heavier than the simple type abstraction and application associated with universals, and some people find them slightly puzzling initially. The following intuitions may be helpful in getting through this phase.
+
+The universal types can be viewed in two different ways. A logical intuition is that an element of the type "X.T is a value that has type [X |-> S]T for all choices of S. This intuition corresponds to a type-erasure view of behavior: for example, the polymorphic identity function λX.λx:X.x erases to the untyped identity function λx.x, which maps an argument from any type S to a result of the same type. By contrast, a more operational intuition is that an element of "X.T is a function mapping a type S to a specialized term with type [X |-> S]T. This intuition corresponds to our definition of System F where the reduction of a type application is considered an actual step of computation.
+
+Similarly, there are two different ways of looking at an existential type, written {$X,T}. The logical intuition is that an element of {$X,T} is a value of type [X |-> S]T, for some type S. The operational intuition, on the other hand, is that an element of {$X,T} is a pair, written {*S,t}, of a type S and a term t of type [X |-> S]T.
+
+We mark the type component of the pair with a * to avoid confusion with ordinary term-tuples (§11.7). Another common notation for existential introduction is pack X=S with t.
+
+We will emphasize the operational view of existential types in this chapter, because it provides a closer analogy between existentials and the modules and abstract data types found in programming languages. Our concrete syntax for existential types reflects this analogy: we write {$X,T} - the curly braces emphasizing that an existential value is a form of tuple-instead of the more standard notation $X.T.
+
+To understand existential types, we need to know two things: how to build (or introduce, see Curry-Howard correspondence) elements that inhabit them, and how to use (or eliminate) these values in computations.
+
+An existentially typed value is introduced by pairing a type with a term, written {*S,t}. A useful concrete intuition is to think of a value {*S,t} of type {$X,T} as a simple form of package or module with one (hidden) type component and one term component. The type S is often called the hidden representation type, or sometimes (to emphasize a connection with logic) the witness type of the package. For example, the package p = {*Nat, {a=5, f=λx:Nat. succ(x)}} has the existential type {$X, {a:X, f:X->X}}. The type component of p is Nat, and the value component is a record containing a field a of type X and a field f of type X->X, for some X (namely Nat).
+
+Obviously, one could imagine generalizing these modules to many type and/or term components, but let's stick with just one of each to keep the notation tractable. The effect of multiple type components can be achieved by nesting single-type existentials, while the effect of multiple term components can be achieved by using a tuple or record as the right-hand component:
+
+  {*S1, *S2, t1, t2} =def= {*S1, {*S2, {t1, t2}}}
+
+The same package p also has the type {$X, {a:X, f:X->Nat}}, since its right-hand component is a record with fields a and f of type X and X->Nat, for some X (namely Nat). This example shows that, in general, the typechecker cannot make an automatic decision about which existential type a given package belongs to: the programmer must specify which one is intended. The simplest way to do this is just to add an annotation to every package that explicitly gives its intended type. So the full introduction form for existentials will look like this,
+
+  p = {*Nat, {a=5, f=λx:Nat. succ(x)}} as {$X, {a:X, f:X->X}};
+  > p : {$X, {a:X,f:X->X}}
+
+  or (the same package with a different type):
+
+  p1 = {*Nat, {a=5, f=λx:Nat. succ(x)}} as {$X, {a:X, f:X->Nat}};
+  > p1 : {$X, {a:X,f:X->Nat}}
+
+The typing rule for existential introduction is as follows:
+
+  Г |- t2:[X |-> U]T2
+  -----------------------------------    T-PACK
+  Г |- {*U,t2} as {$X, T2} : {$X, T2}
+
+One thing to notice about this rule is that packages with different hidden representation types can inhabit the same existential type. For example:
+
+  p2 = {*Nat, 0} as {$X,X};
+  > p2 : {$X, X}
+
+  p3 = {*Bool, true} as {$X,X};
+  > p3 : {$X, X}
+
+Or, more usefully:
+
+  p4 = {*Nat, {a=0, f=λx:Nat. succ(x)}} as {$X, {a:X, f:X->Nat}};
+  > p4 : {$X, {a:X,f:X->Nat}}
+
+  p5 = {*Bool, {a=true, f=λx:Bool. 0}} as {$X, {a:X, f:X->Nat}};
+  > p5 : {$X, {a:X,f:X->Nat}}
+
+The analogy with modules also offers a helpful intuition for the existential elimination construct. If an existential package corresponds to a module, then package elimination is like an open or import directive: it allows the components of the module to be used in some other part of the program, but holds abstract the identity of the module's type component. This can be achieved with a kind of pattern-matching binding:
+
+  Г |- t1:{$X,T12}    Г,X,x:T12 |- t2:T2
+  --------------------------------------    T-UNPACK
+  Г |- let {X,x}=t1 in t2:T2
+
+That is, if t1 is an expression that yields an existential package, then we can bind its type and term components to the pattern variables X and x and use them in computing t2. (Another common concrete syntax for existential elimination is open t1 as {X,x} in t2.)
+
+For example, take the package p4, of type {$X, {a:X, f:X->Nat}}, defined above. The elimination expression
+
+  let {X,x}=p4 in (x.f x.a);
+  > 1 : Nat
+
+opens p4 and uses the fields of its body (x.f and x.a) to compute a numeric result. The body of the elimination form can also involve the type variable X:
+
+    let {X,x}=p4 in (λy:X. x.f y) x.a;
+    > 1 : Nat
+
+The fact that the package's representation type is held abstract during the typechecking of the body means that the only operations allowed on x are those warranted by its "abstract type" {a:X,f:X->Nat}. In particular, we are not allowed to use x.a concretely as a number:
+
+  let {X,x}=p4 in succ(x.a);
+  > Error: argument of succ is not a number
+
+This restriction makes good sense, since we saw above that a package with the same existential type as p4 might use either Nat or Bool (or anything else) as its representation type.
+
+There is another, more subtle, way in which typechecking of the existential elimination construct may fail. In the rule T-UNPACK, the type variable X appears in the context in which t2's type is calculated, but does not appear in the context of the rule's conclusion. This means that the result type T2 cannot contain X free, since any free occurrences of X will be out of scope in the conclusion.
+
+  let {X,x}=p in x.a;
+  > Error: Scoping error!
+
+The computation rule for existentials is straightforward:
+
+  let {X,x}=({*T11,v12} as T1) in t2 -> [X |->T11][x |-> v12]t2    (E-UNPACKPACK)
+
+If the first subexpression of the let has already been reduced to a concrete package, then we may substitute the components of this package for the variables X and x in the body t2. In terms of the analogy with modules, this rule can be viewed as a linking step, in which symbolic names (X and x) referring to the components of a separately compiled module are replaced by the actual contents of the module.
+
+Since the type variable X is substituted away by this rule, the resulting program actually has concrete access to the package's internals. This is just another example of a phenomenon we have seen several times: expressions can become "more typed" as computation proceeds - in particular an ill-typed expression can reduce to a well-typed one.
+
+The rules defining the extension of System F with existential types are summarized below:
+
+Existential types (Extended System F)
+---------------------------------------------------------
+t ::=                             terms
+      {*T,t} as T                 packing
+      let (X,x)=t in t            unpacking
+
+v ::=                             values
+      {*T,v} as T                 package value
+
+T ::=                             types
+      {$X,T}                      exsitential type
+
+Evaluation                        t->t'
+
+let (X,x)=({*T11,v12} as T1) in t2
+-> [X |-> T11][x |-> v12]t2       E-UNPACKPACK
+
+t12 -> t12'
+-------------------------------------    E-PACK
+{*T11,t12} as T1 -> {*T11,t12'} as T1
+
+t1 -> t1'
+-----------------------------------------    E-UNPACK
+let {X,x}=t1 in t2 -> let {X,x}=t1' in t2 
+
+Typing                            Г |- t:T
+
+Г |- t2:[X->U]T2
+-------------------------------   T-PACK
+Г |- {*U,t2} as {$X,T2}:{$X,T2}
+
+Г |- t1:{$X,T12}    Г,X,x:T12 |- t2:T2
+--------------------------------------    T-UNPACK
+Г |- let {X,x}=t1 in t2:T2
