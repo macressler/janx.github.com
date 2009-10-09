@@ -125,3 +125,149 @@ Typing                            Г |- t:T
 Г |- t1:{$X,T12}    Г,X,x:T12 |- t2:T2
 --------------------------------------    T-UNPACK
 Г |- let {X,x}=t1 in t2:T2
+
+
+Data Abstraction with Existentials
+----------------------------------
+
+The introductory chapter argued that the uses of type systems go far beyond their role in detecting small-scale programming errors like 2+true: they also offer crucial support for programming in the large. In particular, types can be used to enforce not only the abstractions built into the language, but also programmer-defined abstractions - i.e., not only protecting the machine from the program, but protecting parts of the program from each other. This section considers two different styles of abstraction-classical abstract data types, and objects-using existential types as a common frame-work for discussion.
+
+For the sake of fairness, we should note that types are not the only way of protecting programmer-defined abstractions. In untyped languages, similar effects can be achieved using function closures, objects, or special-purpose constructs such as MzScheme's units.
+
+All the examples in this section are purely functional programs. This is purely an expository choice: mechanisms for modularity and abstraction are almost completely orthogonal to the statefulness or statelessness of the abstractions being defined. The reasons for preferring purely functional examples here are that (1) this choice implies that our examples live in a simpler and more economical formal framework, and (2) working with purely functional programs sometimes makes the typing problems more interesting (and their solutions correspondingly more revealing). The reason for this is that, in imperative programming, mutable variables provide a "side-channel" allowing direct communication between distant parts of a program. In purely functional programs, all information that passes between different parts of the program must go via the arguments and results of functions, where it is "visible" to the type system. This is particularly true in the case of objects, and it will force us to postpone treatment of some important features (subtyping and inheritance), where we will have some more powerful type-theoretic machinery at our disposal.
+
+
+Abstrace Data Types
+-------------------
+
+A conventional abstract data type (or ADT) consists of
+
+  (1) a type name A
+  (2) a concrete representation type T
+  (3) implementations of some operations for creating, querying, and manipulating values of type T
+  (4) an abstraction boundary enclosing the representation and operations.
+
+Inside this boundary, elements of the type are viewed concretely (with type T). Outside, they are viewed abstractly, with type A. Values of type A may be passed around, stored in data structures, etc., but not directly examined or changed-the only operations allowed on A are those provided by the ADT.
+
+For example, here is a declaration of an abstract data type of purely functional counters, in a pseudocode notation similar to Ada or Clu:
+
+  ADT counter = type Counter
+                representation Nat
+                signature
+                  new : Counter,
+                  get : Counter→Nat,
+                  inc : Counter→Counter;
+                operations
+                  new = 1,
+                  get = λi:Nat. i,
+                  inc = λi:Nat. succ(i);
+
+  counter.get (counter.inc counter.new);
+
+The abstract type name is Counter; its concrete representation is Nat. The implementations of the operations deal with Counter objects concretely, as Nats: new is just the constant 1; the inc operation is the successor function; get is the identity. The signature section specifies how these operations are to be used externally, replacing some instances of Nat in their concrete types by Counter. The abstraction boundary extends from the ADT keyword to the terminating semicolon; in the remainder of the program (i.e., the last line), the association between Counter and Nat is broken, so that the only thing that can be done with the constant counter.new is to use it as an argument to counter.get or counter.inc.
+
+We can translate this pseudocode almost symbol for symbol into our calculus with existentials. We first create an existential package containing the internals of the ADT:
+
+  counterADT = {*Nat, {new = 1, get = λi:Nat. i, inc = λi:Nat. succ(i)}}
+               as {$Counter, {new:Counter, get:Counter->Nat, inc:Counter->Counter}};
+  > counterADT : {$Counter, {new:Counter,get:Counter->Nat,inc:Counter->Counter}}
+
+We then open the package, introducing the type variable Counter as a place-holder for the hidden representation type of the package and a term variable counter providing access to the operations:
+
+  let {Counter,counter} = counterADT in counter.get (counter.inc counter.new);
+  > 2 : Nat
+
+The version using existential types is slightly harder on the eye, compared to the syntactically sugared pseudocode, but the two are identical in structure.
+
+In general, the body of the let that opens the existential package contains the whole remainder of the program:
+
+  let {Counter,counter} = <counter package> in <rest of program>
+
+In the remainder, the type name Counter can be used just like the base types built into the language. We can define functions that operate on counters, we can even define new abstract data types whose representation involves counters. In this way, a large program can be broken up into a long sequence of ADT declarations, each using the types and operations provided by its predecessors to implement its own, and packaging these up for its successors as a clean, well-defined abstraction.
+
+  let {Counter,counter}=counterADT in
+    let add3 = λc:Counter. counter.inc (counter.inc (counter.inc c)) in
+      counter.get (add3 counter.new);
+
+A key property of the kind of information hiding we are doing here is representation independence. We can substitute an alternative implementation of the Counter ADT - for example, one where the internal representation is a record containing a Nat rather than just a single Nat, in complete confidence that the whole program will remain typesafe, since we are guaranteed that the rest of the program cannot access instances of Counter except using get and inc.
+
+Experience has shown that a programming style based on abstract data types can yield huge improvements in robustness and maintainability of large systems. There are several reasons for this. First, this style limits the scope of changes to the program. As we saw just above, we can replace one implementation of an ADT by another, possibly changing both its concrete representation type and the implementations of its operations, without affecting the rest of the program, because the typing rules for existential packages ensure that the rest of the program cannot depend on the ADT's internal representation. Second, it encourages programmers to limit the dependencies between the parts of a program by making the signatures of ADTs as small as possible. Finally, and perhaps most importantly, by making the signatures of the operations explicit, it forces programmers to think about designing abstractions.
+
+
+Existential Objects
+-------------------
+
+The "pack and then open" idiom that we saw in the last subsection is the hallmark of ADT-style programming using existential packages. A package defines an abstract type and its associated operations, and we open each package immediately after it is built, binding a type variable for the abstract type and exposing the ADT's operations abstractly. In this section, we show how a simple form of object-style data abstraction can also be viewed as a different programming idiom based on existentials.
+
+We will again use simple counters as our running example, as we did both in the existential ADTs above and in our earlier encounters with objects. We again choose a purely functional style, where sending the message inc to a counter does not change its internal state in-place, but rather returns a fresh counter object with incremented internal state.
+
+A counter object comprises two basic components: a number (its internal state), and a pair of methods, get and inc, that can be used to manipulate the state. We also need to ensure that the only way that the state can be queried or updated is by using one of these two methods. This can be accomplished by wrapping the state and methods in an existential package, abstracting the type of the state. For example, a counter object holding the value 5 might be written
+
+  c = {*Nat, {state = 5, methods = {get = λx:Nat. x, inc = λx:Nat. succ(x)}}} as Counter;
+
+where: Counter = {$X, {state:X, methods: {get:X->Nat, inc:X->X}}};
+
+To use a method of a counter object, we open the existential and apply the appropriate element of its methods to its state field. For example, to get the current value of c we can write:
+
+  let {X,body} = c in body.methods.get(body.state);
+  > 5 : Nat
+
+More generally, we can define a little function that "sends the get message" to any counter:
+
+  sendget = λc:Counter. let {X,body} = c in body.methods.get(body.state);
+  > sendget : Counter -> Nat
+
+Invoking the inc method of a counter object is a little more complicated. If we simply do the same as for get, the typechecker complains
+
+  let {X,body} = c in body.methods.inc(body.state);
+  > Error: Scoping error!
+
+because the type variable X appears free in the type of the body of the let. Indeed, what we've written doesn't make intuitive sense either, since the result of the inc method is a bare internal state, not an object. To satisfy both the typechecker and our informal understanding of what invoking inc should do, we must take this fresh internal state and repackage it as a counter object, using the same record of methods and the same internal state type as in the original object:
+
+  c1 = let {X,body} = c in {*X, {state = body.methods.inc(body.state), methods = body.methods}} as Counter;
+
+More generally, to "send the inc message" to a counter, we can write:
+
+  sendinc = λc:Counter. let {X,body} = c in {*X, {state = body.methods.inc(body.state), methods = body.methods}} as Counter;
+  > sendinc : Counter -> Counter
+
+More complex operations on counters can be implemented in terms of these two basic operations:
+
+  add3 = λc:Counter. sendinc (sendinc (sendinc c));
+  > add3 : Counter -> Counter
+
+
+Objects vs ADTs
+---------------
+
+The examples in the previous section do not constitute a full-blown model of object-oriented programming. Many of the features including subtyping, classes, inheritance, and recursion via self and super, are missing here. But there are already several interesting comparisons to be made between these simple objects and the ADTs discussed previously.
+
+At the coarsest level, the two programming idioms fall at opposite ends of a spectrum: when programming with ADTs, packages are opened immediately after they are built; on the other hand, when packages are used to model objects they are kept closed as long as possible-until the moment when they must be opened so that one of the methods can be applied to the internal state.
+
+A consequence of this difference is that "the abstract type of counters" refers to different things in the two styles. In an ADT-style program, the counter values manipulated by client code such as the add3 function are elements of the underlying representation type (e.g., simple numbers). In an object-style program, each counter is a whole package-including not only a number, but also the implementations of the get and inc methods. This stylistic difference is reflected in the fact that, in the ADT style, the type Counter is a bound type variable introduced by the let construct, while in the object style Counter stands for the whole existential type {$X, {state:X, methods: {get:X->Nat, inc:X->X}}}.
+
+Thus, at run time, all the counter values generated from the counter ADT are just bare elements of the same internal representation type, and there is a single implementation of the counter operations that works on this internal representation. By contrast, each counter object carries its own representation type together with its own set of methods that work for this representation type.
+
+These differences between objects and ADTs lead to contrasting pragmatic advantages. One obvious one is that, since each object chooses its own representation and carries its own operations, a single program can freely intermix many different implementations of the same object type. This is particularly convenient in the presence of subtyping and inheritance: we can define a single, general class of objects and then produce many different refinements, each with its own slightly (or completely) different representation. Since instances of these refined classes all share the same general type, they can be manipulated by the same generic code, stored together in lists, etc.
+
+For example, a user-interface library may define a generic Window class, with subclasses like TextWindow, ContainerWindow, ScrollableWindow, TitledWindow, DialogBox, etc. Each of these subclasses will include its own particular instance variables (e.g., a TextWindow may use a String instance variable to represent its current contents, whereas a ContainerWindow might use a list of Window objects), and provide specialized implementations of operations like repaint and handleMouseEvent. Defining Window as an ADT, on the other hand, leads to a less flexible structure. The concrete representation type of Window will need to include a variant type with one case for each specific sort of window, carrying the specialized data relevant to that type of window. Operations like repaint will perform a case on the variant and execute the appropriate specialized code. If there are many special forms of windows, this monolithic declaration of the Window ADT can easily grow to be quite large and unwieldy.
+
+A second major pragmatic difference between objects and ADTs concerns the status of binary operations-operations that accept two or more arguments of the same abstract type. To discuss this point coherently, we need to distinguish between two kinds of binary operations:
+
+  * Some binary operations can be implemented entirely in terms of the publicly available operations on two abstract values. For example, to implement an equality operation for counters, all we need to do is ask each for its current value (using get) and compare the two numbers that we get back-i.e., the equal operation can just as well live outside the abstraction boundary that protects the concrete representation of counters. We call such operations weak binary operations.
+
+  * Other binary operations cannot be implemented without concrete, privileged access to the representations of both abstract values. For example, suppose we are implementing an abstraction representing sets of numbers. After scouring several algorithms textbooks, we choose a concrete representation of sets as labeled trees obeying some particular complex invariant. An efficient implementation of the union operation on two sets will need to view both of them concretely, as trees. However, we do not want to expose this concrete representation anywhere in the public interface to our set abstraction. So we will need to arrange for union to have privileged access to both of its arguments that is not available to ordinary client code-i.e., the union operation must live inside the abstraction boundary. We call such operations strong binary operations.
+
+Weak binary operations are an easy case for both of the styles of abstraction we are considering, since it does not make much difference whether we place them inside or outside of the abstraction boundary. If we choose to place them outside, then they may simply be defined as free-standing functions (taking either objects or values of an ADT, as appropriate). Placing them inside an ADT is exactly the same (they will then have concrete access to the representations of their arguments, even though they don't really need it). Placing a weak binary operation inside of an object is only slightly more demanding, since the type of the object now becomes recursive:
+
+  EqCounter = {$X, {state:X, methods: {get:X->Nat, inc:X->X, eq:X->EqCounter->Bool}}}
+
+Strong binary operations, on the other hand, cannot be expressed as methods of objects in our model. We can express their types just as we did for weak binary methods above:
+
+  NatSet = {$X, {state:X, methods: {empty:X, singleton:Nat->X, member:X->Nat->Bool, union:X->NatSet->X}}}
+
+But there is no satisfactory way to implement an object of this type: all we know about the second argument of the union operation is that it provides the operations of NatSet, but these do not give us any way to find out what its elements are so that we can compute the union.
+
+In summary, the single representations of ADTs directly support binary operations, while the multiple representations of objects give up binary methods in return for useful flexibility. These advantages are complementary; neither style dominates the other.
+
+One caveat should be added to this discussion. These comparisons apply to the simple, "purist" model of objects presented earlier in the chapter. The classes in mainstream object-oriented languages like C++ and Java are designed to allow some forms of strong binary methods, and are actually best described as a kind of compromise between the pure objects and pure ADTs that we have seen in this chapter. In these languages, the type of an object is exactly the name of the class from which it was instantiated, and this type is considered distinct from the names of other classes, even if they provide exactly the same operations. That is, a given object type in these languages has a single implementation given by the corresponding class declaration. Moreover, subclasses in these languages can add instance variables only to those inherited from superclasses. These constraints mean that every object belonging to type C is guaranteed to have all the instance variables defined by the (unique) declaration of class C (and possibly some more). It now makes sense for a method of such an object to take another C as an argument and concretely access its instance variables, as long as it uses only instance variables defined by C. This permits strong binary operations such as set union to be defined as methods.
