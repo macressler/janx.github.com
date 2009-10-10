@@ -1,0 +1,53 @@
+Agile Estimating and Planning
+=============================
+
+
+Part I. The Problem and The Goal
+================================
+
+
+1. The Purpose of Planning
+--------------------------
+
+A good planning process supports yourt project by:
+
+  * Reducing risk 
+
+    find risks at the very beginning
+
+  * Reducing uncertainty 
+
+    understand what a user want better
+
+  * Supporting better decision making
+
+  * Establishing trust
+
+    Frequent reliable delivery of promised features builds trust between the developers of a product and the customers of that product. Reliable estimates enable reliable delivery.
+    Reliable estimates benefit developers by allowing them to work at a sustainable pace. This leads to higher quality code and fewer bugs. These, in turn, lead back to more reliable estimates because less time is spent on highly unpredictable work such as bug fixing.
+
+  * Conveying information
+
+    A plan conveys expectations and describes one possibility of what may come to pass over the course of a project. A plan does not guarantee an exact set of features on an exact date at a specified cost. A plan does, however, communicate and establish a set of baseline expectations.
+
+
+A good plan is one that stakeholders find sufficiently reliable that they can use it as the basis for making decisions. 
+
+e.g. You'll ship a new release six months later. You create a plan that describes a set of features that are certain to be in the new version and another set of features that may or may not be included, depending on how well things progress.
+
+A plan, although inaccurate, was even more likely useful if we consider that it should have been updated regularly throughout the course of the project. In that case, a one-month late delivery should not have been a last-minute surprise to anyone.
+
+This book is about agile planning, not agile plans. Plans are documents or figures, they are snapshots of how we believe a project might unfold over an uncertain future. Planning is an activity. Agile planning shifts the emphasis from the plan to the planning. Agile planning balances the effort and investment in planning with the knowledge that we will revise the plan through the course of the project. An agile plan is one that we are not only willing but anxious to change. We don’t want to change the plan just for the sake of changing, but we want to change because change means we’ve learned something or that we’ve avoided a mistake.
+
+Just because we’re changing the plan does not mean we change the dates.  We may or may not do that. But if we learn we were wrong about some aspect of the target product and need to do something about it, then the plan needs to change. There are many ways we can change the plan without changing the date.  We can drop a feature, we can reduce the scope of a feature, we can possibly add people to the project, and so on.
+
+Because we acknowledge that we cannot totally define a project at its outset, it is important that we do not perform all of a project’s planning at the outset.  Agile planning is spread more or less evenly across the duration of a project. Release planning sets the stage and is followed by a number of rounds of iteration planning, after which the entire process is repeated perhaps a handful of times on a project.
+
+So in defining agile planning we find that it:
+
+  * Is focused more on the planning than the plan
+  * Encourages change
+  * Results in plans that are easily changed
+  * Is spread throughout the project
+
+Estimates given early in a project are far less accurate than those given later. This progressive refinement is shown in the cone of uncertainty.
