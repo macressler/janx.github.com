@@ -155,8 +155,8 @@ For example, here is a declaration of an abstract data type of purely functional
                 representation Nat
                 signature
                   new : Counter,
-                  get : Counter→Nat,
-                  inc : Counter→Counter;
+                  get : Counter->Nat,
+                  inc : Counter->Counter;
                 operations
                   new = 1,
                   get = λi:Nat. i,
@@ -271,3 +271,47 @@ But there is no satisfactory way to implement an object of this type: all we kno
 In summary, the single representations of ADTs directly support binary operations, while the multiple representations of objects give up binary methods in return for useful flexibility. These advantages are complementary; neither style dominates the other.
 
 One caveat should be added to this discussion. These comparisons apply to the simple, "purist" model of objects presented earlier in the chapter. The classes in mainstream object-oriented languages like C++ and Java are designed to allow some forms of strong binary methods, and are actually best described as a kind of compromise between the pure objects and pure ADTs that we have seen in this chapter. In these languages, the type of an object is exactly the name of the class from which it was instantiated, and this type is considered distinct from the names of other classes, even if they provide exactly the same operations. That is, a given object type in these languages has a single implementation given by the corresponding class declaration. Moreover, subclasses in these languages can add instance variables only to those inherited from superclasses. These constraints mean that every object belonging to type C is guaranteed to have all the instance variables defined by the (unique) declaration of class C (and possibly some more). It now makes sense for a method of such an object to take another C as an argument and concretely access its instance variables, as long as it uses only instance variables defined by C. This permits strong binary operations such as set union to be defined as methods.
+
+
+Encoding Existentials
+---------------------
+
+The encoding of pairs as a polymorphic type suggests a similar encoding for existential types in terms of universal types, using the intuition that an element of an existential type is a pair of a type and a value:
+
+  {$X,T} =def= "Y.("X.T -> Y) -> Y
+
+That is, an existential package is thought of as a data value that, given a result type and a continuation, calls the continuation to yield a final result. The continuation takes two arguments—a type X and a value of type T—and uses them in computing the final result.
+
+Given this encoding of existential types, the encoding of the packaging and unpackaging constructs is essentially forced. To encode a package
+
+  {*S,t} as {$X,T}
+
+we must use S and t to build a value of type "Y.("X.T -> Y) -> Y. This type begins with a universal quantifier, the body of which is an arrow type. An element of this type should therefore begin with two abstractions:
+
+  {*S,t} as {$X,T} =def= λY.λf:("X.T -> Y). ...
+
+To complete the job, we need to return a result of type Y; clearly, the only way to do this is to apply f to some appropriate arguments. First, we supply the type S (this is a natural choice, being the only type we have lying around at the moment):
+
+  {*S,t} as {$X,T} =def= λY.λf:("X.T -> Y). f[S] ...
+
+Now, the type application f [S] has type [X |-> S](T->Y), i.e., ([X |-> S]T) -> Y. We can thus supply t (which, by rule T-PACK, has type [X |-> S]T) as the next argument:
+
+  {*S,t} as {$X,T} =def= λY.λf:("X.T -> Y). f[S] t
+
+The type of the whole application f [S] t is now Y, as required.
+
+To encode the unpacking construct let {X,x}=t1 in t2, we proceed similarly. First, the typing rule T-UNPACK tells us that t1 should have some type {$X,T11}, that t2 should have type T2 (under an extended context binding X and x:T11), and that T2 is the type we expect for the whole let...in... expression. The intuition here is that the introduction form ({*S,t}) is encoded as an active value that "performs its own elimination." So the encoding of the elimination form here should simply take the existential package t1 and apply it to enough arguments to yield a result of the desired type T2:
+
+  let {X,x} = t1 in t2 =def= t1 ...
+
+The first argument to t1 should be the desired result type of the whole expression, i.e., T2:
+
+  let {X,x} = t1 in t2 =def= t1 [T2] ...
+
+Now, the application t1 [T2] has type ("X. T11->T2) -> T2. That is, if we can now supply another argument of type ("X.T11->T2), we will be finished. Such an argument can be obtained by abstracting the body t2 on the variables X and x:
+
+  let {X,x} = t1 in t2 =def= t1 [T2] (λX.λx:T11.t2)
+
+This finishes the encoding.
+
+Strictly speaking, the fact that the translation requires these extra bits of type information not present in the syntax of terms means that what we are translating is actually typing derivations, not terms. We have seen a similar situation in the definition of the coercion semantics for subtyping before.
