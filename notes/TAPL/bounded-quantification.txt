@@ -1,0 +1,229 @@
+Bounded Quantification
+======================
+
+Many of the interesting issues in programming languages arise from interactions between features that are relatively straightforward when considered individually. This chapter introduces bounded quantification, which arises when polymorphism and subtyping are combined, substantially increasing both the expressive power of the system and its metatheoretic complexity. The calculus we will be studying, called F<: ("F sub"), has played a central role in programming language research since it was developed in the mid '80s, in particular in studies on the foundations of object-oriented programming.
+
+The simplest way of combining subtyping and polymorphism is to take them as completely orthogonal features—i.e., to consider a system that is essentially the union of subtyping systems and polymorphism systems we learned before. This system is theoretically unproblematic, and is useful for all of the reasons that subtyping and polymorphism are individually. However, once we have both features in the same language, it is tempting to mix them in more interesting ways. 
+
+Suppose f is the identity function on records with a numeric field a:
+
+  f = λx:{a:Nat}. x;
+  > f : {a:Nat} -> {a:Nat}
+
+If ra is a record with an a field, 
+
+  ra = {a=0};
+
+then we can apply f to ra — in any of the type systems that we have seen in previous chapters—yielding a record of the same type.
+
+  f ra;
+  > {a=0} : {a:Nat}
+
+Similarly, if we define a larger record rab with two fields, a and b,
+
+  rab = {a=0, b=true};
+
+we can also apply f to rab by using the rule of subsumption (T-Sub) to promote the type of rab to {a:Nat} to match the type expected by f.
+
+  f rab;
+  > {a=0, b=true} : {a:Nat}
+
+However, the result type of this application has only the field a, which means that a term like (f rab).b will be judged ill typed. In other words, by passing rab through the identity function, we have lost the ability to access its b field!
+
+Using the polymorphism of System F, we can write f in a different way:
+
+  fpoly = λX. λx:X. x;
+  > fpoly : "X. X -> X
+
+The application of fpoly to rab (and an appropriate type argument) yields the desired result:
+
+  fpoly [{a:Nat, b:Bool}] rab;
+  > {a=0, b=true} : {a:Nat, b:Bool}
+
+But in making the type of x into a variable, we have given up some information that we might have wanted to use. For example, suppose we want to write a different version of f that returns a pair of its original argument and the numeric successor of its a field.
+
+  f2 = λx:{a:Nat}. {orig=x, asucc=succ(x.a)};
+  > f2 : {a:Nat} -> {orig:{a:Nat}, asucc:Nat}
+
+Again, using subtyping, we can apply f2 to both ra and rab, losing the b field in the second case.
+
+  f2 ra;
+  > {orig={a=0}, asucc=1} : {orig:{a:Nat}, asucc:Nat}
+
+  f2 rab;
+  > {orig={a=0,b=true}, asucc=1} : {orig:{a:Nat}, asucc:Nat}
+
+But this time polymorphism offers us no solution. If we replace the type of x by a variable X as before, we lose the constraint that x must be a record with an a field, which is required to compute the asucc field of the result.
+
+  f2poly = λX. λx:X. {orig=x, asucc=succ(x.a)};
+  > Error: Expected record type
+
+The fact about the operational behavior of f2 that we want to express in its type is that it takes an argument of any record type R that includes a numeric a field and returns as its result a record containing a field of type R and a field of type Nat. We can use the subtype relation to express this concisely: f2 takes an argument of any subtype R of the type {a:Nat} and returns a record containing a field of type R and a field of type Nat. This intuition can be formalized by introducing a subtyping constraint on the bound variable X of f2poly.
+
+  f2poly = λX<:{a:Nat}. λx:X. {orig=x, asucc=succ(x.a)};
+  > f2poly : "X<:{a:Nat}. X -> {orig:X, asucc:Nat}
+
+This so-called bounded quantification is the characteristic feature of System F<:.
+
+Formally, F<: is obtained by combining the types and terms of System F with the subtype lambda system and refining universal quantifiers to carry subtyping constraints. Bounded existential quantifiers can be defined similarly.
+
+There are actually two reasonable ways of defining the subtyping relation of F<:, differing in their formulation of the rule for comparing bounded quantifiers (S-All): a more tractable but less flexible version called the kernel rule, and a more expressive but technically somewhat problematic full subtyping rule.
+
+Figure below presents the full definition of kernel F<:, with differences from previous systems highlighted.
+
+-> " <: Top      (based on System F and simple subtyping)
+---------------------------------------------------------
+t ::=                             terms
+      x                           variable
+      λx:T.t                      abstraction
+      t t                         application
+      λX<:T.t                     type abstraction
+      t [T]                       type application
+
+v ::=                             values
+      λx:T.t                      abstraction value
+      λX<:T.t                     type abstraction value
+
+T ::=                             types
+      X                           type variable
+      Top                         maximum type
+      T->T                        type of functions
+      "X<:T.T                     universal type
+
+Г ::=                             contexts
+      O                           empty context
+      Г,x:T                       term variable binding
+      Г,X<:T                      type variable binding
+
+Evaluation                        (t->t')
+
+t1 -> t1'
+---------------                   E-APP1
+t1 t2 -> t1' t2
+
+t2 -> t2'
+---------------                   E-APP2
+v1 t2 -> v1 t2'
+
+t1 -> t1'
+-------------------               E-TAPP
+t1 [T2] -> t1' [T2]
+
+(λX<:T11.t12)[T2] -> [X |-> T2]t12     E-TAPPTABS
+
+(λx:T11.t12)v2 -> [x |-> v2]t12   E-APPABS
+
+Subtyping                         (Г |- S <: T)
+
+Г |- S<:S                         S-REFL
+
+Г |- S<:U    Г |- U<:T
+----------------------            S-TRANS
+Г |- S<:T
+
+X<:T <- Г
+---------                         S-TVAR
+Г |- X<:T
+
+Г |- T1<:S1    Г |- S2<:T2
+--------------------------        S-ARROW
+Г |- S1->S2 <: T1->T2
+
+Г,X<:U1 |- S2<:T2
+---------------------------       S-ALL
+Г |- "X<:U1.S2 <: "X<:U1.T2
+
+Typing                            (Г |- t:T)
+
+x:T <- Г
+--------                          T-VAR
+Г |- x:T
+
+Г,x:T1 |- t2:T2
+----------------------            T-ABS
+Г |- λx:T1.t2 : T1->T2
+
+Г |- t1:T11->T12    Г |- t2:T11
+-------------------------------   T-APP
+Г |- t1 t2 : T12
+
+Г,X<:T1 |- t2:T2
+--------------------------        T-TABS
+Г |- λX<:T1.t2 : "X<:T1.T2
+
+Г |- t1:"X<:T11.T12     Г |- T2<:T11
+------------------------------------      T-TAPP
+Г |- t1 [T2] : [X |-> T2]T12
+
+Г |- t:S    Г |- S<:T
+---------------------             T-SUB
+Г |- t:T
+
+
+Bounded and Unbounded Quantification
+------------------------------------
+
+One point that is immediately obvious from this figure is that the syntax of F<: provides only bounded quantification: the ordinary, unbounded quantification of pure System F has disappeared. The reason for this is that we do not need it: a bounded quantifier whose bound is Top ranges over all subtypes of Top—that is, over all types. So we recover unbounded quantification as an abbreviation:
+
+  "X.T =def= "X<:Top.T
+
+
+Scoping
+-------
+
+An important technical detail that is not obvious in Figure above concerns the scoping of type variables. Obviously, whenever we talk about a typing statement of the form Г |- t:T, we intend that the free type variables in t and T should be in the domain of Г. But what about free type variables appearing in the types inside Г? In particular, which of the following contexts should be considered to be well-scoped?
+
+  Г1 = X<:Top, y:X->Nat
+  Г2 = y:X->Nat, X<:Top
+  Г3 = X<:{a:Nat,b:X}
+  Г4 = X<:{a:Nat,b:Y}, Y<:{c:Bool,d:X}
+
+Г1 is certainly well-scoped: it introduces a type variable X and then a term variable y whose type involves X. A term that might give rise to this context during typechecking would have the form X<:Top. λy:X->Nat. t, and it is clear that the X in the type of y is bound by the enclosing λ. On the other hand, by the same reasoning Г2 looks wrong, since in the sort of term that would give rise to it — e.g., λy:X->Nat. λX<:Top. t — is it not clear what the intended scope of X is.
+
+Г3 is a more interesting case. We could argue that it is clear, in a term like λX<:{a:Nat,b:X}. t, where the second X is bound. All we need to do is to regard the scope of the binding for X as including its own upper bound (and everything to the right of the binding, as usual). The variety of bounded quantification incorporating this refinement is called F-bounded quantification (Canning, Cook, Hill, Olthoff, and Mitchell, 1989b). F-bounded quantification often appears in discussions of types for object-oriented programming, and has been used in the GJ language design (Bracha, Odersky, Stoutamire, and Wadler, 1998). However, its theory is somewhat more complex than that of ordinary F<: (Ghelli, 1997; Baldan, Ghelli, and Raffaetà, 1999), and it only becomes really interesting when recursive types are also included in the system (no non-recursive type X could satisfy a constraint like X<:{a:Nat,b:X}).
+
+Yet more general contexts like Г4, permitting mutual recursion between type variables via their upper bounds, are not unheard of. In such calculi, each new variable binding is generally allowed to introduce an arbitrary set of inequations involving the new variable and all the existing ones.
+
+We will not consider F-bounded quantification further in this book, and will take all of Г2, Г3, and Г4 to be ill-scoped. More formally, we will require that, whenever we mention a type T in a context, the free variables of T should be bound in the portion of the context to the left of where T appears.
+
+
+Subtyping
+---------
+
+Type variables in F<: have associated bounds (just as ordinary term variables have associated types), and we must keep track of these bounds during both subtyping and typechecking. We do this by changing the type bindings in contexts to include an upper bound for each type variable. These bounds are used during subtyping to justify steps of the form "the type variable X is a subtype of the type T because we assumed it was."
+
+Adding this rule implies that subtyping now becomes a three-place relation—that is, every subtyping statement will now have the form Г |- S <: T, pronounced "S is a subtype of T under assumptions Г." We complete this refinement by adding contexts to all the other subtyping rules.
+
+Besides the new rule for variables, we must also add a subtyping rule for comparing quantified types (S-All). Figure above gives the simpler variant, called the kernel rule, in which the bounds of the two quantifiers being compared must be identical.
+
+The term "kernel" comes from Cardelli and Wegner's original paper (1985), where this variant of F<: was called Kernel Fun.
+
+  Г,X<:U1 |- S2<:T2
+  ---------------------------       S-ALL
+  Г |- "X<:U1.S2 <: "X<:U1.T2
+
+
+Typing
+------
+
+We must also refine the typing rules for ordinary universal types. These extensions are straightforward: in the introduction rule for bounded quantifiers, we carry the bound from the abstraction into the context during the typechecking of the body (T-TABS), and in the elimination rule we check that the supplied type argument actually satisfies the bound (T-TAPP).
+
+
+Full F<:
+--------
+
+In kernel F<:, two quantified types can be compared only if their upper bounds are identical. If we think of a quantifier as a sort of arrow type (whose elements are functions from types to terms), then the kernel rule corresponds to a "covariant" restriction of the standard subtyping rule for arrows, in which the domain of an arrow type is not allowed to vary in subtypes:
+
+  S2 <: T2
+  ----------------
+  U1->S2 <: U1->T2
+
+This restriction looks rather unnatural, both for arrows and for quantifiers. This analogy suggests that we should refine the kernel S-ALL rule to allow contravariant subtyping in the "left-hand side" of bounded quantifiers:
+
+  Г |- T1<:S1    Г,X<:T1 |- S2<:T2
+  --------------------------------       S-ALL
+  Г |- "X<:S1.S2 <: "X<:T1.T2
+
+Intuitively, the full version of S-ALL can be understood as follows. A type T = "X<:T1.T2 describes a collection of functions from types to values, each mapping subtypes of T1 to instances of T2. If T1 is a subtype of S1, then the domain of T is smaller than that of S = "X<:S1 .S2, so S is a stronger constraint and describes a smaller collection of polymorphic values. Moreover, if, for each type U that is an acceptable argument to the functions in both collections (i.e., one that satisfies the more stringent requirement U <: T1), the U-instance of S2 is a subtype of the U-instance of T2, then S is a "pointwise stronger" constraint and again describes a smaller collection of values.
+
+The system with just the kernel subtyping rule for quantified types is called Kernel F<:. The same system with the full quantifier subtyping rule is called Full F<:. The bare name F<: refers ambiguously to both systems.
