@@ -1,0 +1,77 @@
+* purely functional data structure (downloaded)
+* the calculi of lambda conversion
+* Lambda-Calculus and Combinators: An Introduction (downloaded) 
+* Introduction to lambda calculus (downloaded)
+* Call-by-name, call-by-value, and the \u03bb-calculus
+* Essentials of Programming Languages, 1st edition (http://lambda-the-ultimate.org/node/649) (3rd downloaded)
+* the little schemer
+* discrete math and its application (downloaded)
+* Concepts, Techniques, and Models of Computer Programming (downloaded)
+* implementing functional language (downloaded)
+* prolog
+* Virtual Machine Design and Implementation in C/C++ 
+* Type and Programming Language {advanced topics}
+* Syntax and Semantics of Programming Languages
+* Lambda Calculi: A Guide for Computer Scientists (Graduate Texts in Computer Science) (Hardcover) http://www.amazon.com/exec/obidos/ASIN/0198538413/
+* domain driven design documents/system-design
+* mathematica
+* the evolution of lisp documents/programming/functional
+* The Little LISPer - 3rd Edition  
+* hackers and painters documents/programming
+* modern compiler design documents/
+* automating linux and ... documents/
+* smalltalk blue book
+* Wicked Cool Ruby Scripts
+* Data Modeling Essentials
+* sed and awk
+* perl book
+* Concrete Mathematics
+* Realworld Haskell
+* Generic Programming in Haskell
+* GEB
+* Refactoring: ruby edition
+* The Mind
+* introduce to algorithm
+* Beautiful Code
+* haskell the craft of functional programming
+* code quality
+* Programming Languages: Application and Interpretation
+* learn you haskell: http://learnyouahaskell.com/starting-out
+* introduce to algorithm
+* acm communication 200808 P91. Composable Memory Transactions
+* The monad reader
+* gene algorithm tutorial
+* Forth
+* programming erlang
+* ANSI Comman Lisp
+* programming collective intelligence
+* mastering regular expressions
+* ocaml for scientist
+* documents/math/guide to latex
+* http://www.amazon.com/Dream-Machine-Licklider-Revolution-Computing/dp/0670899763/ref=ed_oe_h
+* 信息论比较有名的是T. Cover的Elements of Information Theory
+
+不过如果不是非要从informtation theoretic的角度去看待和研究问题，没必要先专门去看信息论的书再回去看PR,
+先看看附录了解下基本概念和公式就可以了。这方面Mackay的information theory, inference and learning
+algorithms 比较好
+Types and Programming Languages -- Pierce
+This is an amazing book. You will never look at a programming languages the same way after reading this.
+
+Defintion of Standard ML (revised) --Millner, et al
+A slim but dense volume. The insights you will gain are not unique to ML, but it is best to have played around with ML first. I think that Elements of ML Programming (Ullman) is a good gentle introduction to ML.
+
+Esentials of Programming languages -- Friedman
+Not formal, but very useful. Quite helpful to refer to when the formal definition isn't sinking in right.
+
+Compiling with Continuations -- Appel
+Not the latest word on compilation, but still an excellent book to read if you are interested in computation over programs.
+
+Category Theory for Computer Scientists -- Pierce
+Good to have alongside Types and Programming Languages (with a good Set Theory book if you're weak there). Read the first two chapters before TAPL gets into subtyping.
+
+Categories for Types -- Crole
+A possible alternative or companion to Category Theory for Computer Scientists. I must confess that I only recently obtained this and just started to look through it. But I like how it is written and organized.
+
+Structure and Interpretation of Computer Programs -- Abelson & Sussman
+On Lisp -- Graham
+Neither of these is very formal, so they don't really belong on this list. Nonetheless, they can be very useful for thinking differently about what a program is. Note that Paul Graham has strong opinions and may occasionally present them as revealed truths.
