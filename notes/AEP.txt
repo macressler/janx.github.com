@@ -1,13 +1,15 @@
+=============================
 Agile Estimating and Planning
 =============================
 
 
+================================
 Part I. The Problem and The Goal
 ================================
 
 
 1. The Purpose of Planning
---------------------------
+==========================
 
 A good planning process supports yourt project by:
 
@@ -51,3 +53,67 @@ So in defining agile planning we find that it:
   * Is spread throughout the project
 
 Estimates given early in a project are far less accurate than those given later. This progressive refinement is shown in the cone of uncertainty.
+
+
+2. Why Planning Fails
+=====================
+
+* 2/3 traditional projects cost more than plan
+* 2/3 features in a released product is not need
+* 100% traditional projects exceeds its schedule
+
+Planning Is By Activity Rather Than Feature
+-------------------------------------------
+
+1. Activities Don't Finish Early:
+
+"Work expands so as to fill the time available for its completion." - Parkinson’s Law (1957)
+
+Parkinson is saying that we take as much time to complete an activity as we think we’ll be allowed. If there’s a Gantt chart hanging on the wall that says an activity is expected to take five days then the programmer assigned to that activity will generally make sure the activity takes the full five days. She may do this by adding a few bells and whistles if it looks like she’ll finish early (a practice known as gold-plating). Or, she may split time between the activity and researching some hot, new technology she thinks may be useful. What she will not do very often is finish the activity early. In many organizations, if she finishes early, her boss may accuse her of having given a padded estimate. Or, her boss may expect her to finish more activities early. Why risk either of these scenarios when a little web surfing can make the activity come in on schedule instead?
+
+2. Lateness Is Passed Down the Schedule
+
+An early start requires a combination of things to go well, a late start can be caused by one thing going wrong.
+
+The problem is compounded because we’ve already established that activities will rarely finish early. This means that activities will start late and that the lateness will get passed down the schedule. 
+
+3. Activities Are Not Independent
+
+Many activities in a typical project plan are not independent. When an activity takes longer than planned, all similar activities are also likely to take longer than planned.
+
+
+Multitasking Causes Further Delays
+----------------------------------
+
+A second reason why traditional approaches to planning often fail is multitasking, which is defined as simultaneously working on multiple tasks. Multitasking exacts a horrible toll on productivity. Clark and Wheelwright (1993) studied the effects of multitasking and found that the time an individual spends on value-adding work drops rapidly when the individual is working on more than two tasks. 
+
+Multitasking becomes a problem on a traditionally planned project for two primary reasons. First, work is typically assigned well in advance of when the work will begin and it is impossible to efficiently allocate work in advance. As signing work to individuals rather than to groups exacerbates the problem. Second, it encourages focusing on achieving a high level of utilization of all individuals on the project rather than on maintaining sufficient slack to cope with the inherent variability in typical project tasks. Loading everyone to 100% of capacity has the same effect as loading a highway to 100% of capacity: no one can make any forward progress.
+
+
+Features Are Not Developed By Priority
+--------------------------------------
+
+Many traditional plans are created with the assumption that all identified activities will be completed. This means that work is typically prioritized and sequenced for the convenience of the development team.
+
+Traditional thinking says that if all work will be completed then project customers have no preference about the sequence in which that work is done. This leads to the development team working on features in what appears to the customer as a relatively haphazard order. Then, with the end of the project approaching, the team scrambles to meet the schedule by dropping features. Since there was no attempt to work on features in a priority order, some of the features dropped are of greater value than those that are delivered.
+
+
+We Ignore Uncertainty
+---------------------
+
+A fourth shortcoming with traditional approaches to planning is the failure to acknowledge uncertainty. We ignore uncertainty about the product and assume that the initial requirements analysis led to a complete and perfect specification of the product. We assume that users will not change their minds, refine their opinions, or come up with new needs during the period covered by the plan.
+
+Similarly, we ignore uncertainty about how we will build the product and pretend we can assign precise estimates (“2 weeks”) to imprecise work. As stated earlier in this chapter, we cannot hope to identify every activity that will be needed in the course of a project. Yet we often fail to acknowledge this in the plans we create.
+
+Even with all this uncertainty, schedules are often expressed as a single, unqualified date: “We will ship on June 30,” for example. During the earliest part of a project we are the most uncertain. The estimates we give should reflect our uncertainty. One way of doing this is by expressing the end date as a range. “We’ll ship sometime between June and August,” for example. As the project progresses and as uncertainty and risk are removed from the project, estimates can be refined and made more precise.
+
+The best way of dealing with uncertainty is to iterate. To reduce uncertainty about what the product should be, work in short iterations and show (or, ideally, give) working software to users every few weeks. Uncertainty about how to develop the product is similarly reduced by iterating. For example, missing tasks can be added to plans, bad estimates can be corrected, and so on. In this way, the focus shifts from the plan to the planning.
+
+
+Estimates Become Commitments
+----------------------------
+
+Embedded within each and every estimate is a probability that the work will be completed in the estimated time. Suppose your team has been asked to develop a new high-end word processor. The probability of finishing this by the end of the week is 0%. The probability of finishing it in ten years is 100%. If I ask you for an estimate and you tell me the end of the week, that estimate comes with a probability of 0%. If the estimate you give me is ten years, that estimate comes with a probability of 100%. Each estimate between the end of the week and ten years from now comes with its own probability between 0% and 100% (Armour 2002).
+
+A problem with traditional planning can arise if the project team or its stakeholders equate estimating with committing. As Phillip Armour (2002) points out, an estimate is a probability and a commitment cannot be made to a probability. Commitments are made to dates. Normally the date that a team is asked (or told) to commit to is one to which they would assign a less than 100% probability. Prior to making such a commitment the team needs to assess a variety of business factors and risks. It is important that they be given this opportunity and that every estimate does not become an implicit commitment.
+
