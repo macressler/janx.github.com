@@ -227,3 +227,129 @@ This restriction looks rather unnatural, both for arrows and for quantifiers. Th
 Intuitively, the full version of S-ALL can be understood as follows. A type T = "X<:T1.T2 describes a collection of functions from types to values, each mapping subtypes of T1 to instances of T2. If T1 is a subtype of S1, then the domain of T is smaller than that of S = "X<:S1 .S2, so S is a stronger constraint and describes a smaller collection of polymorphic values. Moreover, if, for each type U that is an acceptable argument to the functions in both collections (i.e., one that satisfies the more stringent requirement U <: T1), the U-instance of S2 is a subtype of the U-instance of T2, then S is a "pointwise stronger" constraint and again describes a smaller collection of values.
 
 The system with just the kernel subtyping rule for quantified types is called Kernel F<:. The same system with the full quantifier subtyping rule is called Full F<:. The bare name F<: refers ambiguously to both systems.
+
+
+Encoding Products
+-----------------
+
+We gave an encoding of pairs of numbers in System F. This encoding can easily be generalized to pairs of arbitrary types: the elements of the type
+
+  Pair T1 T2 = "X. (T1->T2->X) -> X;
+
+(Jan: T1->T2->X is a selector, so pair is an object that accepts a selector and return the thing user want, see below, X will be either T1 or T2, so polimorphism is required for products encoding, but subtyping is not)
+
+represent pairs of T1 and T2. The constructor pair and the destructors fst and snd are defined as follows. (The ascription in the definition of pair helps the typechecker print its type in a readable form.)
+
+  pair = λX. λY. λx:X. λy:Y. (λR. λp:X->Y->R. p x y) as Pair X Y;
+  > pair : "X. "Y. X -> Y -> Pair X Y
+
+  fst = λX. λY. λp: Pair X Y. p [X] (λx:X. λy:Y. x);
+  > fst : "X. "Y. Pair X Y -> X
+
+  snd = λX. λY. λpp: Pair X Y. p [Y] (λx:X. λy:Y. y);
+  > snd : "X. "Y. Pair X Y -> Y
+
+Clearly, the same encoding can be used in F<:, since F<: contains all the features of System F. What is more interesting, though, is that this encoding also has some natural subtyping properties. In fact, the expected subtyping rule for pairs
+
+  Г |- S1<:T1    Г |- S2<:T2
+  -----------------------------
+  Г |- Pair S1 S2 <: Pair T1 T2
+
+follows directly from the encoding.
+
+
+Encoding Records
+----------------
+
+We begin by defining flexible tuples as follows. They are "flexible" because they can be expanded on the right during subtyping, unlike ordinary tuples.
+
+Definition: For each n ≥ 0 and types T1 through Tn, let {Ti,i<-1..n} =def= Pair T1 (Pair T2 ... (Pair Tn Top)...)
+
+In particular, {} =def= Top. Similarly, for terms t1 through tn, let {ti,i<-1..n} =def= pair t1 (pair t2 ... (pair tn top)...)
+
+where we elide the type arguments to pair, for the sake of brevity. (The term top here is just some arbitrary element of Top - i.e., an arbitrary closed, well-typed term.) The projection t.n (again eliding type arguments) is: fst (snd (snd ... (snd t)...)
+                                                                                          |-----------------|
+                                                                                              n-1 times
+
+From this abbreviation, we immediately obtain the following rules for subtyping and typing of flexible tuples.
+
+  Г |- Si<:Ti, i<-1..n
+  -----------------------------------
+  Г |- {Si, i<-1..n} <: {Ti, i<-1..n}
+
+  Г |- ti:Ti, i<-1..n
+  --------------------------------
+  Г |- {ti, i<-1..n}:{Ti, i<-1..n}
+
+  Г |- t:{Ti, i<-1..n}
+  ----------------------
+  Г |- t.i:Ti
+
+Now, let L be a countable set of labels, with a fixed total ordering given by the bijective function label-with-index:N->L . We define records as follows: Let L be a finite subset of L and let Sl be a type for each l <- L. Let m be the maximal index of any element of L, and
+
+  Si = Sl, if label-with-index(i) = l <- L
+       Top, if label-with-index(i) doesn't belong to L
+
+The record type {l:Sl,l<-L} is defined as the flexible tuple {Si, i<-1..m}. Similarly, if tl is a term for each l:L, then
+
+  ti = tl, if label-with-index(i) = l <- L
+       top, if label-with-index(i) doesn't belong to L
+
+The record value {l=tl,l<-L} is {ti, i<-1..m}. The projection t.l is just the tuple projection t.i, where label-with-index(i) = l.
+
+This encoding validates the expected rules for typing and subtyping of records (rules S-RCDWIDTH, S-RCDDEPTH, S-RCDPERM, T-RCD, and T-PROJ. However, its interest is mainly theoretical - from a practical standpoint, the reliance on a global ordering of all field labels is a serious drawback: it means that, in a language with separate compilation, numbers cannot be assigned to labels on a module-by-module basis, but must instead be assigned all at once, i.e., at link time.
+
+
+Church Encoding with Subtyping
+------------------------------
+
+As a final illustration of the expressiveness of F<:, let's look at what happens when we add bounded quantification to the encoding of Church numerals in System F. There, the type of Church numerals was:
+
+  CNat = "X. (X->X) -> X -> X;
+
+An intuitive anthropomorphic reading of this type is: "Tell me a result type T; now give me a function on T and a 'base element' of T, and I'll give you back another element of T formed by iterating the function you gave me n times over the base element you gave."
+
+We can generalize this by adding two bounded quantifiers and refining the types of the parameters s and z.
+
+  SNat = "X<:Top. "S<:X. "Z<:X. (X->S) -> Z -> X;
+
+Intuitively, this type reads: "Give me a generic result type X and two subtypes S and Z. Now give me a function that maps from the whole set X into the subset S and an element of the special set Z, and I'll return you an element of X formed by iterating the function n times over the base element."
+
+To see why this is interesting, consider this slightly different type:
+
+  SZero = "X<:Top. "S<:X. "Z<:X. (X->S) -> Z -> Z;
+
+Although SZero has almost the same form as SNat, it says something much stronger about the behavior of its elements, since it promises that its final result will be an element of Z, not just of X. In fact, there is just one way that this can happen - namely by yielding the argument z itself. In other words, the value
+
+  szero = λX. λS<:X. λZ<:X. λs:X->S. λz:Z. z;
+  > szero : SZero
+
+is the only inhabitant of the type SZero (in the sense that every other element of SZero behaves the same as szero). Since SZero is a subtype of SNat, we also have szero : SNat.
+
+On the other hand, the similar type
+
+  SPos = "X<:Top. "S<:X. "Z<:X. (X->S) -> Z -> S;
+
+has more inhabitants; for example,
+
+  sone   = λX. λS<:X. λZ<:X. λs:X->S. λz:Z. s z;
+  stwo   = λX. λS<:X. λZ<:X. λs:X->S. λz:Z. s (s z);
+  sthree = λX. λS<:X. λZ<:X. λs:X->S. λz:Z. s (s (s z));
+
+and so on. Indeed, SPos is inhabited by all the elements of SNat except zsero.
+
+We can similarly refine the typings of operations defined on Church numerals. For example, the type system can be used to check that the successor function always returns a positive number:
+
+  ssucc = λn:SNat. λX. λS<:X. λZ<:X. λs:X->S. λz:Z. s (n [X] [S] [Z] s z);
+  > ssucc : SNat -> SPos
+
+Similarly, by refining the types of its parameters, we can write the function plus in such a way that the typechecker gives it the type SPos->SPos->SPos.
+
+  spluspp = λn:SPos. λm:SPos. λX. λS<:X. λZ<:X. λs:X->S. λz:Z. n [X] [S] [S] s (m [X] [S] [Z] s z);
+  > spluspp : SPos -> SPos -> SPos
+
+The previous example and exercise raise an interesting point. Clearly, we don't want to write several different versions of plus with different names and then have to decide which to apply based on the expected types of its arguments: we want to have a single version of plus whose type contains all these possibilities-something like
+
+  plus : SZero->SZero->SZero ∧ SNat->SPos->SPos ∧ SPos->SNat->SPos ∧ SNat->SNat->SNat
+
+where t : S∧T means "t has both type S and type T." The desire to support this kind of overloading has led to the study of systems combining intersection types with bounded quantification.
