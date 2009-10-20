@@ -353,3 +353,75 @@ The previous example and exercise raise an interesting point. Clearly, we don't 
   plus : SZero->SZero->SZero ∧ SNat->SPos->SPos ∧ SPos->SNat->SPos ∧ SNat->SNat->SNat
 
 where t : S∧T means "t has both type S and type T." The desire to support this kind of overloading has led to the study of systems combining intersection types with bounded quantification.
+
+
+Safety
+------
+
+The type preservation property can be established quite directly for both the kernel and full variants of F<:. When we consider subtyping and type-checking algorithms, however, the two variants will turn out to be more different than the basic arguments in this chapter might suggest. We will find many points where the full system is much more complex to analyze than the kernel system, or indeed where the full system lacks useful properties (including decidable typechecking!) enjoyed by the kernel system.
+
+Lemma [Permutation]
+
+Suppose that Г is a well-formed context and that Δ is a permutation of Г — that is, Δ has the same bindings as Г, and their ordering in Δ preserves the scopes of type variables from Г, in the sense that, if one binding in Г introduces a type variable that is mentioned in another binding further to the right, then these bindings appear in the same order in Δ.
+
+  1. If Г |- t:T, then Δ |- t:T.
+  2. If Г |- S<:T, then Δ |- S<:T.
+
+Lemma [Weakening]
+
+  1. If Г |- t:T and Г, x:U is well formed, then Г, x:U |- t:T.
+  2. If Г |- t:T and Г, X<:U is well formed, then Г, X<:U |- t:T.
+  3. If Г |- S<:T and Г, x:U is well formed, then Г, x:U |- S<:T.
+  4. If Г |- S<:T and Г, X<:U is well formed, then Г, X<:U |- S<:T.
+
+Lemma [Strengthening for Term Variables in Subtyping Derivations]
+
+  If Г, x:T, Δ |- S<:T, then Г, Δ |- S<:T. (typing assumptions play no role in subtype derivations.)
+
+Lemma [Narrowing]
+
+  1. If Г, X<:Q, Δ |- S<:T and Г |- P<:Q, then Г, X<:P, Δ |- S<:T.
+  2. If Г, X<:Q, Δ |- t:T and Г |- P <: Q, then Г, X<:P, Δ |- t:T.
+
+These properties are often called narrowing because they involve restricting (narrowing) the range of the variable X.
+
+Lemma [Substitution Preserves Typing]
+
+  If Г, x:Q, Δ |- t:T and Г |- q:Q, then Г, Δ |- [x |-> q]t:T.
+
+We write [X |-> S]Г for the context obtained by substituting S for X in the right-hand sides of all of the bindings in Г.
+
+Lemma [Type Substitution Preserves Subtyping]
+
+  If Г, X<:Q, Δ |- S<:T and Г |- P<:Q, then Г, [X |-> P] Δ |- [X |-> P]S <: [X |-> P]T.
+
+Note that we need to substitute for X only in the part of the environment that follows the binding of X, since our conventions about scoping require that the types to the left of the binding of X do not contain X.
+
+Lemma [Type Substitution Preserves Type]
+
+  If Г, X<:Q, Δ |- t:T and Г |- P<:Q, then Г, [X |-> P]Δ |- [X |-> P]t:[X |-> P]T.
+
+Lemma [Inversion of the Subytype Relation, From Right to Left]
+
+  1. If Г |- S<:X, then S is a type variable.
+  2. If Г |- S <: T1->T2, then either S is a type variable or else S has the form S1 -> S2, with Г |- T1<:S1 and Г |- S2<:T2.
+  3. If Г |- S <: "X<:U1.T2, then either S is a type variable or else S has the form "X<:U1 .S2 with Г, X<:U1 |- S2<:T2.
+
+Lemma:
+
+  1.  If Г |- λx:S1.s2 : T and Г |- T <: U1->U2, then Г |- U1<:S1 and there is some S2 such that Г, x:S1 |- s2:S2 and Г |- S2<:U2.
+  2.  If Г |- λX<:S1.s2 : T and Г |- T <: "X<:U1.U2, then U1 = S1 and there is some S2 such that Г, X<:S1 |- s2:S2 and Г, X<:S1 |- S2<:U2.
+
+
+With above lemmas we get Preservation Theorem: If Г |- t:T and t -> t′, then Г |- t′:T.
+---------------------------------------------------------------------------------------
+
+
+Lemma [Canonical Forms]
+
+  1. If v is a closed value of type T1->T2, then v has the form λx:S1.t2.
+  2. If v is a closed value of type "X<:T1.T2, then v has the form λX<:T1.t2.
+
+
+With above lemmas we get Progress Therom: If t is a closed, well-typed F<: term, then either t is a value or else there is some t′ with t -> t′.
+------------------------------------------------------------------------------------------------------------------------------------------------
