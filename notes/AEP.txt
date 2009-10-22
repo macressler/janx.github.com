@@ -1,7 +1,4 @@
-=============================
-Agile Estimating and Planning
-=============================
-
+============================= Agile Estimating and Planning ============================= 
 
 ================================
 Part I. The Problem and The Goal
@@ -216,7 +213,7 @@ Agile teams achieve this by planning at three distinct horizons. The three horiz
 | | |           | | |
 | | |           | | |
 | | ------------- | |
-| -------------------
+- -------------------
 
 Most agile teams are only concerned with the three innermost levels of the planning onion. Release planning considers the user stories or themes that will be developed for a new release of a product or system. The goal of release planning is to determine an appropriate answer to the questions of scope, schedule, and resources for a project. Release planning occurs at the start of a project but is not an isolated effort. A good release plan is updated throughout the project (usually at the start of each iteration) so that it always reflects the current expectations about what will be included in the release.
 
@@ -247,4 +244,37 @@ As an example, consider a travel reservation site that includes the user story, 
 Like release planning, iteration planning is iterative. The product owner and the team discuss various ways of best meeting the conditions of satisfaction for the iteration.
 
 Feedback loops from the resulting new product increment back into the conditions of satisfaction boxes at the start of both release and iteration planning. Based on their experience developing the product increment during the iteration the team may have gained knowledge or experience that affects planning at one or more of these levels. Similarly, showing the product increment to existing or likely users may generate new knowledge that may cause changes to the plans. An agile team will incorporate these changes into their plans to the extent they lead to a higher-value product.
+
+
+========================
+Part II. Estimating Size
+========================
+
+Agile teams separate estimates of size from estimates of duration. Estimates size first, then estimate duration. (Duration = Size/Velocity) We'll see two measures of size - story points and ideal time.
+
+
+4. Estimating Size with Story Points
+====================================
+
+
+Story Points are Relative
+-------------------------
+
+Story points are a unit of measure for expressing the overall size of a user story, feature, or other piece of work. When we estimate with story points we assign a point value to each item. The raw value we assign is unimportant. What matters are the relative values. A story that is assigned a two should be twice as much as a story that is assigned a one. It should also be two-thirds of a story that is estimated as three story points.
+
+The number of story points associated with a story represents the overall size of the story. There is no set formula for defining the size of a story. Rather, a story point estimate is an amalgamation of the amount of effort involved in developing the feature, the complexity of developing it, the risk inherent in it, and so on.
+
+There are two common ways to get started. The first appoach is to select a story that you expect to be one of the smallest stories you’ll work with and say that story is estimated at 1 story point. The second approach is instead to select a story that seems somewhat medium-sized and give it a number somewhere in the middle of the range you expect to use. Personally, I prefer most of my stories to be in the range of 1–10. This means I’ll look for a medium-size story and call it five story points. Once you’ve fairly arbitrarily assigned a story point value to the first story, each additional story is estimated by comparing it to the first story or to any others that have been estimated.
+
+On an agile project it is not uncommon to begin an iteration with incompletely specified requirements, the details of which will be discovered during the iteration. However, we need to associate an estimate with each story, even those that are incompletely defined. When you’re given a loosely-defined user story (or dog), you make some assumptions, take a guess, and move on. You can guess like this: "this won't be larger than A, which is 5 points; and will be larger than B, which 1-2 points. So give it an average, 3, will be reasonable"
+
+
+Velocity
+--------
+
+In order to understand how estimating in unitless story points can possibly work, it is necessary to introduce a new concept: velocity. Velocity is a measure of a team’s rate of progress. It is calculated by summing the number of story points assigned to each user story that the team completed during the iteration. If the team completed three stories each estimated at five story points then their velocity would be fifteen. If the team completed two five-point stories their velocity would be ten.
+
+If a team completed ten story points of work last iteration, our best guess is that they will complete ten story points this iteration. Since story points are estimates of relative size, this will be true whether they work on two five-point stories or five two-point stories. If we sum the story point estimates for all desired features we come up with a total size estimate for the project. If we know the team’s velocity we can divide size by velocity to arrive at an estimated number of iterations. We can turn this duration into a schedule by mapping it onto a calendar.
+
+Fortunately, as a team begins making progress through the user stories of a project, their velocity becomes apparent over the first few iterations. The beauty of a points-based approach to estimating is that planning errors are self-correcting because of the application of velocity. The beauty of this is that estimating in story points completely separates the estimation of effort from the estimation of duration. Of course effort and schedule are related, but separating them allows each to be estimated independently. In fact you are no longer even estimating the duration of a project; you are computing it or deriving it. The distinction is subtle but important.
 
