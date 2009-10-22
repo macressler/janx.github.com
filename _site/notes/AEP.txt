@@ -278,3 +278,31 @@ If a team completed ten story points of work last iteration, our best guess is t
 
 Fortunately, as a team begins making progress through the user stories of a project, their velocity becomes apparent over the first few iterations. The beauty of a points-based approach to estimating is that planning errors are self-correcting because of the application of velocity. The beauty of this is that estimating in story points completely separates the estimation of effort from the estimation of duration. Of course effort and schedule are related, but separating them allows each to be estimated independently. In fact you are no longer even estimating the duration of a project; you are computing it or deriving it. The distinction is subtle but important.
 
+
+5. Estimating in Ideal Days
+===========================
+
+Ideal time is the amount of time that something takes when stripped of all peripheral activities. Elapsed time, on the other hand, is the amount of time that passes on a clock (or perhaps a calendar). It is almost always far easier and accurate to predict the duration of an event in ideal time than in elapsed time. 
+
+On a software project, ideal time differs from elapsed time because of the natural overhead we experience every day. On any given day, in addition to working on the planned activities of a project, a team member may spend time answering email, making a support call to a vendor, interviewing a candidate for the open analyst position, and in two meetings. 
+
+Additionally, in looking at why ideal time does not equal elapsed time, consider that managers are able to work an average of only five minutes between interruptions (Hobbs 1987). Even if the typical developer is interrupted only one-third as often that is still an interruption every fifteen minutes.
+
+Problems can arise when a manager asks a team member the inevitable question: “How long will this take?” The team member responds “five days,” so the manager counts off five days on her calendar and marks the day with a big red X. The team member, however, really meant to say, “Five days if that’s all I do; but I do a lot of other things so probably two weeks.” On a software project, multitasking also broadens the gap between ideal time and elapsed time. A football player is never asked by his coach, “Since you’re not busy on every play, I want you to play in this high-priority hockey game at the same time.” A software developer who is told to multitask loses a great deal of efficiency while switching between two (or more) tasks.
+
+On a software project, we may choose to estimate user stories or other work in ideal days. When estimating in ideal days you assume that:
+
+  * the story being estimated is the only thing you’ll work on (single task)
+  * everything you need will be on hand when you start (independent)
+  * there will be no interruptions
+
+
+When we estimate the number of ideal days that a user story will take to develop, test, and accept, it is not necessary to consider the impact of the overhead of the environment in which the team works. If developing a particular screen will take me one ideal day, then it will take me one ideal day regardless of whether I’m employed by a startup with no overhead or other demands on my team or by a huge bureaucracy. 
+
+*** When considerations of organizational overhead are ignored, ideal days can be thought of as another estimate of size, just as story points are. Then, an estimate of size expressed as a number of ideal days can be converted into an estimate of duration using velocity in exactly the same way as with story points.  
+
+If you choose to estimate in ideal days, assign one aggregate estimate to each user story. Some teams are tempted to estimate a number of ideal days for each individual or group who will work on a story. For example, such a team might estimate that a particular user story will take two ideal days from a programmer, one ideal day from a database engineer, one ideal day from a user interaction designer, and two ideal days from a tester. I’ve seen teams then write the estimate on the story card with either a different colored marker for each role or on a different colored sticky piece of paper for each role that is affixed to the story card.
+
+In the vast majority of cases my advice is not to do this. This level of focus on the individual roles on a team shifts team thinking away from the “we’re all in this together” mentality we’d like to exist on an agile team. Further, it vastly increases the amount of work necessary to plan a release. If each story is assigned an estimate for each role who will work on the story then the release plan should realistically take each role into account. This means we’d have to track velocity and remaining work for each role as well.
+
+While this is rarely worth the additional effort it may sometimes be necessary. I was with one client recently who is working on three versions of a product — one for the Macintosh, one for Windows, and one for handheld computers. In their case it is absolutely critical that each version be released with exactly the same functionality. Further, the individuals on this team do not currently have the skills to switch between Mac, Windows, and handheld development. A team in this situation may want to estimate the ideal time for each role on each story. They should, however, be aware of the extra administrative burden this will require.
