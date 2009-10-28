@@ -306,3 +306,83 @@ If you choose to estimate in ideal days, assign one aggregate estimate to each u
 In the vast majority of cases my advice is not to do this. This level of focus on the individual roles on a team shifts team thinking away from the “we’re all in this together” mentality we’d like to exist on an agile team. Further, it vastly increases the amount of work necessary to plan a release. If each story is assigned an estimate for each role who will work on the story then the release plan should realistically take each role into account. This means we’d have to track velocity and remaining work for each role as well.
 
 While this is rarely worth the additional effort it may sometimes be necessary. I was with one client recently who is working on three versions of a product — one for the Macintosh, one for Windows, and one for handheld computers. In their case it is absolutely critical that each version be released with exactly the same functionality. Further, the individuals on this team do not currently have the skills to switch between Mac, Windows, and handheld development. A team in this situation may want to estimate the ideal time for each role on each story. They should, however, be aware of the extra administrative burden this will require.
+
+
+6. Techniques for Estimating
+============================
+
+No matter how much effort is invested, the estimate is never at the top of the accuracy axis. No matter how much effort you put into an estimate, an estimate is still an estimate. No amount of additional effort will make an estimate perfect. It is possible to put too much effort into estimating with the result being a less accurate estimate.
+
+Agile team acknowledge that we cannot eliminate uncertainty from estimates but they embrace the idea that small efforts are rewarded with big gains. Even though they are less far up the accuracy/effort scale, agile teams can produce more reliable plans because they deliver small increments of fully working, tested, integrated code.
+
+
+Estimates are Shared
+--------------------
+
+Estimates are not created by a single individual on the team. Agile teams do not rely on a single expert to estimate. Despite well-known evidence that estimates prepared by those who will do the work are better than estimates prepared by anyone else (Lederer 1992), estimates are best derived collaboratively by the team, which includes those who will do the work.
+
+First, on an agile project we tend not to know specifically who will perform a given task. Yes, we may all suspect that the team’s database guru will be the one to do the complex stored procedure task that has been identified. However, there’s no guarantee that this will be the case. She may be busy when the time comes and someone else will work on it. So, since anyone may work on anything, it is important that everyone have input into the estimate.
+
+Second, even though we may expect the database guru to do the work, others may have something to say about her estimate. Suppose, for example, that the team’s database guru, Kristy, estimates a particular user story as three ideal days. Someone else on the project may not know enough to program the feature himself but he may know enough to say, “Kristy, you’re nuts; the last time you worked on a feature like that it took a lot longer. I think you’re forgetting how hard it was last time.” At that point Kristy may offer a good explanation of why it’s different this time. However, more often than not in my experience, she will acknowledge that she was indeed underestimating the feature.
+
+
+The Estimation Scale
+--------------------
+
+Studies have shown that we are best at estimating things that fall within one order of magnitude (Miranda 2001; Saaty 1996). So you're good at esimating disance between your home and nearest shopping-mall, but not good at the distance between your home and the Moon.
+
+Two good estimation scales:
+
+  * 1, 2, 3, 5, 8 (fibonacci)
+  * 1, 2, 4, 8 (exponetial)
+
+These non-linear sequences work well because they reflect the greater uncertainty associated with estimates for larger units of work. Each of these numbers should be thought of as a bucket into which items of the appropriate size are poured. Rather than thinking of work as water being poured into the buckets, think of the work as sand. 
+
+You may want to consider including 0 as a valid number within your estimation range. While it’s unlikely that a team will encounter many user stories or features that truly take no work, including 0 is often useful. There are two reasons for this. First, if we want to keep all features within a 10x range, assigning non-zero values to tiny features will limit the size of largest features. Second, if the work truly is closer to 0 than 1, the team may not want the completion of the feature to contribute to its velocity calculations. 
+
+While, in general, we want to estimate user stories whose sizes are within one order of magnitude, this cannot always be the case. If we are to estimate everything within one order of magnitude it would mean writing all stories at a fairly fine-grained level. For features that we’re not sure we want (a preliminary cost estimate is desired before too much investment is put into them) or for features that may not happen in the near future, it is often desirable to write one much larger user story. A large user story is sometimes called an epic.
+
+Additionally, a set of related user stories may be combined together (usually by a paper clip if working with note cards) and treated as a single entity for either estimating or release planning. Such a set of user stories is referred to as a theme. An epic, by its very size alone, is often a theme on its own. By aggregating some stories into themes and writing some stories as epics, a team is able to reduce the effort they’ll spend on estimating. However, it’s important that they realize that estimates of themes and epics will be more uncertain than estimates of the more specific, smaller user stories.
+
+User stories that will be worked on in the near future (the next few iterations) need to be small enough that they can be completed in a single iteration. These items should be estimated within one order of magnitude. I use the sequence 1, 2, 3, 5, and 8 for this. User stories or other items that are likely to be more distant than a few iterations can be left as epics or themes. These items can be estimated in units beyond the 1–8 range I recommend. To accommodate estimating these larger items I add 13, 20, 40, and 100 to my preferred sequence of 1, 2, 3, 5, and 8.
+
+
+Deriving an Estimate
+--------------------
+
+Three most common techniques may be used on its own but should be combined for best results when estimaing:
+
+* Expert opinion
+
+Ask an expert, and the expert gives an estimate based on his intuition. This approach is less useful on agile projects than on traditional projects. On an agile project, estimates are assigned to user stories or other user-valued functionality. Developing this functionality is likely to require a variety of skills normally performed by more than one person. This makes it difficult to find suitable experts who can assess the effort across all disciplines. On a traditional project for which estimates are associated with tasks this is not as significant of a problem because each task is likely performed by one person. Another benefit of this method is it's usually fast.
+
+* Analogy
+
+When estimating by analogy, the estimator compares the story being estimated to one or more other stories. If the story is twice the size, it is given an estimate twice as large. There is evidence that we are better at estimating relative size than we are at estimating absolute size.
+
+When estimating this way you do not compare all stories against a single baseline or universal reference. Instead, you want to estimate each new story against an assortment of those that have already been estimated. This is referred to as triangulation. To triangulate, compare the story being estimated against a couple of other stories. To decide if a story should be estimated at five story points, see if it seems a little bigger than a story you estimated at three and a little smaller than a story you estimated at eight.
+
+* Disaggregation
+
+Disaggregation refers to splitting a story or feature into smaller, easier-to-estimate pieces.
+
+
+Planning Poker
+--------------
+
+Planning poker combines expert opinion, analogy, and disaggregation into an enjoyable approach to estimating that results in quick but reliable estimates. Participants in planning poker include all of the developers on the team. The product owner participates in planning poker but does not estimate.
+
+At the start of planning poker, each estimator is given a deck of cards. Each card has written on it one of the valid estimates. Each estimator may, for example, be given a deck of cards that read 0, 1, 2, 3, 5, 8, 13, 20, 40, and 100. The cards should be prepared prior to the planning poker meeting and the numbers should be large enough to see across a table. Cards can be saved and used for the next planning poker session. For each user story or theme to be estimated, a moderator reads the description. The moderator is usually the product owner or an analyst. However, the moderator can be anyone as there is no special privilege associated with the role. The product owner answers any questions that the estimators have. However, everyone is asked to remain aware of the effort/accuracy curve. The goal in planning poker is not to derive an estimate that will withstand all future scrutiny. Rather, the goal is to be somewhere well on the left of the effort line where a valuable estimate can be arrived at cheaply. After their questions are answered, each estimator privately selects a card representing his or her estimate. Cards are not shown until each estimator has made a selection. At that time, all cards are simultaneously turned over and shown so that all participants can see each estimate. It is very likely at this point that the estimates will differ significantly. This is actually good news. If estimates differ, the high and low estimators explain their estimates. It’s important that this does not come across as attacking those estimators. Instead, you want to learn what they were thinking about.
+
+The group can discuss the story and their estimates for a few more minutes. The moderator can take any notes she thinks will be helpful when theis story is being programmed and tested. After the discussion, each estimator re-estimates by again selecting a card. Cards are once again kept private until everyone has estimated at which point they are turned over at the same time. In many cases, the estimates will already converge by the second round. But, if they have not, continue to repeat the process. The goal is for the estimators to converge on a single estimate that can be used for the story. It rarely takes more than three rounds but continue the process as long as estimates are moving closer together. It isn’t necessary that everyone in the room turn over a card with exactly the same estimate written down. If I’m moderating an estimate and on the second round four estimators tell me 5, 5, 5, and 3, I will ask the low estimator if she is OK with an estimate of 5. Again, the point is not absolute precision but reasonableness.
+
+It is possible to play planning poker with a subset of the team, rather than involving everyone. This isn’t ideal but may be a reasonable option, especially if there are many, many items to be estimated as can happen at the start of a new project. The best way to do this is to split the larger team into two or three smaller teams each of which must have at least three estimators. It is important that each of the teams estimate consistently. What your team calls three story points or ideal days better be consistent with what my team calls the same. To achieve this, start all teams together in a joint planning poker game for an hour or so. Have them estimate 10–20 stories. Then make sure each team has a copy of these stories and their estimates and that they use them as baselines for estimating the stories they are given to estimate.
+
+Teams will need to play planning poker at two different times. First, there will usually be an effort to estimate a large number of items before the project officially begins or during its first iterations. To estimate an initial set of user stories may take a team two or three meetings of from one to three hours. Naturally this will depend on how many items there are to estimate, the size of the team, and the product owner’s ability to succinctly clarify the requirements. Second, teams will need to put forth some ongoing effort to estimate any new stories that are identified during an iteration. One way to do this is to plan to hold a very short estimation meeting near the end of each iteration. Normally this is quite sufficient for estimating any work that came in during the iteration and it allows new work to be considered in the prioritization of the coming iteration.
+
+Alternatively, colleague Kent Beck suggests hanging an envelope on the wall with all new stories placed in the envelope. As individuals have a few spare minutes they will grab a story or two from the envelope and estimate them. Teams will establish a rule for themselves, typically either that all stories must be estimated by the end of the day or by the end of the iteration. I like the idea of hanging an envelope on the wall to contain unestimated stories. However, I’d prefer that when someone has a few spare minutes to devote to estimating that he find at least one other person and that they estimate jointly.
+
+* Planning poker brings together multiple expert opinions to do the estimating.
+* A lively dialogue ensues during planning poker and estimators are called upon by their to justify their estimates. 
+* Studies have shown that averaging individual estimates leads to better results as do group discussions of estimates.
+* Planning poker works because it’s fun.
