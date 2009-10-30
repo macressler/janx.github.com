@@ -386,3 +386,51 @@ Alternatively, colleague Kent Beck suggests hanging an envelope on the wall with
 * A lively dialogue ensues during planning poker and estimators are called upon by their to justify their estimates. 
 * Studies have shown that averaging individual estimates leads to better results as do group discussions of estimates.
 * Planning poker works because it’s fun.
+
+
+7. Re-Estimating
+================
+
+If we keep in mind that story points and ideal time estimate size then it’s easier to see that we should re-estimate only when we believe a story’s relative size has changed. When working with story points or ideal time we do not re-estimate solely because a story took longer to implement than we thought.
+
+Velocity is the great equalizer. Because the estimate for each feature is made relative to the estimates for other features, it does not matter if our estimates are correct, a little incorrect, or a lot incorrect. What matters is that they are consistent.
+
+I’m generally in favor of an all-or-nothing stance toward counting velocity: if a story is done (coded, tested, and accepted by the product owner) then the team earns all the points, but if anything on the story isn’t done, they earn nothing. At the end of an iteration, this is the easiest case to assess. This works well as long as everyone remembers that we’re mostly interested in the team’s average velocity over time, not in whether velocity jumped up or down in a given iteration.
+
+In some cases the unfinished portion of a story may not be done in the next iteration. In these cases it can be appropriate to allow the team to take partial credit for the completed portion of the story. The remaining story (which is a subset of the initial story) is re-estimated based on the team’s current knowledge. 
+
+Do not become overly concerned with the need to re-estimate. Whenever the team feels one or more stories are mis-estimated relative to other stories, re-estimate as few stories as possible to bring the relative estimates back in line.
+
+
+8. Choosing Between Story Points and Ideal Days
+===============================================
+
+Why Story Points
+----------------
+
+* Story points help drive cross-functional behavior
+
+* Story point estimates do not decay
+
+  Note that both story point and ideal day estimates will need to be updated if the size of an effort changes based on the development of a framework, for example. However, only ideal day estimates need to change when the team the team becomes better at something. Velocity won't fix the problem with ideal days.
+
+* Story points are a pure measure of size
+
+  First, this means that we can only estimate story points by analogy. There is credible evidence that we are better at estimating “this is like that” than we are at estimating the absolute size of things (Lederer 1998; Vicinanza 1991). When we estimate in ideal days, on the other hand, we can still estimate by analogy. But, when estimating in ideal days we also tend to think of the calendar and how long a story will take to develop.
+
+  Second, because story points are a pure measure of size and are entirely abstract there can be no temptation to compare them to reality. Teams that estimate in ideal days almost inevitably have their ideal days compared to actual days. They then find themselves justifying why they “only” completed eight ideal days of work in a ten-day iteration.
+
+* Estimating in story points is typically faster
+
+* My ideal days are not your ideal days
+
+
+Why Ideal Days
+--------------
+
+* Ideal days are easier to explain outside the team
+
+* Ideal days are easier to estimate at first
+
+* Ideal days make velocity predictions easier
+
