@@ -1,0 +1,63 @@
+Metatheory of Bounded Quantification
+====================================
+
+In this chapter we develop subtyping and typechecking algorithms for F<:. We study both the kernel and the full variants of the system, which behave somewhat differently. Some properties are enjoyed by both but harder to prove for the full variant, while others are lost outright in full F<: - the price we pay for the extra expressiveness of this system.
+
+
+Exposure
+--------
+
+In the typechecking algorithm for the simply typed lambda-calculus with subtyping, the key idea was to calculate a minimal type for each term from the minimal types of its subterms. We can use the same basic idea for F<:, but we need to take into account one small complication arising from the presence of type variables in the system. Consider the term
+
+  f = λX<:Nat->Nat. λy:X. y 5;
+  > f : "X<:Nat->Nat. X -> Nat
+
+This term is clearly well typed, since the type of the variable y in the application y 5 can be promoted to Nat->Nat by T-SUB. But the minimal type of y is X, which is not an arrow type. In order to find the minimal type of the whole application, we need to find the smallest arrow type that y possesses - i.e., the minimal arrow type that is a supertype of the type variable X. Not too surprisingly, we can find this type by promoting the minimal type of y until it becomes something other than a type variable.
+
+Formally, we write Г |- S |^ T (pronounced "S exposes to T under Г") to mean "T is the least nonvariable supertype of S." Exposure is defined by repeated promotion of variables, as shown in Figure below:
+
+  X<:T <- Г    Г |-> T |^ T'
+  --------------------------    XA-PROMOTE
+  Г |-> X |^ T'
+
+  T is not a type variable
+  ------------------------    XA-OTHER
+  Г |-> T |^ T
+
+It is easy to see that these rules define a total function. Moreover, the result of exposing a type is always the least supertype that has some shape other than a variable.
+
+Lemma [Exposure]: Suppose Г |- S |^ T. Then:
+  1. Г |- S <: T.
+  2. If Г |- S <: U and U is not a variable, then Г |- T <: U.
+
+
+Minimal Typing
+--------------
+
+The algorithm for calculating minimal types is now built along the same lines as the one for the simply typed lambda-calculus with subtyping, with one additional twist: when we typecheck an application, we calculate the minimal type of the left-hand side and then expose this type to obtain an arrow type, as shown in Figure below. If the exposure of the left-hand side does not yield an arrow type, then rule TA-APP does not apply and the application is ill-typed. Similarly, we typecheck a type application by exposing its left-hand side to obtain a quantified type.
+
+  x:T <- Г
+  --------    TA-VAR
+  Г |- x:T
+
+  Г,x:T1 |- t2:T2
+  ----------------------    TA-ABS
+  Г |- λx:T1.t2 : T1->T2
+
+  Г |- t1:T1    Г |- T1 |^ (T11->T12)    Г |- t2:T2    Г |- T2<:T11
+  -----------------------------------------------------------------    TA-APP
+  Г |- t1 t2 : T12
+
+  Г,X<:T1 |- t2:T2
+  ------------------------    TA-TABS
+  Г |- λX<:T1.t2:"X<:T1.T2
+
+  Г |- t1:T1    Г |- T1 |^ "X<:T11.T12    Г |- T2<:T11
+  ----------------------------------------------------    TA-TAPP
+  Г |- t1 [T2] : [X |-> T2]T12
+
+Theorem [Minimal Typing]:
+  1. If Г |-> t:T  , then Г |- t:T.
+  2. If Г |- t:T, then Г |- t:M with Г |- M<:T.
+                
+Corollary [Decidability of Typing]: The kernel F<: typing relation is decidable, given a decision procedure for the subtype relation.
