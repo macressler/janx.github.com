@@ -61,3 +61,70 @@ Theorem [Minimal Typing]:
   2. If Г |- t:T, then Г |- t:M with Г |- M<:T.
                 
 Corollary [Decidability of Typing]: The kernel F<: typing relation is decidable, given a decision procedure for the subtype relation.
+
+
+Subtyping in Kernel F<:
+-----------------------
+
+We remarked that the declarative subtype relation for the simply typed lambda-calculus with subtyping is not syntax directed - i.e., it cannot be read directly as a subtyping algorithm - for two reasons: (1) the conclusions of S-REFL and S-TRANS overlap with the other rules (so, reading the rules from bottom to top, we would not know which one to try to apply), and (2) the premises of S-TRANS mention a metavariable that does not appear in the conclusion (which a naive algorithm would have to somehow "guess"). We saw that these problems can be fixed by simply dropping the two offending rules from the system, but that, before doing so, we must fix up the system a little by combining the three separate record subtyping rules into one.  
+
+For kernel F<:, the story is similar. Again, the offending rules are S-REFL and S-TRANS, and we obtain an algorithm by dropping these rules and fixing up the remaining rules a little to account for the essential uses of the dropped rules.
+
+In the simply typed lambda-calculus with subtyping, there were no essential uses of the reflexivity rule - we could just drop it without changing the set of derivable subtyping statements. In F<:, on the other hand, subtyping statements of the form Г |- X <: X can be proved only by reflexivity. So, when we remove the full reflexivity rule, we should add in its place a restricted reflexivity axiom that applies only to variables.
+
+Similarly, to eliminate S-TRANS, we must first understand which of its uses are essential. Here, the interesting interaction is with the S-TVAR rule, which allows assumptions about type variables to be used in deriving subtyping statements. For example, if Г = W<:Top, X<:W, Y<:X, Z<:Y, then the statement Г |- Z <: W cannot be proved if S-TRANS is removed from the system. An instance of S-TRANS whose left-hand subderivation is an instance of the axiom S-TVAR, as in
+
+Z<:Y <- Г              ...
+--------- (S-TVAR)  ----------
+Г |- Z<:Y           Г |- Y<:W
+------------------------------------ (S-TRANS)
+Г |- Z<:W
+
+Fortunately, derivations of this form are the only essential uses of transitivity in subtyping. This observation can be made precise by introducing a new subtyping rule
+
+X<:U <- Г    Г |- U<:T
+----------------------
+Г |- X<:T
+
+that captures exactly this pattern of variable lookup followed by transitivity, and showing that replacing the transitivity and variable rules by this one does not change the set of derivable subtyping statements.
+
+These changes lead us to the algorithmic subtype relation for kernel F<:, shown below. We add an arrowhead to the turnstile symbol in algorithmic typing statements so that we can distinguish them from original typing statements in discussions involving both.
+
+Г |-> S<:Top    (SA-TOP)
+
+Г |-> X<:X      (SA-REFL-TVAR)
+
+X<:U <- Г    Г |-> U<:T
+----------------------    (SA-TRANS-TVAR)
+Г |-> X<:T
+
+Г |-> T1<:S1    Г |-> S2<:T2
+--------------------------    (SA-ARROW)
+Г |-> S1->S2 <: T1->T2
+
+Г,X<:U1 |-> S2<:T2
+---------------------------   (SA-ALL)
+Г |-> "X<:U1.S2 <: "X<:U1.T2
+
+The fact that the new SA-REFL-TVAR and SA-TRANS-TVAR rules are sufficient replacements for the old reflexivity and transitivity rules is captured by the next two lemmas.
+
+Lemma [Reflexivity of the Algorithmic Subtype Relation]: Г |-> T<:T is provable for every Г and T.
+
+Lemma [Transitivity of the Algorithmic Subtype Relation]: If Г |-> S<:Q and Г |-> Q<:T, then Г |-> S<:T.
+
+Theorem [Soundness and Completeness of Algorithmic Subtyping]: Г |- S<:T iff Г |-> S<:T
+
+Finally, we need to check that the subtyping rules define an algorithm that is total - i.e., that terminates on all inputs. We do this by assigning a weight to each subtyping statement and checking that the algorithmic rules all have conclusions with strictly greater weight than their premises.
+
+Definition: The weight of a type T in a context Г, written weightГ(T), is defined as follows:
+
+  weightГ(X)         = weightГ1(U) + 1, if Г = Г1,X<:U,Г2
+  weightГ(Top)       = 1
+  weightГ(T1->T2)    = weightГ(T1) + weightГ(T2) + 1
+  weightГ("X<:T1.T2) = weightГ,X<:T1(T2) + 1
+
+The weight of a subtyping statement Г |- S<:T is the maximum weight of S and T in Г.
+
+Theorem: The subtyping algorithm terminates on all inputs.
+
+Corollary: Subtyping in kernel F<: is decidable.
