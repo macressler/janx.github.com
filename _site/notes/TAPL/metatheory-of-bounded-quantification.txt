@@ -128,3 +128,32 @@ The weight of a subtyping statement Г |- S<:T is the maximum weight of S and T 
 Theorem: The subtyping algorithm terminates on all inputs.
 
 Corollary: Subtyping in kernel F<: is decidable.
+
+
+Subtyping in Full F<:
+---------------------
+
+Г |-> S<:Top    (SA-TOP)
+
+Г |-> X<:X      (SA-REFL-TVAR)
+
+X<:U <- Г    Г |-> U<:T
+-----------------------    (SA-TRANS-TVAR)
+Г |-> X<:T
+
+Г |-> T1<:S1    Г |-> S2<:T2
+--------------------------    (SA-ARROW)
+Г |-> S1->S2 <: T1->T2
+
+Г |-> T1<:S1    Г,X<:T1 |-> S2<:T2
+----------------------------------   (SA-ALL)
+Г |-> "X<:S1.S2 <: "X<:T1.T2
+
+
+Lemma [Permutation and Weakening]:
+  1. Suppose that Δ is a well-formed permutation of Г. If Г |-> S<:T, then Δ |-> S<:T.
+  2. If Г |-> S<:T and dom(Δ) ∩ dom(Г) = , then Г,Δ |-> S<:T.
+
+Lemma [Transitivity and Narrowing for Full F<:]:
+  1.  If Г |-> S<:Q and Г |-> Q<:T, then Г |-> S<:T.
+  2.  If Г,X<:Q,Δ |-> M<:N and Г |-> P<:Q then Г,X<:P,Δ |-> M<:N.
