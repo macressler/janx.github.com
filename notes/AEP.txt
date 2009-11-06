@@ -434,3 +434,54 @@ Why Ideal Days
 
 * Ideal days make velocity predictions easier
 
+
+============================
+Part III. Planning for Value
+============================
+
+
+9. Prioritizing Themes
+======================
+
+The responsibility for prioritizing is shared among the whole team but the effort is led by the product owner.
+
+It is generally difficult to estimate the value of small units of functionality, such as a single user story. To get around this, individual user stories or features are aggregated into themes. Stories and themes are then prioritized relative to one another for the purpose of creating a release plan. Themes should be selected such that each defines a discrete set of user- or customer-valued functionality. 
+
+
+Factors in Prioritization
+-------------------------
+
+1. The financial value of having the features
+
+   Often, an ideal way to determine the value of a theme is estimate its financial impact over a period of time, usually the next few months, quarters, or possibly years. Because of the complexity in doing this, it is often useful to have an alternate method for estimating value. Since the value of a theme is related to the desirability of that theme to new and existing users, it is possible to use non-financial measures of desirability to represent value. 
+                        
+2. The cost of developing (and perhaps supporting) the new features
+
+   An important, yet often overlooked, aspect of cost is that the cost can change over time. The best way to reduce the cost of change is to implement a feature as late as possible - effectively when there is no more time for change.
+
+   Themes often seem worthwhile when viewed only in terms of the time they will take. As trite as it sounds, it is important to remember that time costs money. We can turn story points into money by:  $x/point = total expense on project/total story points. Then convert points esitmate on story into money estimate, and ask yourself: will this story worth that much investment?
+
+3. The amount and significance of learning and new knowledge created by developing the features
+
+   On many projects, much of the the overall effort is spent in the pursuit of new knowledge. It is important that this effort be acknowledged and considered fundamental to the project. Acquiring new knowledge is important because at the start of a project we never know everything that we’ll need to know by the end of the project. The knowledge that a team develops can be classified into two areas:
+
+   * Knowledge about the product: knowledge about what will be developed. The more product knowledge a team has, the better able they will be to make decisions about the nature and features of the product.  
+
+   * Knowledge about the project: knowledge about how the product will be created, include what technologies will be used.
+
+The flip side of acquiring knowledge is reducing uncertainty. At the start of a project there is some amount of uncertainty about what features the new product should contain. There is also uncertainty about how we’ll build the product. Laufer (1996) refers to these as end uncertainty and means uncertainty. End uncertainty is reduced by acquiring more knowledge about the prodcut; means uncertainty is reduced through acquiring more knowledge about the project.
+
+4. The amount of risk removed by developing the features
+
+   Risks can be classified as either technological or business risks. To optimally prioritize work it is important to consider both risk and value.  
+
+   The appropriate development sequence for the features is high-value-high-risk -> high-value-low-risk -> low-value-low-risk, and low-value-high-risk feature should be avoid.
+
+   The high-value, high-risk features should be developed first. These features deliver the most value and working on them eliminates significant risks. Next are the high-value, low-risk features. These features offer as much value as the first set but they are less risky. They can therefore be done later in the schedule. Because of this, use the guideline to work first on high-value features but use risk as a tie-breaker.
+
+   Be aware that a feature’s risk and value profile changes over time. 
+
+Because most projects are undertaken to either save or make money, the first two factors often dominate prioritization discussions. However, proper consideration of the influence of learning and risk on the project is critical if we are to prioritize optimally.
+
+To combine the four prioritiziaton factors, think first about the value of the feature relative to what it would cost to develop today. This gives you an initial priority order for the themes. Those themes with a high value-to-cost ratio are those that should be done first. Next, think of the other prioritization factors as moving themes forward or backward. 
+
