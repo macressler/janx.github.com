@@ -728,3 +728,73 @@ Splitting Tricks:
 ===================
 Part IV. Scheduling
 ===================
+
+
+13. Release Planning Essentials
+-------------------------------
+
+Release planning is the process of creating a very high-level plan that covers a period longer than an iteration. A typical release will cover perhaps three to six months and maybe three to twelve or more iterations, depending on how long the iterations are. A release plan is important for a number of reasons:
+
+1. It helps the product owner and the whole team decide how much must be developed and how long that will take before they have a releasable product.
+2. It conveys expectations about what is likely to be developed and in what timeframe. Many organizations need this information because it feeds into other strategic planning activities.
+3. It serves as a guidepost toward which the project team can progress. Without the concept of a release, teams move endlessly from one iteration to the next. A release plan provides context that allows iterations to combine into a satisfying whole. This is a fundamental concern with any iterative process, not just agile ones.
+
+
+The Release Plan
+----------------
+
+Part of planning a release is determining how much can be accomplished by what date. In some cases we start with a date and see how much can be finished by then. In other cases we start with a set of user stories and see how long it will take to develop them. In both cases, once a team has an initial answer, it is assessed against the organization’s goals for the project: Will the product developed make the desired amount of money? Will it save enough money? Will the product capture the target market share? If not, perhaps a longer or shorter project may achieve an acceptable set of goals.
+
+At a cursory level, determining how much work will fit into a release and what user stories that will be is a very straightforward process. Multiplying the planned number of iterations by either the expected or known velocity of the team gives us the total amount of work that can be performed.
+
+During release planning we do not want to create a plan that indicates which developers will work on which user stories or tasks or the sequence in which work will be performed within an iteration. Creating a plan with that level of detail is dangerous and misleading during release planning. Decisions about who works on what and the sequence of activities are best left to the individuals working on those tasks and are best deferred as long as possible. Additionally, remember that items in a release plan are user stories, which are descriptions of the functionality to be delivered, not individual engineering tasks to be performed. During release planning it is too early and some user stories may be insufficiently understood to be disaggregated into engineering tasks. The team will eventually disaggregate the user stories of the release plan into their constituent tasks. But, they won’t do this until the beginning of the iteration containing those stories.
+
+Naturally, should your project, organization, and work environment warrant it, you can include additional information in a release plan. For example, you may wish to communicate some key assumptions underlying the plan (who is on the team, how long an iteration will be, etc.).
+
+The general steps to planning a release is:
+
+1 .Determine conditions of satisfaction
+2. Estimate user stories
+3. Select iteraion length, Estimate Velocity, Prioritize user stories
+4. Select stories and a release date
+5. goto 1
+
+* Determine the Conditions of Satisfaction
+
+  Before starting to plan a release, it is important to know the criteria by which the project will be evaluated as a success or a failure. For most projects, the ultimate scorecard is the amount of money saved or generated. As leading indicators of whether a project is likely to achieve these financial goals, most projects use the triumvirate of schedule, scope, and resources. For most projects, this means that the product owner’s conditions of satisfaction are defined by a combination of schedule, scope, and resource goals.
+
+  The product owner will bring desired targets for each of these factors into almost every release planning meeting. A product owner may want four themes (worth 200 story points) developed in three months without adding personnel, for example. While a target for each factor is often identified, one is usually preeminent. Many project ares either date-driven or feature-driven. A date-driven project is one that must be released by a certain date but for which the feature set is negotiable. A feature-driven is one that we would probably like to release as soon as possible but consider the completion of a set of features more important.
+
+* Estimate The User Stories
+
+  Because an estimate represents the cost of developing a user story, it is important that each has been estimated. It is not necessary to estimate everything that a product owner may ever want. It is only necessary to have an estimate for each new feature that has some reasonable possibility of being selected for inclusion in the upcoming release. Often, a product owner will have a wish list that extends two, three, or more releases into the future. It is not necessary to have estimates on the more distant work.
+
+* Select an Iteration Length
+
+  Most agile teams work in iterations of from one to four weeks. It’s possible to go slightly longer and some teams have experimented with even shorter iterations. When planning a release, an appropriate iteration length will need to be chosen.
+
+* Estimate Velocity
+
+  If the team has experience working together, your best bet is often to use the velocity the team exhibited most recently. Naturally, if the technology or business domain changed dramatically, it may not be appropriate to use a team’s past velocity. Still, there are techniques you can apply that enable you to make an informed estimate of velocity based on past results. We'll discuss that later.
+
+* Prioritize User Stories
+
+  Most projects have either too little time or too many features. It is often impossible to do everything that everyone wants in the time allowed. Because of this, the product owner must prioritize the features she wants developed. A good product owner will accept ultimate responsibility for prioritizing, but will listen to advice from the development team, especially about sequencing.
+
+* Select Stories and A Date
+
+  If the project is feature-driven, we can sum the estimates of all needed features and divide by the expected velocity. This will give us the number of iterations necessary to complete the desired functionality.
+
+  If the project is date-driven, we can determine the number of iterations by looking at a calendar. Multiplying the number of iterations by the expected velocity will tell us how many story points or ideal days will fit in the release. We can count off that many points or ideal days into the prioritized list of user stories and see how much functionality can be delivered in the desired time.
+
+  The next question to be addressed regards how detailed the release plan will be. Some teams in some environments prefer to create a release plan that shows what they expect to develop during each iteration. Other teams prefer simply to determine what they think will be developed during the overall release, leaving the specifics of each iteration for later. This is something to be discussed and decided during release planning.
+
+  There are advantages and disadvantages to each approach. Obviously, assigning specific features to specific iterations takes more time. However, the additional detail this provides can be useful when coordinating work among multiple teams. On the other hand, not allocating work to specific iterations provides less detail, but it takes much less time. Further, even if we do preliminarily assign work to specific iterations, we do so with less knowledge than we’ll have at the start of each iteration. Undoubtedly, the plan will change as we learn more throughout the project. So, the investment of time and effort to assign work to specific iterations should be weighed against this. Still, on some projects it may be worth doing. What I find to be a good compromise is to place specific work into the first one to three iterations, treating the rest of the release plan as one large bucket. It’s almost always worth allocating specific work to the first iteration, especially if it is starting immediately.
+
+
+Updating The Release Plan
+-------------------------
+
+At this point, the release plan is done. However, it’s important that the release plan isn’t filed away somewhere or put up on a shelf never to be touched again. The release plan should be revisited and updated with some regular frequency. If the development team’s velocity has remained fairly constant and iteration planning hasn’t introduced any big surprises, you may want to go as long as four to six weeks without formally updating the release plan. On the other hand, many projects benefit from establishing a rule that the release plan will be revisited after each iteration.
+
+A release plan is a high-level plan that covers a period longer than an iteration. For most teams a release occurs every three to six months, but it is not unusual to have releases more or less frequently depending on the type of software.
