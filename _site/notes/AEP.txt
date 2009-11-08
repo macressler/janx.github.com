@@ -798,3 +798,72 @@ Updating The Release Plan
 At this point, the release plan is done. However, it’s important that the release plan isn’t filed away somewhere or put up on a shelf never to be touched again. The release plan should be revisited and updated with some regular frequency. If the development team’s velocity has remained fairly constant and iteration planning hasn’t introduced any big surprises, you may want to go as long as four to six weeks without formally updating the release plan. On the other hand, many projects benefit from establishing a rule that the release plan will be revisited after each iteration.
 
 A release plan is a high-level plan that covers a period longer than an iteration. For most teams a release occurs every three to six months, but it is not unusual to have releases more or less frequently depending on the type of software.
+
+
+14. Iteration Planning
+======================
+
+An iteration plan is created in an iteration planning meeting. This meeting should be attended by the product owner, analysts, programmers, testers, database engineers, user interaction designers, and so on. Anyone involved in taking a raw idea and turning it into a functioning product should be present.
+
+An iteration plan can be as simple as a spreadsheet or a set of note cards with one task handwritten on each card. In either case, tasks and stories should be organized so that it’s possible to tell which tasks go with which stories. 
+
+One of the most significant advantages to using note cards during iteration planning is that it allows everyone to participate in the process. If tasks are being typed into a system during the iteration planning meeting, someone has his or her fingers on a keyboard. There is tremendous power to having control over the keyboard. All conversations had better involve the typist or nothing will get entered into the release plan. Worse, whoever has the keyboard can change what gets entered into the release plan.
+
+
+Tasks Are Not Allocated During Iteration Meeting
+------------------------------------------------
+
+Individuals do not sign up for tasks until the iteration begins and generally only sign up for one or two related tasks at a time. New tasks are not begun until previously selected ones are completed. There’s nothing to gain and quite a bit to lose by assigning individuals to specific tasks during iteration planning. Projects do best when they foster a "we’re all in this together" attitude; when team members pick up slack for each other knowing that the favor will be returned. When individuals sign up for specific tasks at the beginning of the iteration it works against fostering a unified commitment to achieving the goals of the iteration.
+
+
+How Iteration Planning Differs From Release Planning
+----------------------------------------------------
+
+While the release plan looks forward through the release of the product, usually three to six months out at the start of a new project, the iteration plan looks ahead only the length of one iteration, usually one to four weeks. The user stories of the release plan are decomposed into tasks on the iteration plan. Where the user stories of a release plan are estimated in story points or ideal days, the tasks on the iteration plan are estimated in ideal hours.
+
+The primary purpose of iteration planning is to refine suppositions made in the more coarse-grained release plan. The release plan is usually intentionally vague about the specific order in which user stories will be worked on. Additionally, at the time of iteration planning the team knows more than when the release plan was last updated. Planning the iteration as it begins allows the team to make use of their recently acquired knowledge. In this way, agile planning becomes a two-stage process. The first stage is the release plan, with its rough edges and general uncertainties. The second stage is the iteration plan. An iteration plan still has some rough edges and continues to be uncertain. However, because it is created concurrent with the start of a new iteration, an iteration plan is more detailed than a release plan.
+
+Creating the iteration plan leads a team into discussions about both product design as well as software design. Product design discussions, for example, may be around topics such as the best combination of stories for optimizing value, interpretation of feedback from showing working software to customers, or the extent to which a desired feature should be implmented (that is, will 20% of the feature and effort deliver 80% of the value). Software design discussions may, for example, involve the appropriate architectural tier in which to implement a new feature, which technologies should be used, whether existing code can be reused, and so on. As a result of these discussions the team comes to a better understanding of what should and will be built and they also create a list of the tasks needed to achieve their goal for the iteration.
+
+Iteration planning is not necessary on Monday. (Jan: I think start on Friday and end on Thursday is a good idea.)
+
+
+At a broad level, there are two ways of planning an iteration, which I refer to velocity-driven and commitment-driven. Different teams use different approaches and each can be successful. Additionally, the two general approaches can be combined to varying degrees.
+
+
+Velocity-Driven Iteration Planning
+----------------------------------
+
+First, the team collaboratively adjusts priorities. They may have learned something in the prior iteration that alters their priorities. Next, they identify the target velocity for the coming iteration. The team then selects an iteration goal, which is a general description of what they wish to accomplish during the coming iteration. After selecting an iteration goal, the team selects the top priority user stories that support that goal. As many stories are selected as necessary for the sum of their ideal day or story point estimates to equal the target velocity. Finally, each selected story is split into tasks and each task is estimated.
+
+1. Adjust priorities. Determine target velocity.
+
+   Ideally, a team should wait until after the iteration review meeting before discussing priorities for the coming iteration. You may need a prioritization meeting for two days before the end of the iteration.
+
+   The default assumption by most teams is that their velocity in the next iteration will equal the velocity of the most recent iteration. Beck and Fowler (2000) call this yesterday's weather since our best guess of today's weather is that it will be like yesterday's weather. Other teams prefer to use a moving average over perhaps the last three iterations.
+
+2. Identify an iteration goal.
+
+   With their priorities and target velocity in mind, the team identifies a goal they would like to achieve during the iteration. The goal succinctly describes what they would like to accomplish during the iteration. The iteration goal is a unifying statement about what will be accomplished during the iteration. It does not have to be very specific.
+
+3. Select user stories.
+
+   In selecting the stories to work on, the product owner and team consider the priority of each story. If a story is too low priority but match the goal, it may not be selected.
+
+4. Split user stories into tasks.
+
+   All tasks necessary to go from a user story to a functioning, finished product should be identified. If there are analysis, design, user interaction design, or other tasks necessary, they need to be identified and estimated. Since the goal of each iteration is to produce a potentially shippable product, take care to include tasks for testing and documenting the product. Including test tasks is important because the team needs to think right at the start of the iteration about how a user story will be tested. This helps engage testers right at the start of the iteration, which improves the cross-functional behavior of the team.
+
+   The iteration plan should only identify those tasks that add immediate value to the current project. Obviously that includes tasks that may be considered analysis, design, coding, testing, user interface design, and so on. Don’t include the hour in the morning when you answer email.
+
+   New agile teams are often not familiar with or skilled at writing automated unit tests. However, this is a skill they work to cultivate during the first few iterations. During that period, I encourage programmers to explicitly identify and estimate unit testing tasks. A programmer may, for example, identify that coding a new feature will take eight hours and then writing its unit tests will take five hours. Later, once unit testing has become a habit for the programmers, the programmer would only write one card saying to code the new feature and would give it an estimate that included time to automate the unit tests. Once something like unit testing becomes a habit, it can be included within another task. Until then, however, making it explicit helps keep awareness of the task high.
+
+   You should identify, estimate, and include tasks for meetings related to the project. When estimating the meeting, be sure to include the time for all participants as well as any time spent preparing for the meeting. For example, suppose the team schedules a meeting to discuss feedback from users. All seven team members plan to attend the one-hour meeting and the analyst plans to spend two hours preparing for the meeting. The estimate for this task is nine hours. I usually enter this into the iteration plan as a single nine-hour task, rather than as a separate task for each team member.
+
+   An agile team has the goal of fixing all bugs in the iteration they are discovered. They become able to achieve this as they become more proficient in working in short iterations, especially through relying on automated testing. When a programmer gives an estimate for coding something that estimate either includes time for fixing any bugs found in the implementation or a separate task ("correct bugs") is identified and estimated. My preference is for identifying a single task but not considering it complete until all of its tests pass.
+
+   A defect found later (or not fixed during the iteration it was discovered) is treated the same as a user story. Fixing the defect will need to be prioritized into a subsequent iteration in the same way any other user story would be. Outside of an iteration, the whole idea of a defect starts to go away. Fixing a bug or adding a feature become two ways of describing the same thing.
+
+   (handling dependencies)
+
+5. Estimate tasks.
