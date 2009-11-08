@@ -591,3 +591,88 @@ Theme   | Story Points  | Cost  | NPV   | ROI   | Discounted Payback Period
 Making a decision is not cut and dry; the product owner and team will need to consider a variety of situationally-specific factors such as the organization’s tolerance for risk, need for short payback periods, availability of resources, other options for investment money, and so on.
 
 For More on Project Economics: "Return on Software: Maximizing the Return On Your Software Investment", Steve Tockey, 2004.
+
+
+11. Prioritizing Desirability
+=============================
+
+Kano Model of Customer Satisfaction
+-----------------------------------
+
+The process was originated by Noriaki Kano (1984). Kano’s approach gives us a way to separate features into three categories:
+
+  * Threshold, or must-have, features
+
+  Threshold features are those that must be present in the product for it to be successful. They are often referred to as must-have features. Improving the performance or amount of a threshold feature will have little impact on customer satisfaction.
+
+  * Linear features
+
+  A linear feature is one for which “the more, the better” holds true. The bigger the hotel room is, the better. These are called linear features because customer satisfaction is correlated linearly with the quantity of the feature. The better one of these features performs (or the more of it there is), the more satisfied the customers will be. Because of this, product price is often related to linear attributes.
+
+  * Exciters and delighters
+
+  Exciters and delighters are those features that provide great satisfaction, often adding a price premium to a product. However, the lack of an exciter or delighter will not decrease customer satisfaction below neutral. The built-in television on the hotel’s treadmill was an exciter for me. I would not have been dissatisfied if the hotel didn’t offer these because I didn’t know anyone had them. In fact, exciters and delighters are often called unknown needs because customers or users do not know they need these features until they see them.
+
+
+Because must-have features are required for a product to even play in its market segment, emphasis should be placed on prioritizing the development of all threshold features. A product’s must-have features do not need to be developed in the first iterations of a release. However, since users consider these features as mandatory, they need to be available before the product is released. Keep in mind, though, that partial implementation of must-have features may be adequate since gains in customer satisfaction drop off quickly after a base level of support for threshold features has been established. 
+
+Secondary emphasis should be placed on completing as many linear features as possible. Because each of these features leads directly to greater customer satisfaction, the more of these features that can be included, the better. (Excluding, of course, such situations as a product that is already bloated with too many features.) Finally and with time permitting, at least a few delighters should be prioritized such that they are included in the release plan.
+
+
+The easiest way to make use of a Kano model on an agile project is to think about each theme and make an educated guess about the type of each. A much better way, however, is to speak with customers or users in order to truly determine the type of each theme. This is surprisingly easy because it can be done with a written questionnaire and you may need to survey as few as 20–30 users to accurately prioritize requirements.
+
+Kano proposed determining the category of a feature by asking two questions: one question regarding how the user would feel if the feature were present in the product and one question about how the user would feel if it were absent. The answers to these questions are on the same five-point scale:
+
+  1. I like it that way
+  2. I expect it to be that way
+  3. I am neutral
+  4. I can live with it that way
+  5. I dislike it that way
+
+Answsers from one user can be inconsistent. By cross-referencing the answer to the functional question with the answer to the dysfunctional question, a prospective user’s responses can be reduced to a single meaning. We use the table:
+
+Customer      | Dysfunctional Question
+Requirements  | Like | Expect | Neutral | Live with | Dislike
+-------------------------------------------------------------
+F Q| Like     | Q    | E      | E       | E         | L
+u u|--------------------------------------------------------- 
+n e| Expect   | R    | I      | I       | I         | M
+c s|--------------------------------------------------------- 
+t t| Neutral  | R    | I      | I       | I         | M
+i i|---------------------------------------------------------
+o o| Live with| R    | I      | I       | I         | M
+n n|---------------------------------------------------------
+a  | Dislike  | R    | R      | R       | R         | Q
+l  |---------------------------------------------------------
+
+M   Must-have
+R   Reverse
+L   Linear
+Q   Questionable
+E   Exciter
+I   Indifferent
+
+If we repeat this process over 20–30 users their answers can be aggregated and their distributions determined as is shown in table below:
+
+------------------------------------------------------
+Theme   | E   | L   | M   | I   | R   | Q   | Category
+------------------------------------------------------
+
+Occasionally you’ll encounter a feature that has high values for two responses. This indicates that different types of customers and users have different expectations. In these cases you should consider analyzing responses based on some factor that differentiates your customer or user sub-population. You may, for example, separate answers from users at small companies from users at large companies. Or you may choose to separate answers based on job role within a company or by industry segment.
+
+
+Relative Weighting
+------------------
+
+Karl Wiegers (1999) has recommended an approach that is similar to Kano’s in that considers both the positive benefit of the presence of a feature and the negative impact of its absence. Rather than use questionnaires, this approach relies on expert judgment. Collaboratively, but led by the product owner, the team assesses each feature being considered for the next release. Each feature is assessed in terms of the benefits it will bring if implemented as well as the penalty that will be incurred if it is not implemented. As with estimates of story points and ideal time, the estimates of benefits and penalties are relative. A scale of 1–9 is used. See table below:
+
+--------------------------------------------------------------------------------------------------------------
+Feature   | Relative Benefit  | Relative Penalty  | Total Value   | Value %   | Estimate  | Cost %  | Priority
+--------------------------------------------------------------------------------------------------------------
+...
+--------------------------------------------------------------------------------------------------------------
+Total     |                   |                   |               |           |           |         |
+--------------------------------------------------------------------------------------------------------------
+
+
+For each feature, the relative benefit and penalty are summed and entered into the Total Value column. If you wish, you could weight the benefits and penalties. For example, to weight the relative benefit as twice as important as the relative penalty, multiply the Relative Benefit by 2 before adding it to Relative Penalty to get the Total Value. The sum of the Total Value column represents the total value of delivering all features. To calculate the relative contribution of each feature, divide its total value by the sum of the Total Value column (fill it in Value % column).The Estimate holds the story point or ideal days estimate. Exactly as with Total Value, the Estimate column is summed and the percentage of each estimate is calculated in the Cost % column. The final column, Priority, is calculated by dividing the Priority % by the Cost %. Higher numbers represent higher priorities because they will create more value for the effort invested in them.
