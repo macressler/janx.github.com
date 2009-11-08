@@ -434,3 +434,160 @@ Why Ideal Days
 
 * Ideal days make velocity predictions easier
 
+
+============================
+Part III. Planning for Value
+============================
+
+
+9. Prioritizing Themes
+======================
+
+The responsibility for prioritizing is shared among the whole team but the effort is led by the product owner.
+
+It is generally difficult to estimate the value of small units of functionality, such as a single user story. To get around this, individual user stories or features are aggregated into themes. Stories and themes are then prioritized relative to one another for the purpose of creating a release plan. Themes should be selected such that each defines a discrete set of user- or customer-valued functionality. 
+
+
+Factors in Prioritization
+-------------------------
+
+1. The financial value of having the features
+
+   Often, an ideal way to determine the value of a theme is estimate its financial impact over a period of time, usually the next few months, quarters, or possibly years. Because of the complexity in doing this, it is often useful to have an alternate method for estimating value. Since the value of a theme is related to the desirability of that theme to new and existing users, it is possible to use non-financial measures of desirability to represent value. 
+                        
+2. The cost of developing (and perhaps supporting) the new features
+
+   An important, yet often overlooked, aspect of cost is that the cost can change over time. The best way to reduce the cost of change is to implement a feature as late as possible - effectively when there is no more time for change.
+
+   Themes often seem worthwhile when viewed only in terms of the time they will take. As trite as it sounds, it is important to remember that time costs money. We can turn story points into money by:  $x/point = total expense on project/total story points. Then convert points esitmate on story into money estimate, and ask yourself: will this story worth that much investment?
+
+3. The amount and significance of learning and new knowledge created by developing the features
+
+   On many projects, much of the the overall effort is spent in the pursuit of new knowledge. It is important that this effort be acknowledged and considered fundamental to the project. Acquiring new knowledge is important because at the start of a project we never know everything that we’ll need to know by the end of the project. The knowledge that a team develops can be classified into two areas:
+
+   * Knowledge about the product: knowledge about what will be developed. The more product knowledge a team has, the better able they will be to make decisions about the nature and features of the product.  
+
+   * Knowledge about the project: knowledge about how the product will be created, include what technologies will be used.
+
+The flip side of acquiring knowledge is reducing uncertainty. At the start of a project there is some amount of uncertainty about what features the new product should contain. There is also uncertainty about how we’ll build the product. Laufer (1996) refers to these as end uncertainty and means uncertainty. End uncertainty is reduced by acquiring more knowledge about the prodcut; means uncertainty is reduced through acquiring more knowledge about the project.
+
+4. The amount of risk removed by developing the features
+
+   Risks can be classified as either technological or business risks. To optimally prioritize work it is important to consider both risk and value.  
+
+   The appropriate development sequence for the features is high-value-high-risk -> high-value-low-risk -> low-value-low-risk, and low-value-high-risk feature should be avoid.
+
+   The high-value, high-risk features should be developed first. These features deliver the most value and working on them eliminates significant risks. Next are the high-value, low-risk features. These features offer as much value as the first set but they are less risky. They can therefore be done later in the schedule. Because of this, use the guideline to work first on high-value features but use risk as a tie-breaker.
+
+   Be aware that a feature’s risk and value profile changes over time. 
+
+Because most projects are undertaken to either save or make money, the first two factors often dominate prioritization discussions. However, proper consideration of the influence of learning and risk on the project is critical if we are to prioritize optimally.
+
+To combine the four prioritiziaton factors, think first about the value of the feature relative to what it would cost to develop today. This gives you an initial priority order for the themes. Those themes with a high value-to-cost ratio are those that should be done first. Next, think of the other prioritization factors as moving themes forward or backward. 
+
+
+10. Financial Prioritization
+============================
+
+Calculating
+-----------
+
+Forecasting the financial value of a theme is the responsibility of the product owner but it is a responsibility shared with all other team members. The way I like to determine the financial value of a theme is to hold a meeting (or serveral meeting) attended by as many of these individuals as practical, to generate a table for each theme like this:
+
+------------------------------------------------------------------------------------------------
+Quarter   | New Revenue   | Incremental Revenue   | Retained Revenue  | Operational Efficiencies
+------------------------------------------------------------------------------------------------
+
+The return on a project can come from a variety of sources. For convenience, we can categorize these into new revenue, incremental revenue, retained revenue, and operational efficiencies. While it is common for one category to dominate the return of a specific project, most projects will earn returns from more than one category.
+
+* New revenue is revenue from new users.
+* Incremental revenue is that from existing users.
+* Retained revenue is the revenue an organization will lose if the project is not performed.
+* Operational Efficiencies: No organization is ever as efficient as it could be. There’s always some task that could be streamlined or eliminated altogether. If you’re developing software for use by internal customers you are probably quite aware of the importance of operational efficiencies. However, even if you’re working on commercial software that is sold to others outside your company, some tasks within your project may still contribute to improving operational efficiencies. In your case, though, most often this will refer to your own inefficiency. e.g. anything that takes a long time or that would take a long time if the company grew, better integration or communciation between departments, reduced employee turnover, shorter training time for new employees, any time-sensitive process, combining multiple processes, anything that improves accuracy and reduces rework
+
+(The categories here are only suggestions. You should change them if they're not appropriate for your project.)
+
+The table includes a row for each quarter in the next two years. The time-frame is up to the team. In some cases, teams may want to look at monthly returns for one or two years. In other cases, quarterly forecasts are adequate. I find that looking out two years works well on most projects. It strikes a good balance between guessing at the distant future and looking far enough ahead. Because of the high amount of uncertainty on software development projects, others concur (Bills 2004).
+
+The table also includes columns for various types of return a theme may have. If your project has different types of returns, use different column headings. Similarly, use different column headings if a theme will benefit from more specific column headings (perhaps “Increased Revenue from U.S. customers” and “Increased Revenue for European customers”). It is not necessary to estimate all themes with the same set of columns.
+
+Where do these numbers we can fill in the table come from? Hopefully from some market research that was used in the business case that initiated the project. At a minimum, who ever is requesting the theme should be able to quantify the reasons for developing it.
+
+We also need to estimate the expected development cost of the theme:
+
+---------------------------------------------------------------------------------------------------------------------------------------
+Role  | Annual Salary   | Fully Burdened Labor Cost   | Burdened Cost Per Iteration   | Time on Project   | Adjusted Cost Per Iteration
+---------------------------------------------------------------------------------------------------------------------------------------
+
+It is often useful to know the cost per story point (or ideal day). To calculate this, divide the adjusted cost per iteration by the team’s average or expected velocity.
+
+Finally we put the two tables together:
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Quarter   | Development Cost  | New Revenue   | Incremental Revenue   | Retained Revenue  | Operational Efficiencies  | Net Cash Flow
+-------------------------------------------------------------------------------------------------------------------------------------
+
+
+The Time Value of Money
+-----------------------
+
+Money today is more valuable than money next Tuesday. ROI (return on investment) calculations put equal value on the money invested in year one and the money earned in year five, which is a problem. To determine the value today of a future amount of money, we think in terms of how much money would have to be put in the bank today in order for it grow to the future amount. To buy a ¤5 hamburger next Tuesday, I might need to put ¤4.99 in the bank today. The amount I have to invest today in order to have a known amount in the future is called the present value. As a simple case, if I can earn 10% on my money and want to have ¤1.00 a year from now, I need to invest ¤0.91 today. In other words, with a 10% interest rate, ¤0.91 is the present value of ¤1.00 in a year.
+
+The process of moving future amounts back into their present value is known as discounting. Clearly the interest rate that is used for discounting future amounts is critical to determining the present value of a future amount. The rate by which organizations discount future money is known as their opportunity cost, and reflects the percentage return that is passed up in order to make this investment. We all - individuals and organizations - have various opportunities for investing our money. I can put my money into a bank saving account or I can invest in stocks. I can invest it in real estate or I can put it under my mattress. Organizations can invest their money in these same ways or they can invest money on various projects. If an organization has typically earned 20% on past projects, new projects must be assessed against this same 20%. The organization’s opportunity cost is 20% because an investment in a new project means that the organization gave up the opportunity to invest in some other project, which would have earned 20%.
+
+
+Measures
+--------
+
+Having come up with a way of estimating the cash flow stream that will be generated by each theme, we next turn our attention to various ways of analyzing and evaluating those cash flow streams.
+
+* Net Present Value (NPV)
+
+  NPV(i) = ∑(t=0,n).Ft*(1+i)^-t
+  
+  i is the interest rate, Ft is net cash flow in period t.
+
+  Using Net Present Value to compare and prioritize themes has the advantages of being easy to calculate and easy to understand. The primary disadvantage to NPV is that comparing the values of two different cash flow streams can be misleading. For example, suppose we are trying to choose between two projects. The first project requires huge upfront investments but has an NPV of ¤100,000. The second project requires only a small upfront investment but also has an NPV of ¤100,000. Clearly we’d prefer to make the investment in the theme that ties up less cash but that has the same NPV. What we’d really like is to express the return on a theme in percentage terms so that we can directly compare themes.
+
+* Internal Rate of Return (IRR, sometimes called Return On Investment, or ROI)
+
+  IRR provides a way of expressing the return on a project in percentage terms. Where NPV is a measure of how much money a project can be expected to return (in today’s present value), IRR is a measure of how quickly the money invested in a project will increase in value. Many organizations will specify a minimum attractive rate of return or MARR. Only projects or themes with an IRR that exceeds the MARR will be funded. It is impractical to set a similar threshold for NPV since NPV values are highly dependent on the magnitude of the project. If an NPV threshold were in place then small (but valuable) projects would never be approved.
+
+  IRR is defined as the interest rate at which the NPV of a cash flow stream is equal to 0. In other words, it is the value for i* such that:
+
+  0 = PV(i*) = ∑(t=0,n).Ft*(1+i)^-t
+
+  Note:
+  - The first one or more items in the cash flow stream must be expenses. (Note that there must be at least one.)
+  - Once the cash flow stream turns positive, it must remain positive.
+  - The sum of the positive items is larger than the sum of the negative items. That is, money is made overall.
+
+  A first advantage to using IRR is that there is no requirement to establish (or, in the worst case, guess at) an organization’s discount rate as is necessary when calculating NPV. A second advantage to IRR is that it can be used directly in comparing projects. A project with a 45% IRR has a higher return on its investment than does a project with a 25% IRR. You cannot usually use IRR in isolation, though, for making decisions. For example, suppose the project returning 45% is very small so the 45% return comes on a small investment yet the project ties up a critical developer. Further, suppose that the project returning 25% does so against a large investment but requires the same critical developer. You may choose to make more money by doing the second project, the one with the lower IRR.
+
+  A first disadvantage to IRR is that because the calculation is hard to do by hand, the result may be more subject to distrust by some. A second disadvantage is that IRR cannot be calculated in all situations. As we saw above, three preconditions must be met in order to calculate a meaningful IRR.
+
+* Payback period
+
+  Payback period is the amount of time required to earn back the initial investment
+
+  There are two primary advantages to using payback period when comparing and prioritizing themes. First, the calculations and interpretation are straight-forward. Second, it measures the amount and duration of financial risk taken on by the organization. The larger the payback period, the riskier the project because anything could change during that period.
+
+  The primary disadvantage to payback period is that it fails to take into account the time value of money. Money received three years in the future is valued as highly as money paid out today. The second drawback to payback period is that it is not a measure of the profitability of a project or theme. Payback period will tell us that an organization will recover its money in seven quarters, but it doesn’t address how much money will be made.
+
+* Discounted payback period
+
+  It is easy to remedy the first drawback of the payback period calculation. To do so we simply apply the appropriate discount factor to each item in the cash flow stream.
+
+
+Comparing Returns
+-----------------
+
+As you assess each theme, you build up information that can be used to compare the themes and make the prioritization decisions that are driving this analysis. The results of valuing multiple themes can be presented in a table like the one shown in table below. A table such as this lets an organization quickly and effectively review its options and choose to work on the highest-valued themes.
+
+---------------------------------------------------------------------------
+Theme   | Story Points  | Cost  | NPV   | ROI   | Discounted Payback Period
+---------------------------------------------------------------------------
+
+Making a decision is not cut and dry; the product owner and team will need to consider a variety of situationally-specific factors such as the organization’s tolerance for risk, need for short payback periods, availability of resources, other options for investment money, and so on.
+
+For More on Project Economics: "Return on Software: Maximizing the Return On Your Software Investment", Steve Tockey, 2004.
