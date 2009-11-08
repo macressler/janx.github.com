@@ -676,3 +676,55 @@ Total     |                   |                   |               |           | 
 
 
 For each feature, the relative benefit and penalty are summed and entered into the Total Value column. If you wish, you could weight the benefits and penalties. For example, to weight the relative benefit as twice as important as the relative penalty, multiply the Relative Benefit by 2 before adding it to Relative Penalty to get the Total Value. The sum of the Total Value column represents the total value of delivering all features. To calculate the relative contribution of each feature, divide its total value by the sum of the Total Value column (fill it in Value % column).The Estimate holds the story point or ideal days estimate. Exactly as with Total Value, the Estimate column is summed and the percentage of each estimate is calculated in the Cost % column. The final column, Priority, is calculated by dividing the Priority % by the Cost %. Higher numbers represent higher priorities because they will create more value for the effort invested in them.
+
+
+12. Splitting User Stories
+==========================
+
+When to Split A User Story:
+
+* It is too large to fit within a single iteration. 
+* A story may be small enough to fit within an iteration but it won’t fit within the iteration being planned because there isn’t enough room. The team may feel they will have time to develop a portion of a story in the iteration, but not the entire story.
+* It can be useful to split a large user story (an epic) if a more accurate estimate is necessary. 
+
+
+Splitting Tricks:
+
+* Splitting Across Data Boundaries
+
+  One of the best ways to split a large user story is by the data that will be supported. Like for a financial project, we can split an epic story "As a user I can enter my balance sheet information." into "As a user, I can enter summary balance sheet data.", "As a user, I can enter categorized balance sheet data.", "As a user, I can enter detailed loan informaton" and so on, since a balance sheet in this case could include a great many fields (at the highest level it includes assets and liabilities, assets included such items as cash, securities, real estate, automobiles, loans, and so on).
+
+  In some cases a large story can be made much smaller by removing the handling of exceptional or error conditions from the main story. 
+
+* Splitting On Operational Boundaries
+
+  Split large stories based on the operations that are performed within the story. Like split a complicated search story into basic search, advanced search and so on. A common approach to doing this is to split a story along the boundaries of the common CRUD operations—Create, Read, Update, and Delete.
+
+* Removing Cross-Cutting Concerns
+
+  Consider removing cross-cutting concerns (such as security, logging, error handling, and so on) and creating two versions of the story: one with and one without support for the cross-cutting concern.
+
+* Don't Meet Performance Constraints
+
+  Considering splitting a large story by separating the functional and non-functional aspects into separate stories.
+
+* Split Stories of Mixed Priority
+
+* Don't Split A Story into Tasks
+
+  The best way to avoid this temptation is to follow Hunt and Thomas’ advice (1999) to fire a tracer bullet through the system. A tracer bullet travels through all layers of a feature. That may mean delivering a partial user interface, a partial middle tier, and a partial database. Delivering a cohesive subset of all layers of a feature is almost always better than delivering all of one layer. This leads to another guidline: Don’t split a large story into tasks. Instead, try to find a way to fire a tracer bullet through the story.
+
+* Avoid The Temptation of Related Changes
+
+  Once you’ve split a story and have it at an appropriate size, don’t make things worse by adding work to the story. Often this comes in the form of the temptation of related changes. We tell ourselves, “While I’m in that code, I might as well take care of these other lingering changes...” It can very possibly be appropriate to fix a bug or address an old issue while working on a separate issue in the same part of the code. However, the prioritiy of doing so needs to be considered in the same manner in which priorities were considered for other features. In other words, which is higher priority: spending a half-day fixing a year-old bug or spending the same amount of time on something else? The answer is clearly entirely contextual and becomes this chapter’s final guideline: Avoid making things worse by adding related changes to an appropriately sized feature, unless the related changes are of equivalent priority.
+
+* Combining Stories
+
+  With all of this advice about splitting stories, it may be tempting to think that every user story a team is about to work on should be made as small as possible. Tha’s not the case. For teams working in two-week iterations, splitting features such that each can be done in 2–5 days or so is appropriate. (Stories are still estimated in story points but by the time a team needs to split stories they will know approximately how many story points or ideal days equates to around 2–5 days.) Stories will need to be a little smaller for one-week iterations and can, but don’t need to, be a little larger for longer iterations. Stories of these approximate sizes flow best through the short iterations of an agile project.
+
+  Just as we may need to split large stories, we may need to combine multiple tiny stories. The combined stories are estimated as a whole rather than individually. When possible try to combine related stories as that will make it easier to prioritize them. It is very common to combine multiple bug reports and treat them as one unit.
+
+
+===================
+Part IV. Scheduling
+===================
