@@ -864,6 +864,60 @@ First, the team collaboratively adjusts priorities. They may have learned someth
 
    A defect found later (or not fixed during the iteration it was discovered) is treated the same as a user story. Fixing the defect will need to be prioritized into a subsequent iteration in the same way any other user story would be. Outside of an iteration, the whole idea of a defect starts to go away. Fixing a bug or adding a feature become two ways of describing the same thing.
 
-   (handling dependencies)
+   When tasks have dependencies between them, we may need to shift tasks between stories.
+
+   A spike is a task included in an iteration plan that is being undertaken specifically to gain knowledge or answer a question. In this case the team did not have a good guess at something so they created two tasks - one a spike and one a placeholder with a guess at the duration. The spike would help the team learn how they’d approach the other task, which would allow them to estimate it.
 
 5. Estimate tasks.
+
+   Some teams prefer to estimate tasks after all have been identified, other teams prefer to estimate tasks as each is identified. Task estimates are expressed in ideal time. So, if I think that a task will take me six hours of working time I give it an estimate of six hours. I do this even if six hours of time on the task will take me an entire day. Task estimating on an agile project should be a group endeavor, because:
+
+     1. Tasks are not allocated to specific individuals during iteration planning it is impossible to ask the specific person who will do the work.
+     2. Even though we expect a specific individual will be the one to do a task and even though he may know the most about that task, it does not mean that others have nothing to contribute. 
+     3. Hearing how long something is expected to take often helps teams identify misunderstandings about a user story or task. 
+     4. When the person who will do the work provides the estimate, the person’s pride and ego may make him reluctant to later admit that an estimate was incorrect. When an estimate is made collaboratively, this reluctance to admit an estimate is wrong goes away.
+
+   Some design discussion is ok, but talking about models or class diagram is not a good sign. It’s not necessary to go so far as drawing a design because all that’s necessary at this point are guesses about the work that will be needed to complete the features. If you get into the iteration and discover the tasks are wrong, get rid of the initial tasks and create new ones. If an estimate is wrong, cross it out and write a new value. Writing tasks and estimates on note cards is a great approach because each card carries with it a subtle reminder of impermanence.
+
+   The tasks you create should be of an approximate size so that each developer is able to finish an average of one per day. This size works well for allowing work to flow smoothly through your agile development process. Larger tasks tend to get bottled up with a developer or two and the rest of the team can be left waiting for them to complete the task. Additionally, if the team is holding short daily meetings (Schwaber and Beedle 2002; Rising 2002), having tasks of this size allows each developer to report the completion of at least one task on most days. Naturally, there will often be tasks that are larger than this. But, larger tasks should be generally understood to be placeholders for one or more additional task that will be added as soon as they are understood. If you need to create a sixteen-hour task during iteration planning, do so. However, once the task is more adequately understood, augment or replace it. This may mean replacing the initial card with more or less than the initially estimated sixteen hours.
+
+
+Commitment-Driven Iteration Planning
+------------------------------------
+
+Rather than creating an iteration plan that calls for completing as many story points or ideal days as were completed in the prior iteration, the team is asked to add stories to the iteration one-by-one until they can commit to completing no more.
+
+1. Adjust priorities. Identify an iteration goal.
+
+2. Select a story to add. Expand the story into tasks. Estimate tasks.
+
+   In commitment-driven iteration planning stories are selected, decomposed into tasks, and the tasks estimated one story at a time. This is different from the velocity-driven approach, in which a set of stories whose estimates equalled the estimated velocity were selected.
+
+3. Ask for team commitment: if can commit and not full, goto 2; if cannot commit, goto 4; if can commit and full, goto 5.
+
+   In their study of what makes teams successful, Larson and LaFasto (1989) determined that a unified commitment made by all team members is one of the key factors contributing to team success. During an iteration planning meeting I ask the team, “Can you commit to delivering the features we’ve discussed.” Notice that the question I ask is not “Can you commit to delivering the tasks we’ve identified?” That is a very different question, and a far weaker commitment since it is a commitment to complete a set of tasks rather than a commitment to deliver new functionality. If new tasks are discovered during the iteration (and they almost certainly will be), a team that is committed to delivering the functionality described by a user story will try to complete the new tasks as well. A team that committed only to an identified list of tasks may not. In either case, it is possible that the newly discovered tasks will take long enough that they cannot be completed during the iteration. In that case, the team will need to discuss the situation with the product owner and see if there is still a way to meet the iteration goal; they may need to reduce the functionality of a story or drop one entirely.
+
+   I ask a team if they can commit after each user story is split into tasks. After discussing the first feature of a new iteration, the question often seems silly. There may be seven people on the team, planning to work a two-week iteration. Perhaps they’ve only identified 34 hours of work so far and I ask if they can commit to it. Their answer (either verbal or through the confused looks on their faces) is “Of course we can commit to this. There are seven of us for two weeks and this is only 34 hours of work.” However, as the meeting progresses and as more user stories are brought into the iteration, the answer to my question of "can you commit?" begins to require some thought. Eventually, we reach a point where the team cannot commit any further. If they cannot, they may choose to drop a story and replace it with a smaller one before finishing.
+
+   The best way I’ve found for a team to determine whether they can commit to a set of user stories is to sum up the estimates given to the tasks and see if the sum represents a reasonable amount of work. Here we need give an estimate on team capacity too, how many man-hours we can put on this iteration, exclude communication, email reading time?
+
+   Before committing to the work of an iteration, the teams needs to look at the tasks and get a feel for whether they represent an appropriate distribution of work based on the various skills within the team.
+
+   In addition to making progress on a project, many teams are also responsible for support and maintenance of another system. It may be a prior version of the product they are working on or it may be an unrelated system. When a team makes a commitment to complete a set of stories during an iteration they need to do so with their maintenance and support load in mind. I am not referring to general bug fixes that can be prioritized in advance. Those should go through the regular itertion planning prioritization process. By maintenance and support acticities I mean those unpredictable but required parts of many team’s lives—supporting a production website or database, taking support calls from key customers or first-tier technical support, and so on. I think of an iteration as an empty glass. The first things poured into the glass are the team’s unchangeable commitments, such as to support and maintenance of other products. Whatever room remains in the glass is available for the team when they commit to the work of an iteration.
+
+   In most situations, the team will not be able to predict their upcoming support load very accurately. They should know a long-term average, but averaging twenty hours of support per week is not the same as having twenty hours every week. If the support and maintenance load exceeds expectations during an iteration, they may not be able to meet their commitment. They need to counter this by trying to exceed their commitment when the support and maintenance load is less than expected in some iterations. This variability is inescapable on teams with significant support and maintenance obligations.
+
+4. Remove a user story.
+5. Iteration planning is done.
+
+
+Mike Cohn's Recommendation
+--------------------------
+
+While both velocity-driven and commitment-driven iteration planning are viable approaches, my preference is for the commitment-driven approach. While velocity plays a critical role in release planning, I do not think it should play an equivalent role in iteration planning. There are two reasons for this. First, because velocity is a measure of coarse-grained estimates (story points or ideal days) it is not accurate enough for planning the work of short iterations. We can use these coarse-grained estimates for estimating the overall amount of work a team will complete during an iteratin. We cannot, however, use them in the same way for planning the shorter-term work of a single iteration.
+
+Second, a team would need to complete twenty to thirty user stories per iteration for errors in the story point or ideal day estimates to average out. Very few teams complete this many stories in an iteration. To see the result of these problems, suppose a team has had a velocity of thirty in each of the past five iterations. That’s about as consistent as it gets and it’s likely they’ll complete thirty points again in the coming iteration. However, we know that not all five-point stories are the same. If we were to sort through a large collection of five-point stories we know we could identify six five-point stories that all looked slightly easier than five points. We might be wrong on some but if this was the first time we tried this, we’d probably succeed. We might increase our velocity from thirty to forty. On the other hand, we could instead select only the five-point stories that seem slightly harder. We still think they should be estimated at five points but they are slightly harder than the other five-point stories.
+
+We’re not going to dig through our collection of user stories and try to find the "easy fives" or the "hard fives." However, most teams plan between three and a dozen stories into each iteration. When pulling that few stories into an iteration, a team will certainly get lucky and select all slightly easy ones or unlucky and select all slightly harder ones occasionally. Because too few stories are completed in a single iteration for these to average out, I prefer not to use velocity when planning an iteration. However, since these differences do average out over the course of a release, velocity works extremely well for release planning.
+
+Story points relate to task estimate (hours) on average only. A story point may equal 10 hours on average, but a story with 1 point may take longer time than a story with 2 points. The differences will be averaged out in long term, but it's there in an iteration.
