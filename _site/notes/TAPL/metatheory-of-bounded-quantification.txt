@@ -157,3 +157,27 @@ Lemma [Permutation and Weakening]:
 Lemma [Transitivity and Narrowing for Full F<:]:
   1.  If Г |-> S<:Q and Г |-> Q<:T, then Г |-> S<:T.
   2.  If Г,X<:Q,Δ |-> M<:N and Г |-> P<:Q then Г,X<:P,Δ |-> M<:N.
+
+
+Undecidability of Full F<:
+--------------------------
+
+We established in the previous section that the algorithmic subtyping rules for full F<: are sound and complete - that is, that the smallest relation closed under these rules contains the same statements as the smallest relation closed under the original declarative rules. This leaves the question of whether an algorithm implementing these rules terminates on all inputs. Unfortunately - and, to many people at the time this was discovered, quite surprisingly - it does not.
+
+Definition: ¬S =def= "X<:S.X
+
+The crucial property of the ¬ operator is that it allows the left-and right-hand sides of subtyping statements to be swapped.
+
+Fact: Г |- ¬S <: ¬T iff Г |- T <: S.
+
+Now define: T  =  "X<:Top. ¬("Y<:X.¬Y), T will diverge.
+
+Worse yet, not only does this particular algorithm fail to terminate on some inputs, it can be shown (Pierce, 1994) that there is no algorithm that is sound and complete for the original full F<: subtype relation and that terminates on all inputs. 
+
+Theorem: For each two-counter machine M, there exists a subtyping statement S(M) such that S(M) is derivable in full F<: iff the execution of M halts.
+
+Thus, if we could decide whether any subtype statement is provable, then we could also decide whether any given two-counter machine will eventually halt. Since the halting problem for two-counter machines is undecidable (cf. Hopcroft and Ullman, 1979), so is the subtyping problem for full F<:.
+
+We should emphasize, again, that the undecidability of the subtype relation does not imply that the semi-algorithm for subtyping developed is either unsound or incomplete. If the statement Г |- S <: T is provable according to the declarative subtyping rules, then the algorithm will definitely terminate and yield true. If Г |- S <: T is not provable according to the declarative subtyping rules, then the algorithm will either diverge or yield false. The point is that a given subtyping statement may fail to be provable from the algorithmic rules in two different ways: either by generating an infinite sequence of subgoals (meaning that there is no finite derivation with this conclusion) or else by leading to an obvious inconsistency like Top <: S->T. The subtyping algorithm can detect one of these cases, but not the other.
+
+Does the undecidability of full F<:: mean that the system is useless in practice? Actually, it is generally held that the undecidability of F<:: is not, per se, a terribly serious deficiency. For one thing, it has been shown (Ghelli, 1995) that, in order to cause the subtype checker to diverge, we must present it with a goal with three quite special properties, each one of which is difficult to imagine programmers creating by accident. Also, there are a number of popular languages whose typechecking or type reconstruction problems are, in principle, either extremely expensive—like ML and Haskell or even undecidable, like C++ and λProlog (Felty, Gunter, Hannan, Miller, Nadathur, and Scedrov, 1988). In fact, experience has shown the lack of joins and meets mentioned to be a significantly more problematic shortcoming of full F<::than its undecidability.

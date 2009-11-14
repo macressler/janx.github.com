@@ -7,7 +7,7 @@ The universal types can be viewed in two different ways. A logical intuition is 
 
 Similarly, there are two different ways of looking at an existential type, written {$X,T}. The logical intuition is that an element of {$X,T} is a value of type [X |-> S]T, for some type S. The operational intuition, on the other hand, is that an element of {$X,T} is a pair, written {*S,t}, of a type S and a term t of type [X |-> S]T.
 
-We mark the type component of the pair with a * to avoid confusion with ordinary term-tuples (§11.7). Another common notation for existential introduction is pack X=S with t.
+We mark the type component of the pair with a * to avoid confusion with ordinary term-tuples. Another common notation for existential introduction is pack X=S with t.
 
 We will emphasize the operational view of existential types in this chapter, because it provides a closer analogy between existentials and the modules and abstract data types found in programming languages. Our concrete syntax for existential types reflects this analogy: we write {$X,T} - the curly braces emphasizing that an existential value is a form of tuple-instead of the more standard notation $X.T.
 
