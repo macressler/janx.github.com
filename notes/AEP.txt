@@ -921,3 +921,65 @@ Second, a team would need to complete twenty to thirty user stories per iteratio
 We’re not going to dig through our collection of user stories and try to find the "easy fives" or the "hard fives." However, most teams plan between three and a dozen stories into each iteration. When pulling that few stories into an iteration, a team will certainly get lucky and select all slightly easy ones or unlucky and select all slightly harder ones occasionally. Because too few stories are completed in a single iteration for these to average out, I prefer not to use velocity when planning an iteration. However, since these differences do average out over the course of a release, velocity works extremely well for release planning.
 
 Story points relate to task estimate (hours) on average only. A story point may equal 10 hours on average, but a story with 1 point may take longer time than a story with 2 points. The differences will be averaged out in long term, but it's there in an iteration.
+
+
+15. Selecting An Iteration Length
+=================================
+
+Factors in Selecting an Iteration Length
+----------------------------------------
+
+Your selection of iteration length should be guided by the following factors. Note there is no predetermined importance to these factors. The importance of each is entirely dependent upon the context of the project.
+
+* The overall length of the release being worked on
+
+  Short projects benefit from short iterations. The length of a project’s iterations determines:
+
+  - how often the software can be shown (in potentially shippable form) to users and customers.
+  - how often progress can be measured.
+  - how often the product owner and team can refine their course since priorities and plans are adjusted between iterations.
+
+  My general rule-of-thumb is that any project will benefit from having at least four or five such opportunities. This means that if the overall project duration will be four or more months, it might be worth considering monthly or four-week iterations. If the overall release will, however, be shorter, the project will benefit from proportionally shorter iterations.
+
+* The amount of uncertainty
+
+  The more uncertainty of any type there is, the shorter the iterations should be. When there is a great deal of uncertainty about the work to be done or the product to be built, short iterations allow more frequent opportunites for the team to measure its progress through its velocity and more opportunities to get feedback from stakeholders, customers, and users.
+
+* The ease of getting feedback
+
+  Iteration length should be chosen to maximize the amount, frequency, and timeliness of feedback to the whole team. Depending on the environment, this may mean longer or shorter iterations. In some organizations it is extremely easy to get informal feedback from internal stakeholders or users throughout an iteration, but extemely difficult to get these same individuals to participate in a scheduled end-of-iteration review meeting. Other organizations have the opposite problem—it is difficult to get feedback on a day-to-day basis but stakeholders, users, and others will attend a scheduled, formal review meeting (especially if food is provided).
+
+  Choose your iteration length to maximize the value of the feedback that can be received from those within and outside the organization.
+
+* How long priorities can remain unchanged
+
+  Once a development team commits to completing a specific set of features in an iteration, it is important that they not be redirected from that goal. It is therefore important that the product owner not change priorities during the iteration and that she help protect the team from others who may attempt to change priorities. Because of this, the length of time that priorities can go unchanged is a factor in selecting the iteration length.
+
+  A key consideration is how long it takes a good new idea to be turned into working software. Consider the case of a team using four-week iterations. If we assume that new ideas are equally likely to occur any time during an iteration then, on average, a new idea can be said to occur in the middle of the iteration. That new idea will be prioritized into the next iteration, which starts in two weeks. It will take another four weeks (a full iteration) before the new idea shows up as potentially shippable, working software. The key point to remember from this example is that the time from new idea to working software will be an average of 1.5 times the length of the team’s iterations.
+
+* Willingness to go without feedback
+
+  The less often a team receives outside feedback, the more likely we may go astray and the greater the loss will be when we found what we delivered is useless at the end of an iteration. To get more feedback, we need short iteration. (Duplicate with 3rd?)
+
+* The overhead of iterating
+
+  There are costs associated with each iteration. For example, each iteration must be fully regression tested. If this is costly (usually in terms of time), the team may prefer longer, four-week iterations. Naturally, one of the goals of a successful agile team is to rapidly reduce (or nearly eliminate) the overhead associated with each iteration. But, especially during a team’s early iterations, this cost can be significant and will influence the decision about the best iteration length.
+
+* A feeling of urgency is maintained
+
+  Colleague Niels Malotaux (2004) points out that, "As long as the end date of a project is far in the future, we don’t feel any pressure and work leisurely... When the pressure of the finish date becomes tangible, we start working harder." Even with four-week iterations the end date is never very far in the future. But, it is sufficiently far away that many teams will feel tangibly less stress during their first week than during the fourth and final week of an iteration.
+
+  The solution to this, of course, is to select an iteration length that evens out the pressure the team feels. The point is not to put the team under more pressume ("You will deliver today!"). Rather, it is to take the total amount of stress they’d normally feel and distribute it more evenly across a suitably long iteration.
+
+
+Making A Decision
+-----------------
+
+One of the main goals in selecting an iteration length is finding one that encourages everyone to work at a consistent pace throughout the iteration. If the duration is too long, there is a natural tendency to relax a bit at the start of the iteration, which leads to panic and longer hours at the end of the iteration. Strive to find an interation duration that smooths out these variations.
+
+Having experimented with a variety of iteration lengths, my general preference is two weeks. One-week iterations (or anything shorter) can be very hectic and stressful. The next deadline is never more than four days away. Extremely short iterations leave no time for recovery if a team member is out sick or if anything goes wrong. Unless a project already has fully automated tests for all parts of the system, I do not often recommend starting with one-week iterations.
+
+A four-week iteration, on the other hand, begins to feel like an eternity after having worked in one– and two-week iterations. With four-week iterations I find that the team often has time to investigate and pursue more creative solutions than they may have time for with shorter iterations. An experienced agile team working on a highly exploratory phase of a project may benefit from a four-week iteration. However, four-week iterations have a feeling of very distinct beginnings, middles, and ends. I don’t like how different the relaxed beginning feels
+from the more frantic end.
+
+I find two-week iterations to be ideal. The overhead for planning and testing is much more manageable when amortized across two weeks. The first week of a two-week iteration may feel different from the second week but the difference is not as dramatic as on a four week iteration. Additionally, most organizations can (with sufficient training) learn not to adjust priorities for two weeks while doing so for four weeks can be very difficult.
