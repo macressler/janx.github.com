@@ -983,3 +983,162 @@ A four-week iteration, on the other hand, begins to feel like an eternity after 
 from the more frantic end.
 
 I find two-week iterations to be ideal. The overhead for planning and testing is much more manageable when amortized across two weeks. The first week of a two-week iteration may feel different from the second week but the difference is not as dramatic as on a four week iteration. Additionally, most organizations can (with sufficient training) learn not to adjust priorities for two weeks while doing so for four weeks can be very difficult.
+
+
+16. Estimating Velocity
+=======================
+
+You have the following three options:
+
+* Use historical values
+* Run an iteration
+* Make a forecast
+
+Regardless of which approach you are using, if you need to estimate velocity you should consider expressing the estimate as a range. 
+
+
+Use Historical Values
+---------------------
+
+The problem with historical values is that they’re of the greatest value when very little has changed between the old project and team and the new project and team. Any personnel or significant technology changes will reduce the usefulness of historical measures of velocity. Before using them, ask yourself questions like these:
+
+* Is the technology the same?
+* Is the domain the same?
+* Is the team the same?
+* Is the product owner the same?
+* Are the tools the same?
+* Is the working environment the same?
+* Were the estimates made by the same people?
+
+The answer to each question is often yes when the team is moving onto a new release of a product they just worked on. In that case, using the team’s historical values is entirely appropriate. Even though velocity in a situation like this is relatively stable, you should still consider expressing it as a range. You could create a range by simply adding and subtracting a few points to the average or by looking at the team’s best and worst iterations over the past two or three months.
+
+However, if the answer to any of the preceding questions is no, you may want to think twice about using historical velocities. Or you may want to use historical velocities but put a larger range around them to reflect the inherent uncertainty in the estimate. To do this, start by calculating the team’s average velocity over the course of the prior release. If they, for example, completed 150 story points of work during ten iterations, their average (mean) velocity was fifteen points.
+
+Before showing how to convert this to a range, take a look at the figure shows the cone of uncertainty. The cone of uncertainty says that the actual duration of a projet will be between 60% and 160% of what we think it is. So, to turn our single-point, average velocity into a range, I multiply it by 60% and 160%.1 So, if our average historical velocity is 15, I would estimate velocity to be in the range of 9–24.
+
+This range may feel large, but given the likely uncertainty at this point it is probably appropriate. Constructing a range in this way helps the project team heed the advice offered in the quote at the start of this chapter that it is better to be roughly right than precisely wrong. A large range around the expected velocity will allow the team to be roughly right about it.
+
+
+Run An Iteration
+----------------
+
+An ideal way to forecast velocity is to run an iteration (or two or three) and then estimate velocity from the observed velocity during the one to three iterations. Because the best way to predict velocity is to actually observe velocity, this should always be your default approach. Many traditional projects get underway with the developers working on the “obvious” requirements or infrastructure, the analysts “finalizing” the requirements, and the project manager putting together a comprehensive list of tasks that becomes the project plan. All of this takes time; often as long as a few iterations on an agile project.
+
+Most project managers can hold off giving an estimate for at least one iteration. If that’s your case, use the time to run an iteration and measure the velocity. Then create a range around that one data point using the cone of uncertainty. So, if you ran one iteration and had a velocity of 15, turn it into a range by multiply by 0.60 and 1.6, giving a range of 9–24.
+
+If a team can run three or more iterations before being giving an estimate of velocity, they have a couple of additional options for determining a range. First and easiest, they can simply use the range of observed values. For example, suppose the team has completed three iterations and had velocities of 12, 15, and 16. They could express velocity as likely to be within the range 12–16.
+
+Alternatively, they could again use the cone of uncertainty. Although there’s no solid mathematical basis for the approach I’m about to describe, it does work and it makes sense. Here’s the approach: Calculate the average velocity for the iterations you’ve run. Then, for each iteration completed, move one step to the right on the cone of uncertainty. So, for a team that has run one iteration, use the range for the "initial product definition" milestone. If the team has run two iterations, use the range for the “approved product definition” milestone (80% to 120%), and so on. For convenience, these numbers are shown in Table below:
+
+Iterations Completed  | Low Multiplier  | High Multiplier
+---------------------------------------------------------
+1                     | 0.6             | 1.6
+---------------------------------------------------------
+2                     | 0.8             | 1.25
+---------------------------------------------------------
+3                     | 0.85            | 1.15
+---------------------------------------------------------
+4 or more             | 0.90            | 1.10
+
+Range = (average*low, average*high)
+
+I normally don’t extend this analysis past three or four iterations. I don’t use the cone of uncertainty, for example, to pretend that after six iterations the team precisely knows their velocity and it won’t waver through the end of the project.
+
+Some organizations will be resistant to starting a project without having any idea how long it will take. In such cases, it is important to stress that your desire to run a few iterations first stems not from a desire to avoid making an estimate but to avoid making an estimate without adequate foundation. You’ll want to stress that the purpose of these initial iterations is to assess the dark corners of the system, better understand the technologies involved, refine the understanding of the requirements, and measure how quickly the team can make progress on this project.
+
+
+Make a Forecast
+---------------
+
+There are times when we don’t have historicals and it is just not feasible to run a few iterations in order to observe velocity. For example, suppose the estimate is for a project that won’t start for twelve months. Or suppose the project may start soon, but only once a client signs a contract for the work. There are two key differences in cases like this: First, you want to minimize the expenditure on the project so you won’t actually start running iterations on a project that may not happen or that is too far in the future; Second, any estimate of velocity on these projects must reflect a high degree of uncertainty.
+
+In cases like these, we need to forecast velocity. Forecasting velocity is rarely your first option but it’s an important option and one you should have in your bag of tricks. The best way to forecast velocity involves expanding user stories into their constituent tasks, estimating those tasks (like we do when planning an iteration), seeing how much work fits into an iteration, and then calculating the velocity that would be achieved if that work were finished in an iteration. This involves the following steps:
+
+1. Estimate the number of hours that each person will be available to work on the project each day.
+
+   From observation and discussion with colleagues, my opinion is that most individuals who are assigned full-time to a project spend between four and six hours per day on that project. This fits with an empricial measurement that showed individuals average 55% of their time on project activities. At the high end, Kennedy (2003) reports that engineers in Toyota - with its highly efficient, lean process - are able to spend 80% of their time on their designated projects.
+
+   Use these numbers as parameters in estimating the amount of time individuals on your project team will be able to dedicate each day to the project. If you are part of a large bureaucracy, you will most likely be at the low-end of the scale. If you are part of a three-person startup in a garage, you’ll probably be at the high-end. 
+
+2. Determine the total number of hours that will be spent on the project during the iteration.
+
+   This step is simple, multiply the number of hours available each day by the number of people on the team and the number of days in each iteration. When I introduce this approach to some teams, they want to factor in additional adjustments for vacations, sick time, and other such interruptions. Don’t bother; it’s not worth the extra effort and it’s unlikely to be more accurate anyway. These events are part of the reason why we don’t plan on a team being 100% available in the first place.
+
+3. Arbitrarily and somewhat randomly select stories and expand them into their constituent tasks. Repeat until you have identified enough tasks to fill the number of hours in the iteration.
+
+   The next step is to expand stories into tasks, estimate the tasks, and keep going until we’ve filled the estimated number of available hours. It is not necessary that stories be expanded in priority order. What you really want is a fairly random assortment of stories. 
+
+   Continue selecting stories and breaking them into tasks as long as the tasks selected do not exceed the capacity of the individuals on the team. Select stories until one skill set on the team can’t handle any more work. Add up the story points or ideal days for the work selected and that is the team’s possible velocity.
+
+   It's not necessary to fill the capacity full. Maybe the capacity is 240 but your team think 221 hours tasks now is enough, they can't commit more, then stop there.
+
+4. Convert the velocity determined in the prior step into a range.
+
+
+Which Approach Should I Use
+---------------------------
+
+* If you can run one or more iterations before giving an estimate of velocity, always do so. There’s no estimate like an actual and seeing the team’s actual velocity is always your best choice.
+* Use the actual velocity from a related project by this team.
+* Estimate velocity by seeing what fits.
+
+Regardless of which approach you use, switch to using actual, observed values for velocity as soon as possible. 
+
+
+17. Buffering Plans for Uncertainty
+===================================
+
+In cases there is either greater uncertainty or greater implication to being wrong about a release schedule. Because of this, it is useful to include a buffer in the determination of the schedule. A buffer is a margin for error around an estimate. The buffer helps protect the project against the impact of the uncertainty. 
+
+
+Feature Buffers
+---------------
+
+Creating a feature buffer is simple to do on an agile project. First, the customer selects all of the absolutely mandatory work. The estimates for that work are summed. This represents the minimum that can be released. The customer then selects another 25–40% more work, selecting toward the higher end of the range for projects with more uncertainty or less tolerance for schedule risk. The estimates for this work are added to the original estimate resulting in a total estimate for the project. The project is then planned as normal for delivery of the entire set of functionality; however, some amount of the work is optional and will only be included if time permits. The optional work is developed last, only after the mandatory work is complete.
+
+  This feature buffering process is consistent with that used in the agile process, DSDM (the Dynamic Systems Development Method). On DSDM projects requirements are sorted into four categories: Must Have, Should Have, Could Have, Won’t Have. DSDM refers to this sorting as the MoSCoW rules. No more than 70% of the planned effort for a project can be targeted at Must Have requirements. In this, DSDM projects create a feature buffer equivalent to 30% of the duration of the project.
+
+
+Schedule Buffers
+----------------
+
+For a trip to the airport it is not appropriate to take a guess at my rate of progress (my velocity) and then provide the airline (the customer) with periodic updates about my expected arrival time. My expected arrival time and my rate of progress don’t matter to the airline; the departure time is fixed, just like deadlines are on many software development projects. In this cases, a schedule buffer protects against uncertainty that can affect the on-time competion of the project.
+
+Note that I am not concerned with whether any one activity (driving, parking, checking in, or going through security) takes too long. I am only concerned with whether the overall chain of activities takes too long. In order to successfully make my flight, I add a 30 minute buffer to my overall schedule for getting to the airport. What we’d like to do is add a similar schedule buffer to projects with greater uncertainty or with greater consequences for missing a deadline.
+
+* Reflecting Uncertainty In Estimates
+
+  In order to protect a project schedule against uncertainty we need a way to quantify the uncertainty. There is normally not much that can be done to accelerate the completion of a task but there are an indefinite number of things that can go wrong and delay the completion of a task. 
+
+  Suppose we want to be 90% confident in the schedule we commit to. One initial approach to doing this might be to estimate the 90% likely duration for each user story in the project and then use those estimates. However, if we do this, the project schedule will almost certainly be too long.
+
+  The plan should protect the only deadline that matters - the overall project deadline. Because it isn’t important if any one task on my way to airport finishes late, I do not need to buffer the on-time completion of the tasks. We should remove local safety from the individual tasks and puts a fraction of that time into a buffer that protects the overall schedule. (The additional time between the 50% and the 90% estimate is called local safety.)
+
+  By moving local safety into an overall project buffer, we are able to avoid the impact of Parkinson’s Law and student syndrome. As you’ll recall from Chapter 2, “Why Planning Fails,” Parkinson’s Law says that work expands to fill the time available. Student syndrome (Goldratt 1997) refers to starting something at the last possible moment that doesn’t preclude successful completion; for example, starting a college term paper three days before it’s due. Because it avoids the problems caused by Parkinson’s Law and student syndrome, a shorter schedule that includes a schedule buffer is more likely to be met than is a longer schedule.
+
+  To create a schedule buffer for a software project, the first thing we need to do is revise our estimating process so that it generates two estimates for each user story or feature. Just like with the trip to the airport, we need to know the 50% and the 90% estimate for each. This is easy enough: When the team meets to estimate, start by estimating the 50% case for the first story. Then estimate the 90% case for that story before moving on to the next story or feature.
+
+* Sizing the Project Buffer
+
+  Since our estimates are at the 50% and 90% points for each item, this means that the difference between these two estimates is about two standard deviations. The standard deviation for each item is then (wi – ai)⁄2 , where wi represents the worst case (90% estimate) for story i and ai represents the average case (50% estimate) for the same story. We’d like the project buffer to protect the overall project to the same 90% level that each task was protected by its own 90% estimate. This means our project buffer should be two standard deviations and can be determined from this formula:
+
+    2σ = 2 × sqrt( ((w1 – a1)⁄2)^2 + ((w2 – a2)⁄2)^2 + ... + ((wn – an)⁄2)^2 )
+
+  where σ is the standard deviation. This can be simplifed to the following:
+
+    2σ = sqrt( (w1 – a1)^2 + (w2 – a2)^2 + ... + (wn – an)^2 )
+
+  (This is why this buffer sizing techninque is commonly called the “Square Root of the Sum of the Squares” approach.)
+
+  The spread between the 50% and 90% estimates influences the size of the project buffer. The user story that contributes the most to the size of the schedule buffer (the first story) is the one with the most uncertainty. Adding in a schedule buffer may or may not add one or more iterations to the length of a project. Most often it will.
+
+  The preceding approach to sizing the project buffer is the best way to size the project buffer. But if for some reason you cannot come up with both 50% and 90% estimate there is a simpler way to size the project buffer. Estimate each story at the 50% level and then set the buffer at half the size of the sum of the 50% estimates. The best way to make sure you’re using 50% estimates is to draw something like Figure 17.1 on a white board and explain that everyone should be estimating with the 50% case in mind. Explain that we want estimates that are just as likely to be high as they are to be low. While this calculation is far simpler, it has the serious flaw of not being influenced by the actual uncertainty around the specific user stories in the project.
+
+  Regardless of whether you prefer the take the square root of the sum of the squares approach or the 50% approach, you should consider these additional guidelines based on advice from Leach (2000):
+
+  - The square root of the sum of the squares approach is most reliable if there are at least ten user stories or features being estimated. But, if your project has fewer than ten items you probably shouldn’t be planning with a buffer anyway.
+  - The project buffer should represent at least 20% of the total project duration. A smaller buffer may not provide adequate protection for the overall project.
+
+
+Combining Buffers
+-----------------
