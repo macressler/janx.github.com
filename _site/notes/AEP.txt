@@ -1173,3 +1173,43 @@ Caveats
 
 18. Planning the Multi-Team Project
 ===================================
+
+Agile teams are often described as having no more than seven to ten developers. Teams of this size can accomplish quite a bit, especially with an agile process that allows and encourages them to become more productive. However, there are some projects where we’d like to bring a larger team to bear on the project. Rather than establishing a single 100-person team, the agile approach is to create multiple smaller teams. An agile project may have a dozen smaller teams instead of a single 100-person team.
+
+
+Establishing a Common Basis For Estimates
+-----------------------------------------
+
+At the start of a project, the teams should meet and choose between story points and ideal days. They should then establish a common baseline for their estimates so that an estimate by one team will be similar to that of another team if the other team had estimated the work instead. Each user story only needs to be estimated by one team, but the estimates should be equivalent regardless of which team estimated the work.
+
+There are two good ways to establish a common baseline. The first approach about the stories. Once these baseline stories are agreed upon, the teams may separately estimate stories by comparing them to the baseline stories (that is, es- timating them by analogy). The second approach is similar but involves collaboratively estimating an assortment of new user stories. A variety of stories planned for the new release are selected. The stories should span a variety of sizes and should be in areas of the situation that most of the estimators can relate to. Either the entire large team—or representatives of each sub-team if the entire team is too big—meet and agree upon an estimate for these stories. As with the first approach, these estimates are then used as baselines against which future estimates are compared. The only time separate teams should consider estimating in different units without a common baseline is when the products being built are truly separate and there is absolutely no opportunity for developers from one team to move onto another. Even then, my recommendation is to establish a common baseline as it facilitates communicating about the project.
+
+
+Adding Details To User Stories Sooner
+-------------------------------------
+
+Ideally, an agile team begins an iteration with vaguely defined requirements and turns those vague requirements into functioning, tested software by the end of the iteration. Going from vague requirement to working software in one iteration is usually easier on a single team project than it is when there are multiple teams. On a multiple team project it is often appropriate and necessary to put more thought into the user stories prior to the start of the iteration. The additional detail allows multiple teams to coordinate work.
+
+To achieve this, larger teams often include dedicated analysts, usage interaction designers, and others who spend a portion of their time during a given iteration preparing the work of the next iteration. In general, I do not advise having analysts, interaction designers, and others work a full iteration ahead. Rather, their primary responsibility should remain the work of the current iteration, but in planning the current iteration they should include some tasks related to preparing for the next iteration.
+
+What I’ve found to be the most useful outcome of work done in advance of the iteration is the identification of the product owner’s conditions of satisfaction for the user stories that are likely to be developed during the iteration. A product owner’s conditions of satisfaction for a user story are the high-level acceptance tests that she would like to see applied to the story before considering it finished. A user story is finished when it can be demonstrated to meet all of the conditions of satisfaction identified by the product owner.
+
+
+Lookahead Planning
+------------------
+
+Most teams with either moderately complex or frequent interdependencies will benefit from maintaining a rolling lookahead window during release and iteration and planning. You may recall that in Chapter 13, “Release Planning Essentials,” I advised that the release plan show detail only for the next couple of iterations. This is because that is often enough to support the interdependencies encountered by many teams. When multiple teams need to coordinate work, the release plan should be updated to show and coordinate the work of the next two or three iterations. The exact number of iterations will, of course, depend on the frequency and significance of the dependencies between teams. As iterations are completed, details about them are dropped from the plan. The release plan then becomes a rolling lookahead plan that always outlines expectations about the new few iterations. Laufer (1996) refers to this as “peering forward.”
+
+
+Incorporating Feeding Buffers Into the Plan
+-------------------------------------------
+
+There are situations, however, where the interdependencies between teams are so complex or frequent that the simple rolling lookahead planning of the prior section is not adequate. In these cases, your first recourse should be to try to find a way to reduce the number of interdependencies so that a rolling lookahead plan is adequate. If that cannot be done, consider including a feeding buffer in iterations that deliver capabilities needed by other teams. A feeding buffer, like the schedule buffer of the previous chapter, protects the on-time delivery of a set of new capabilities. This is a somewhat complicated way of saying that if your team needs something from my team tomorrow at 8:00 A.M., my team shouldn’t plan on finishing it at 7:59.
+
+To include a feeding buffer in a release plan, all you need to do is plan temporarily for a lower velocity for the team that is delivering a capability to another team. In many cases, adding feeding buffers will extend the expected duration of a project. But, it usually does so in a way that represents a realistic expectation of the likely schedule, not in a "let’s pad the schedule so we don’t have to work hard" way. Because feeding buffers can prolong a schedule, you want to add them only when necessary.
+
+To determine where feeding buffers are necessary, first allocate user stories among teams and iterations. Then look for critical dependencies between iterations and teams. Finally, add a feeding buffer only between these critical dependencies. That is, add a feeding buffer only if a team will be unable to do planned, high-priority work without the deliverables of another team. Even so, if the team can easily swap in other highly valuable work, a feeding buffer is unnecessary. Similarly, do not add a feeding buffer if the second team will be able to start making progress with a partial deliverable from the first team. If your team can start its work even if my team delivers only half of the planned functionality then a feeding buffer is not needed.
+
+Most inter-team dependencies are based on no more than a handful of stories or features at a time. Because of this you usually won’t have enough stories to effectively use the square root of the sum of the squares approach described in that chapter. In these cases, set the size of the feeding buffer as a percentage of the stories creating the inter- dependency. You can use 50% as a default buffer size but this should be adjusted based on team judgment.
+
+It is possible to have a feeding buffer that is longer than a full iteration. However, it is rarely advisable to use a feeding buffer that long. A feeding buffer that is longer than an iteration is usually the result of planning to pass a large chunk of functionality on to another team. There are two reasons why a project probably doesn’t need a large feeding buffer in these cases. First, the hand-off from one team to another should almost certainly be divided so that the functionality is delivered incrementally. This will allow the second team to get started as soon as they receive the initial set of functionality from the first team. Second, rather than consume an extremely large feeding buffer, the teams would probably find ways of splitting the work or of making other adjustments between iterations as soon as they noticed one team slipping behind. Having the receiving team act as a product owner or customer of the delivering team will allow the two teams to usually work out an incremental delivery sequence that works for both teams.
