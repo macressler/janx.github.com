@@ -1142,3 +1142,34 @@ Note that I am not concerned with whether any one activity (driving, parking, ch
 
 Combining Buffers
 -----------------
+
+At first it may seem like overkill to have multiple buffers. However, it is often appropriate to use multiple buffers because we are protecting the project against multiple types of uncertainty. We should always buffer a given type of project uncertainty with the right units, which means we buffer feature uncertainty with features and schedule uncertainty with time. Additionally, when multiple buffers are used, the size of each can be smaller.
+
+Also, keep in mind that a project may use other buffers besides feature and schedule. A project may include a budget buffer where, for example, thirty developers are assigned to the project while the budget allows up to thirty-three. This is a common practice on medium and large projects but is seen less frequently on small projects for two reasons:
+
+  1. The additional person or two who would make up the personnel buffer on a small project would almost certainly be able to make direct contributions to the project. There may be little or no productivity gains in fully staffing from 30 to 33 developers. There will, however, almost certainly be productivity gains from fully staffing from 4 to 5.
+
+  2. It is difficult to buffer anything in small numbers. When a 30-person project has a three-person buffer to a full staff size of 33 it has a 10% personnel buffer. A similarly sized buffer on a four-person project implies a buffer of four-tenths of a developer. Clearly, it’s easier to add whole rather than partial people to a project.
+
+
+A Schedule Buffer Is Not Padding
+--------------------------------
+
+The term padding has the pejorative meaning of excess time arbitrarily added to an estimate. I pad an estimate when I think it will take three days but decide to tell you five, just in case. Individuals add padding to an estimate if they expect to be beaten up if they are wrong. A schedule buffer is different: A schedule buffer is a necessary margin of safety added to the sum of estimates from which local safety has been removed.
+
+When we allow small amounts of flexibility in both delivery date and functionality we can buffer two dimensions of the project. More importantly, we buffer each project constraint with the appropriate resource: We buffer the deadline with time; we buffer functionality with functionality. When we cannot buffer a constraint appropriately, we are forced to increase the size of other buffers. If I am forced to guarantee the functionality then I will support that guarantee with a larger schedule buffer.
+
+
+Caveats
+-------
+
+* When adding a schedule buffer, either use the two-estimate approach described in this chapter or be sure that the single-value estimates represent estimates at the 50% point. Adding a schedule buffer on top of already pessimistic, 90% estimates will result in an overly long schedule.
+
+* On many projects, a precise deadline with a precise set of delivered functionality is not needed. Instead the team simply needs to deliver high-quality software as fast as possible over a sustained period. If you’re in this situation, don’t take on the small extra work of adding buffers to your project.
+
+* Be careful with how you communicate buffers. You should not hide their existence or how they are used. However, a buffer (especially a schedule buffer) can appear to be padding. This means you’ll need to communicate how you derived the estimates and the buffer and how the buffer is intended to provide a schedule everyone can be 90–95% confident in.
+
+
+
+18. Planning the Multi-Team Project
+===================================
