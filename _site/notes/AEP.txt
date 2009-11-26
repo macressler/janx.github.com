@@ -1213,3 +1213,58 @@ To determine where feeding buffers are necessary, first allocate user stories am
 Most inter-team dependencies are based on no more than a handful of stories or features at a time. Because of this you usually won’t have enough stories to effectively use the square root of the sum of the squares approach described in that chapter. In these cases, set the size of the feeding buffer as a percentage of the stories creating the inter- dependency. You can use 50% as a default buffer size but this should be adjusted based on team judgment.
 
 It is possible to have a feeding buffer that is longer than a full iteration. However, it is rarely advisable to use a feeding buffer that long. A feeding buffer that is longer than an iteration is usually the result of planning to pass a large chunk of functionality on to another team. There are two reasons why a project probably doesn’t need a large feeding buffer in these cases. First, the hand-off from one team to another should almost certainly be divided so that the functionality is delivered incrementally. This will allow the second team to get started as soon as they receive the initial set of functionality from the first team. Second, rather than consume an extremely large feeding buffer, the teams would probably find ways of splitting the work or of making other adjustments between iterations as soon as they noticed one team slipping behind. Having the receiving team act as a product owner or customer of the delivering team will allow the two teams to usually work out an incremental delivery sequence that works for both teams.
+
+
+==================================
+Part V. Tracking and Communicating
+==================================
+
+Once a plan and schedule have been created, the planning is not over. It is important to monitor progress against the plan, communicate about progress, and then refine the plan based on our observations.
+
+
+19. Monitoring The Release Plan
+===============================
+
+Tracking the progress of a software team is very similar to charting a ship’s position, especially by dead reckoning. We would like to sail our software development project in a straight line from Point A to Point B. This rarely happens, though, because requirements change or are refined, our rate of progress isn’t always what we expected, and we sometimes make mistakes in how we measure our position. The sections of this chapter describe techniques for tracking progress that are designed to minimize the effect of these and similar problems.
+
+
+Tracking The Release
+--------------------
+
+Completed work, changed requirements, and revised estimates will change our project track.
+
+Because velocity is the primary measure of a team’s progress, it is important to establish some ground rules for how it is calculated. The most important rule is that a team counts points toward velocity only for stories or features that are complete at the end of the iteration. Complete means code that is well written and well factored, checked-in, clean, complies with coding standards, and passes all tests. In order to know how much progress has been made, we count only the points for work that is complete. Opening the door to counting partially finished work, perhaps giving partial credit, makes it impossible to know exactly where we are. 
+  
+We don't count incomplete story in for 3 reasons: First, it is extremely hard to measure unfinished or incomplete work. Second, incomplete stories break down the trust between the developer team and the customer team on the project. If a story cannot be completed as planned during an iteration then the developers and the customer team need to collobartively resolve the issue as soon as it’s discovered. Usually this means the story will be moved out of the iteration or split and parts of it moved out. The product owner and customer team can make these decisions in real-time during the iteration and may choose to reprioritize based on the new knowledge about the cost of the story. Alternatively, the customer team may decide to alter the acceptance criteria for the story, accepting it under lessened criteria. They wouldn’t go so far as to accept a buggy or untested version of the story but they may reduce performance requirements, handling of special cases, and so on. Third, and most importantly, unfinished work leads to a build-up of work-in-process in the development process. The more work-in-process a team allows to build up, the longer it will take new features to be transformed from raw ideas into functioning software. Over time, this will decrease the throughput of the whole team. Similarly, with large amounts of work-in-process it takes longer for the team to get feedback on what they’re developing. This means that learning is also delayed.
+
+If a team has unfinished stories at the end of an iteration, they are working with features or stories that are too large. Small stories lead to a steady flow through the development process. If stories are left unfinished, they need to be split into smaller stories. Ideally, this should happen prior to the start of the iteration. However, if during an iteration a story is found to be larger than expected, then it needs to be brought to the attention of the product owner. The product owner, in collaboration with the team, finds a way to split the story or reduce its scope such that a portion can hopefully still be completed within the iteration with the remainder moved to a future iteration.
+
+So, how should a team count a partially finished story when determining velocity? How they count such a story is less important than that they determine why it happened and how they can prevent it from happening again. It may have happened because it was underestimated. If so, the team should think about what type of work was underestimated or forgotten and try to remember to take care when estimating that type of work in the future. Or the story may have been unfinished because too many stories were pulled into the current iteration. If that was the cause, care should be taken to more carefully plan iterations.
+
+
+Release Burndown Chart
+----------------------
+
+The vertical axis shows the number of story points remaining in the project. (It could just as easily show the number of ideal days remaining.) Iterations are shown across the horizontal axis. A release burndown chart shows the amount of work remaining at the start of each iteration. This becomes a powerful visual indicator of how quickly a team is moving toward its goal. 
+
+Alternatively, the burndown chart may show a burn up because work has been added to the release. Think of this as equivalent to a sailboat making eight miles per hour of progress but sailing directly into a current running 12 miles per hour in the opposite direction. In the sailboat’s case, it ends up farther away from its initial target. However, in the case of the software project, the added work may be the result of the team having learned something that directs them at a more valuable release.
+
+
+Release Burndown Bar Chart
+--------------------------
+
+Sometimes it’s useful to draw the release burndown chart so that you can easily see the team’s velocity and the scope changes separately. Each bar in Release Burndown Bar Chart shows the amount of work in a release as of the start of an iteration. This type of burndown chart uses bars rather than lines to help distinguish the regions above and below the horizontal axis at 0. The bottom of the bar is lowered whenever work is added to the project. The bottom is moved up whenever work is removed from an iteration. If the bottom is below the horizontal axis at 0 it means that overall work has been added to the release.
+
+* Any time work is completed, the top is lowered.
+* When work is re-estimated, the top moves up or down.
+* When new work is added, the bottom is lowered.
+* When work is removed, the bottom is raised.
+
+While I find the release burndown bar chart more expressive (and, therefore, often more useful) than the traditional burndown chart, I do have a couple of caveats on its use. First, the burndown bar chart is harder to understand so I almost always start a new team with the simpler burndown line chart. Second, the burndown bar chart is only for use in organizations mature enough not to argue about whether something belongs above the line or below the line. At the first sign of an argument of this nature, I tell everyone involved that we can’t use the burndown bar chart and we’re reverting to the line chart.
+
+
+A Parking Lot Chart
+-------------------
+
+A parking lot chart contains a large rectangular box for each theme (or grouping of user stories) in a release. Each box is annotated with the name of the them, the number of stories in that theme, the number of story points or ideal days for those stories, and the percentage of the story points that are complete. A parking lot chart is a powerful method for compressing a great deal of information into a small space. In many cases, all of a release’s themes can be summarized on one page using a parking lot diagram.
+
