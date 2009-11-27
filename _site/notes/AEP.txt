@@ -1,4 +1,4 @@
-============================= Agile Estimating and Planning ============================= 
+============================= Agile Estimating and Planning =============================
 
 ================================
 Part I. The Problem and The Goal
@@ -10,11 +10,11 @@ Part I. The Problem and The Goal
 
 A good planning process supports yourt project by:
 
-  * Reducing risk 
+  * Reducing risk
 
     find risks at the very beginning
 
-  * Reducing uncertainty 
+  * Reducing uncertainty
 
     understand what a user want better
 
@@ -30,7 +30,7 @@ A good planning process supports yourt project by:
     A plan conveys expectations and describes one possibility of what may come to pass over the course of a project. A plan does not guarantee an exact set of features on an exact date at a specified cost. A plan does, however, communicate and establish a set of baseline expectations.
 
 
-A good plan is one that stakeholders find sufficiently reliable that they can use it as the basis for making decisions. 
+A good plan is one that stakeholders find sufficiently reliable that they can use it as the basis for making decisions.
 
 e.g. You'll ship a new release six months later. You create a plan that describes a set of features that are certain to be in the new version and another set of features that may or may not be included, depending on how well things progress.
 
@@ -72,7 +72,7 @@ Parkinson is saying that we take as much time to complete an activity as we thin
 
 An early start requires a combination of things to go well, a late start can be caused by one thing going wrong.
 
-The problem is compounded because we’ve already established that activities will rarely finish early. This means that activities will start late and that the lateness will get passed down the schedule. 
+The problem is compounded because we’ve already established that activities will rarely finish early. This means that activities will start late and that the lateness will get passed down the schedule.
 
 3. Activities Are Not Independent
 
@@ -82,7 +82,7 @@ Many activities in a typical project plan are not independent. When an activity 
 Multitasking Causes Further Delays
 ----------------------------------
 
-A second reason why traditional approaches to planning often fail is multitasking, which is defined as simultaneously working on multiple tasks. Multitasking exacts a horrible toll on productivity. Clark and Wheelwright (1993) studied the effects of multitasking and found that the time an individual spends on value-adding work drops rapidly when the individual is working on more than two tasks. 
+A second reason why traditional approaches to planning often fail is multitasking, which is defined as simultaneously working on multiple tasks. Multitasking exacts a horrible toll on productivity. Clark and Wheelwright (1993) studied the effects of multitasking and found that the time an individual spends on value-adding work drops rapidly when the individual is working on more than two tasks.
 
 Multitasking becomes a problem on a traditionally planned project for two primary reasons. First, work is typically assigned well in advance of when the work will begin and it is impossible to efficiently allocate work in advance. As signing work to individuals rather than to groups exacerbates the problem. Second, it encourages focusing on achieving a high level of utilization of all individuals on the project rather than on maintaining sufficient slack to cope with the inherent variability in typical project tasks. Loading everyone to 100% of capacity has the same effect as loading a highway to 100% of capacity: no one can make any forward progress.
 
@@ -282,9 +282,9 @@ Fortunately, as a team begins making progress through the user stories of a proj
 5. Estimating in Ideal Days
 ===========================
 
-Ideal time is the amount of time that something takes when stripped of all peripheral activities. Elapsed time, on the other hand, is the amount of time that passes on a clock (or perhaps a calendar). It is almost always far easier and accurate to predict the duration of an event in ideal time than in elapsed time. 
+Ideal time is the amount of time that something takes when stripped of all peripheral activities. Elapsed time, on the other hand, is the amount of time that passes on a clock (or perhaps a calendar). It is almost always far easier and accurate to predict the duration of an event in ideal time than in elapsed time.
 
-On a software project, ideal time differs from elapsed time because of the natural overhead we experience every day. On any given day, in addition to working on the planned activities of a project, a team member may spend time answering email, making a support call to a vendor, interviewing a candidate for the open analyst position, and in two meetings. 
+On a software project, ideal time differs from elapsed time because of the natural overhead we experience every day. On any given day, in addition to working on the planned activities of a project, a team member may spend time answering email, making a support call to a vendor, interviewing a candidate for the open analyst position, and in two meetings.
 
 Additionally, in looking at why ideal time does not equal elapsed time, consider that managers are able to work an average of only five minutes between interruptions (Hobbs 1987). Even if the typical developer is interrupted only one-third as often that is still an interruption every fifteen minutes.
 
@@ -297,9 +297,9 @@ On a software project, we may choose to estimate user stories or other work in i
   * there will be no interruptions
 
 
-When we estimate the number of ideal days that a user story will take to develop, test, and accept, it is not necessary to consider the impact of the overhead of the environment in which the team works. If developing a particular screen will take me one ideal day, then it will take me one ideal day regardless of whether I’m employed by a startup with no overhead or other demands on my team or by a huge bureaucracy. 
+When we estimate the number of ideal days that a user story will take to develop, test, and accept, it is not necessary to consider the impact of the overhead of the environment in which the team works. If developing a particular screen will take me one ideal day, then it will take me one ideal day regardless of whether I’m employed by a startup with no overhead or other demands on my team or by a huge bureaucracy.
 
-*** When considerations of organizational overhead are ignored, ideal days can be thought of as another estimate of size, just as story points are. Then, an estimate of size expressed as a number of ideal days can be converted into an estimate of duration using velocity in exactly the same way as with story points.  
+*** When considerations of organizational overhead are ignored, ideal days can be thought of as another estimate of size, just as story points are. Then, an estimate of size expressed as a number of ideal days can be converted into an estimate of duration using velocity in exactly the same way as with story points.
 
 If you choose to estimate in ideal days, assign one aggregate estimate to each user story. Some teams are tempted to estimate a number of ideal days for each individual or group who will work on a story. For example, such a team might estimate that a particular user story will take two ideal days from a programmer, one ideal day from a database engineer, one ideal day from a user interaction designer, and two ideal days from a tester. I’ve seen teams then write the estimate on the story card with either a different colored marker for each role or on a different colored sticky piece of paper for each role that is affixed to the story card.
 
@@ -336,9 +336,9 @@ Two good estimation scales:
   * 1, 2, 3, 5, 8 (fibonacci)
   * 1, 2, 4, 8 (exponetial)
 
-These non-linear sequences work well because they reflect the greater uncertainty associated with estimates for larger units of work. Each of these numbers should be thought of as a bucket into which items of the appropriate size are poured. Rather than thinking of work as water being poured into the buckets, think of the work as sand. 
+These non-linear sequences work well because they reflect the greater uncertainty associated with estimates for larger units of work. Each of these numbers should be thought of as a bucket into which items of the appropriate size are poured. Rather than thinking of work as water being poured into the buckets, think of the work as sand.
 
-You may want to consider including 0 as a valid number within your estimation range. While it’s unlikely that a team will encounter many user stories or features that truly take no work, including 0 is often useful. There are two reasons for this. First, if we want to keep all features within a 10x range, assigning non-zero values to tiny features will limit the size of largest features. Second, if the work truly is closer to 0 than 1, the team may not want the completion of the feature to contribute to its velocity calculations. 
+You may want to consider including 0 as a valid number within your estimation range. While it’s unlikely that a team will encounter many user stories or features that truly take no work, including 0 is often useful. There are two reasons for this. First, if we want to keep all features within a 10x range, assigning non-zero values to tiny features will limit the size of largest features. Second, if the work truly is closer to 0 than 1, the team may not want the completion of the feature to contribute to its velocity calculations.
 
 While, in general, we want to estimate user stories whose sizes are within one order of magnitude, this cannot always be the case. If we are to estimate everything within one order of magnitude it would mean writing all stories at a fairly fine-grained level. For features that we’re not sure we want (a preliminary cost estimate is desired before too much investment is put into them) or for features that may not happen in the near future, it is often desirable to write one much larger user story. A large user story is sometimes called an epic.
 
@@ -383,7 +383,7 @@ Teams will need to play planning poker at two different times. First, there will
 Alternatively, colleague Kent Beck suggests hanging an envelope on the wall with all new stories placed in the envelope. As individuals have a few spare minutes they will grab a story or two from the envelope and estimate them. Teams will establish a rule for themselves, typically either that all stories must be estimated by the end of the day or by the end of the iteration. I like the idea of hanging an envelope on the wall to contain unestimated stories. However, I’d prefer that when someone has a few spare minutes to devote to estimating that he find at least one other person and that they estimate jointly.
 
 * Planning poker brings together multiple expert opinions to do the estimating.
-* A lively dialogue ensues during planning poker and estimators are called upon by their to justify their estimates. 
+* A lively dialogue ensues during planning poker and estimators are called upon by their to justify their estimates.
 * Studies have shown that averaging individual estimates leads to better results as do group discussions of estimates.
 * Planning poker works because it’s fun.
 
@@ -397,7 +397,7 @@ Velocity is the great equalizer. Because the estimate for each feature is made r
 
 I’m generally in favor of an all-or-nothing stance toward counting velocity: if a story is done (coded, tested, and accepted by the product owner) then the team earns all the points, but if anything on the story isn’t done, they earn nothing. At the end of an iteration, this is the easiest case to assess. This works well as long as everyone remembers that we’re mostly interested in the team’s average velocity over time, not in whether velocity jumped up or down in a given iteration.
 
-In some cases the unfinished portion of a story may not be done in the next iteration. In these cases it can be appropriate to allow the team to take partial credit for the completed portion of the story. The remaining story (which is a subset of the initial story) is re-estimated based on the team’s current knowledge. 
+In some cases the unfinished portion of a story may not be done in the next iteration. In these cases it can be appropriate to allow the team to take partial credit for the completed portion of the story. The remaining story (which is a subset of the initial story) is re-estimated based on the team’s current knowledge.
 
 Do not become overly concerned with the need to re-estimate. Whenever the team feels one or more stories are mis-estimated relative to other stories, re-estimate as few stories as possible to bring the relative estimates back in line.
 
@@ -445,7 +445,7 @@ Part III. Planning for Value
 
 The responsibility for prioritizing is shared among the whole team but the effort is led by the product owner.
 
-It is generally difficult to estimate the value of small units of functionality, such as a single user story. To get around this, individual user stories or features are aggregated into themes. Stories and themes are then prioritized relative to one another for the purpose of creating a release plan. Themes should be selected such that each defines a discrete set of user- or customer-valued functionality. 
+It is generally difficult to estimate the value of small units of functionality, such as a single user story. To get around this, individual user stories or features are aggregated into themes. Stories and themes are then prioritized relative to one another for the purpose of creating a release plan. Themes should be selected such that each defines a discrete set of user- or customer-valued functionality.
 
 
 Factors in Prioritization
@@ -453,8 +453,8 @@ Factors in Prioritization
 
 1. The financial value of having the features
 
-   Often, an ideal way to determine the value of a theme is estimate its financial impact over a period of time, usually the next few months, quarters, or possibly years. Because of the complexity in doing this, it is often useful to have an alternate method for estimating value. Since the value of a theme is related to the desirability of that theme to new and existing users, it is possible to use non-financial measures of desirability to represent value. 
-                        
+   Often, an ideal way to determine the value of a theme is estimate its financial impact over a period of time, usually the next few months, quarters, or possibly years. Because of the complexity in doing this, it is often useful to have an alternate method for estimating value. Since the value of a theme is related to the desirability of that theme to new and existing users, it is possible to use non-financial measures of desirability to represent value.
+
 2. The cost of developing (and perhaps supporting) the new features
 
    An important, yet often overlooked, aspect of cost is that the cost can change over time. The best way to reduce the cost of change is to implement a feature as late as possible - effectively when there is no more time for change.
@@ -465,7 +465,7 @@ Factors in Prioritization
 
    On many projects, much of the the overall effort is spent in the pursuit of new knowledge. It is important that this effort be acknowledged and considered fundamental to the project. Acquiring new knowledge is important because at the start of a project we never know everything that we’ll need to know by the end of the project. The knowledge that a team develops can be classified into two areas:
 
-   * Knowledge about the product: knowledge about what will be developed. The more product knowledge a team has, the better able they will be to make decisions about the nature and features of the product.  
+   * Knowledge about the product: knowledge about what will be developed. The more product knowledge a team has, the better able they will be to make decisions about the nature and features of the product.
 
    * Knowledge about the project: knowledge about how the product will be created, include what technologies will be used.
 
@@ -473,17 +473,17 @@ The flip side of acquiring knowledge is reducing uncertainty. At the start of a 
 
 4. The amount of risk removed by developing the features
 
-   Risks can be classified as either technological or business risks. To optimally prioritize work it is important to consider both risk and value.  
+   Risks can be classified as either technological or business risks. To optimally prioritize work it is important to consider both risk and value.
 
    The appropriate development sequence for the features is high-value-high-risk -> high-value-low-risk -> low-value-low-risk, and low-value-high-risk feature should be avoid.
 
    The high-value, high-risk features should be developed first. These features deliver the most value and working on them eliminates significant risks. Next are the high-value, low-risk features. These features offer as much value as the first set but they are less risky. They can therefore be done later in the schedule. Because of this, use the guideline to work first on high-value features but use risk as a tie-breaker.
 
-   Be aware that a feature’s risk and value profile changes over time. 
+   Be aware that a feature’s risk and value profile changes over time.
 
 Because most projects are undertaken to either save or make money, the first two factors often dominate prioritization discussions. However, proper consideration of the influence of learning and risk on the project is critical if we are to prioritize optimally.
 
-To combine the four prioritiziaton factors, think first about the value of the feature relative to what it would cost to develop today. This gives you an initial priority order for the themes. Those themes with a high value-to-cost ratio are those that should be done first. Next, think of the other prioritization factors as moving themes forward or backward. 
+To combine the four prioritiziaton factors, think first about the value of the feature relative to what it would cost to develop today. This gives you an initial priority order for the themes. Those themes with a high value-to-cost ratio are those that should be done first. Next, think of the other prioritization factors as moving themes forward or backward.
 
 
 10. Financial Prioritization
@@ -544,7 +544,7 @@ Having come up with a way of estimating the cash flow stream that will be genera
 * Net Present Value (NPV)
 
   NPV(i) = ∑(t=0,n).Ft*(1+i)^-t
-  
+
   i is the interest rate, Ft is net cash flow in period t.
 
   Using Net Present Value to compare and prioritize themes has the advantages of being easy to calculate and easy to understand. The primary disadvantage to NPV is that comparing the values of two different cash flow streams can be misleading. For example, suppose we are trying to choose between two projects. The first project requires huge upfront investments but has an NPV of ¤100,000. The second project requires only a small upfront investment but also has an NPV of ¤100,000. Clearly we’d prefer to make the investment in the theme that ties up less cash but that has the same NPV. What we’d really like is to express the return on a theme in percentage terms so that we can directly compare themes.
@@ -614,7 +614,7 @@ The process was originated by Noriaki Kano (1984). Kano’s approach gives us a 
   Exciters and delighters are those features that provide great satisfaction, often adding a price premium to a product. However, the lack of an exciter or delighter will not decrease customer satisfaction below neutral. The built-in television on the hotel’s treadmill was an exciter for me. I would not have been dissatisfied if the hotel didn’t offer these because I didn’t know anyone had them. In fact, exciters and delighters are often called unknown needs because customers or users do not know they need these features until they see them.
 
 
-Because must-have features are required for a product to even play in its market segment, emphasis should be placed on prioritizing the development of all threshold features. A product’s must-have features do not need to be developed in the first iterations of a release. However, since users consider these features as mandatory, they need to be available before the product is released. Keep in mind, though, that partial implementation of must-have features may be adequate since gains in customer satisfaction drop off quickly after a base level of support for threshold features has been established. 
+Because must-have features are required for a product to even play in its market segment, emphasis should be placed on prioritizing the development of all threshold features. A product’s must-have features do not need to be developed in the first iterations of a release. However, since users consider these features as mandatory, they need to be available before the product is released. Keep in mind, though, that partial implementation of must-have features may be adequate since gains in customer satisfaction drop off quickly after a base level of support for threshold features has been established.
 
 Secondary emphasis should be placed on completing as many linear features as possible. Because each of these features leads directly to greater customer satisfaction, the more of these features that can be included, the better. (Excluding, of course, such situations as a product that is already bloated with too many features.) Finally and with time permitting, at least a few delighters should be prioritized such that they are included in the release plan.
 
@@ -635,9 +635,9 @@ Customer      | Dysfunctional Question
 Requirements  | Like | Expect | Neutral | Live with | Dislike
 -------------------------------------------------------------
 F Q| Like     | Q    | E      | E       | E         | L
-u u|--------------------------------------------------------- 
+u u|---------------------------------------------------------
 n e| Expect   | R    | I      | I       | I         | M
-c s|--------------------------------------------------------- 
+c s|---------------------------------------------------------
 t t| Neutral  | R    | I      | I       | I         | M
 i i|---------------------------------------------------------
 o o| Live with| R    | I      | I       | I         | M
@@ -683,9 +683,9 @@ For each feature, the relative benefit and penalty are summed and entered into t
 
 When to Split A User Story:
 
-* It is too large to fit within a single iteration. 
+* It is too large to fit within a single iteration.
 * A story may be small enough to fit within an iteration but it won’t fit within the iteration being planned because there isn’t enough room. The team may feel they will have time to develop a portion of a story in the iteration, but not the entire story.
-* It can be useful to split a large user story (an epic) if a more accurate estimate is necessary. 
+* It can be useful to split a large user story (an epic) if a more accurate estimate is necessary.
 
 
 Splitting Tricks:
@@ -694,7 +694,7 @@ Splitting Tricks:
 
   One of the best ways to split a large user story is by the data that will be supported. Like for a financial project, we can split an epic story "As a user I can enter my balance sheet information." into "As a user, I can enter summary balance sheet data.", "As a user, I can enter categorized balance sheet data.", "As a user, I can enter detailed loan informaton" and so on, since a balance sheet in this case could include a great many fields (at the highest level it includes assets and liabilities, assets included such items as cash, securities, real estate, automobiles, loans, and so on).
 
-  In some cases a large story can be made much smaller by removing the handling of exceptional or error conditions from the main story. 
+  In some cases a large story can be made much smaller by removing the handling of exceptional or error conditions from the main story.
 
 * Splitting On Operational Boundaries
 
@@ -805,7 +805,7 @@ A release plan is a high-level plan that covers a period longer than an iteratio
 
 An iteration plan is created in an iteration planning meeting. This meeting should be attended by the product owner, analysts, programmers, testers, database engineers, user interaction designers, and so on. Anyone involved in taking a raw idea and turning it into a functioning product should be present.
 
-An iteration plan can be as simple as a spreadsheet or a set of note cards with one task handwritten on each card. In either case, tasks and stories should be organized so that it’s possible to tell which tasks go with which stories. 
+An iteration plan can be as simple as a spreadsheet or a set of note cards with one task handwritten on each card. In either case, tasks and stories should be organized so that it’s possible to tell which tasks go with which stories.
 
 One of the most significant advantages to using note cards during iteration planning is that it allows everyone to participate in the process. If tasks are being typed into a system during the iteration planning meeting, someone has his or her fingers on a keyboard. There is tremendous power to having control over the keyboard. All conversations had better involve the typist or nothing will get entered into the release plan. Worse, whoever has the keyboard can change what gets entered into the release plan.
 
@@ -873,8 +873,8 @@ First, the team collaboratively adjusts priorities. They may have learned someth
    Some teams prefer to estimate tasks after all have been identified, other teams prefer to estimate tasks as each is identified. Task estimates are expressed in ideal time. So, if I think that a task will take me six hours of working time I give it an estimate of six hours. I do this even if six hours of time on the task will take me an entire day. Task estimating on an agile project should be a group endeavor, because:
 
      1. Tasks are not allocated to specific individuals during iteration planning it is impossible to ask the specific person who will do the work.
-     2. Even though we expect a specific individual will be the one to do a task and even though he may know the most about that task, it does not mean that others have nothing to contribute. 
-     3. Hearing how long something is expected to take often helps teams identify misunderstandings about a user story or task. 
+     2. Even though we expect a specific individual will be the one to do a task and even though he may know the most about that task, it does not mean that others have nothing to contribute.
+     3. Hearing how long something is expected to take often helps teams identify misunderstandings about a user story or task.
      4. When the person who will do the work provides the estimate, the person’s pride and ego may make him reluctant to later admit that an estimate was incorrect. When an estimate is made collaboratively, this reluctance to admit an estimate is wrong goes away.
 
    Some design discussion is ok, but talking about models or class diagram is not a good sign. It’s not necessary to go so far as drawing a design because all that’s necessary at this point are guesses about the work that will be needed to complete the features. If you get into the iteration and discover the tasks are wrong, get rid of the initial tasks and create new ones. If an estimate is wrong, cross it out and write a new value. Writing tasks and estimates on note cards is a great approach because each card carries with it a subtle reminder of impermanence.
@@ -994,7 +994,7 @@ You have the following three options:
 * Run an iteration
 * Make a forecast
 
-Regardless of which approach you are using, if you need to estimate velocity you should consider expressing the estimate as a range. 
+Regardless of which approach you are using, if you need to estimate velocity you should consider expressing the estimate as a range.
 
 
 Use Historical Values
@@ -1058,7 +1058,7 @@ In cases like these, we need to forecast velocity. Forecasting velocity is rarel
 
    From observation and discussion with colleagues, my opinion is that most individuals who are assigned full-time to a project spend between four and six hours per day on that project. This fits with an empricial measurement that showed individuals average 55% of their time on project activities. At the high end, Kennedy (2003) reports that engineers in Toyota - with its highly efficient, lean process - are able to spend 80% of their time on their designated projects.
 
-   Use these numbers as parameters in estimating the amount of time individuals on your project team will be able to dedicate each day to the project. If you are part of a large bureaucracy, you will most likely be at the low-end of the scale. If you are part of a three-person startup in a garage, you’ll probably be at the high-end. 
+   Use these numbers as parameters in estimating the amount of time individuals on your project team will be able to dedicate each day to the project. If you are part of a large bureaucracy, you will most likely be at the low-end of the scale. If you are part of a three-person startup in a garage, you’ll probably be at the high-end.
 
 2. Determine the total number of hours that will be spent on the project during the iteration.
 
@@ -1066,7 +1066,7 @@ In cases like these, we need to forecast velocity. Forecasting velocity is rarel
 
 3. Arbitrarily and somewhat randomly select stories and expand them into their constituent tasks. Repeat until you have identified enough tasks to fill the number of hours in the iteration.
 
-   The next step is to expand stories into tasks, estimate the tasks, and keep going until we’ve filled the estimated number of available hours. It is not necessary that stories be expanded in priority order. What you really want is a fairly random assortment of stories. 
+   The next step is to expand stories into tasks, estimate the tasks, and keep going until we’ve filled the estimated number of available hours. It is not necessary that stories be expanded in priority order. What you really want is a fairly random assortment of stories.
 
    Continue selecting stories and breaking them into tasks as long as the tasks selected do not exceed the capacity of the individuals on the team. Select stories until one skill set on the team can’t handle any more work. Add up the story points or ideal days for the work selected and that is the team’s possible velocity.
 
@@ -1082,13 +1082,13 @@ Which Approach Should I Use
 * Use the actual velocity from a related project by this team.
 * Estimate velocity by seeing what fits.
 
-Regardless of which approach you use, switch to using actual, observed values for velocity as soon as possible. 
+Regardless of which approach you use, switch to using actual, observed values for velocity as soon as possible.
 
 
 17. Buffering Plans for Uncertainty
 ===================================
 
-In cases there is either greater uncertainty or greater implication to being wrong about a release schedule. Because of this, it is useful to include a buffer in the determination of the schedule. A buffer is a margin for error around an estimate. The buffer helps protect the project against the impact of the uncertainty. 
+In cases there is either greater uncertainty or greater implication to being wrong about a release schedule. Because of this, it is useful to include a buffer in the determination of the schedule. A buffer is a margin for error around an estimate. The buffer helps protect the project against the impact of the uncertainty.
 
 
 Feature Buffers
@@ -1108,7 +1108,7 @@ Note that I am not concerned with whether any one activity (driving, parking, ch
 
 * Reflecting Uncertainty In Estimates
 
-  In order to protect a project schedule against uncertainty we need a way to quantify the uncertainty. There is normally not much that can be done to accelerate the completion of a task but there are an indefinite number of things that can go wrong and delay the completion of a task. 
+  In order to protect a project schedule against uncertainty we need a way to quantify the uncertainty. There is normally not much that can be done to accelerate the completion of a task but there are an indefinite number of things that can go wrong and delay the completion of a task.
 
   Suppose we want to be 90% confident in the schedule we commit to. One initial approach to doing this might be to estimate the 90% likely duration for each user story in the project and then use those estimates. However, if we do this, the project schedule will almost certainly be too long.
 
@@ -1233,8 +1233,8 @@ Tracking The Release
 
 Completed work, changed requirements, and revised estimates will change our project track.
 
-Because velocity is the primary measure of a team’s progress, it is important to establish some ground rules for how it is calculated. The most important rule is that a team counts points toward velocity only for stories or features that are complete at the end of the iteration. Complete means code that is well written and well factored, checked-in, clean, complies with coding standards, and passes all tests. In order to know how much progress has been made, we count only the points for work that is complete. Opening the door to counting partially finished work, perhaps giving partial credit, makes it impossible to know exactly where we are. 
-  
+Because velocity is the primary measure of a team’s progress, it is important to establish some ground rules for how it is calculated. The most important rule is that a team counts points toward velocity only for stories or features that are complete at the end of the iteration. Complete means code that is well written and well factored, checked-in, clean, complies with coding standards, and passes all tests. In order to know how much progress has been made, we count only the points for work that is complete. Opening the door to counting partially finished work, perhaps giving partial credit, makes it impossible to know exactly where we are.
+
 We don't count incomplete story in for 3 reasons: First, it is extremely hard to measure unfinished or incomplete work. Second, incomplete stories break down the trust between the developer team and the customer team on the project. If a story cannot be completed as planned during an iteration then the developers and the customer team need to collobartively resolve the issue as soon as it’s discovered. Usually this means the story will be moved out of the iteration or split and parts of it moved out. The product owner and customer team can make these decisions in real-time during the iteration and may choose to reprioritize based on the new knowledge about the cost of the story. Alternatively, the customer team may decide to alter the acceptance criteria for the story, accepting it under lessened criteria. They wouldn’t go so far as to accept a buggy or untested version of the story but they may reduce performance requirements, handling of special cases, and so on. Third, and most importantly, unfinished work leads to a build-up of work-in-process in the development process. The more work-in-process a team allows to build up, the longer it will take new features to be transformed from raw ideas into functioning software. Over time, this will decrease the throughput of the whole team. Similarly, with large amounts of work-in-process it takes longer for the team to get feedback on what they’re developing. This means that learning is also delayed.
 
 If a team has unfinished stories at the end of an iteration, they are working with features or stories that are too large. Small stories lead to a steady flow through the development process. If stories are left unfinished, they need to be split into smaller stories. Ideally, this should happen prior to the start of the iteration. However, if during an iteration a story is found to be larger than expected, then it needs to be brought to the attention of the product owner. The product owner, in collaboration with the team, finds a way to split the story or reduce its scope such that a portion can hopefully still be completed within the iteration with the remainder moved to a future iteration.
@@ -1245,7 +1245,7 @@ So, how should a team count a partially finished story when determining velocity
 Release Burndown Chart
 ----------------------
 
-The vertical axis shows the number of story points remaining in the project. (It could just as easily show the number of ideal days remaining.) Iterations are shown across the horizontal axis. A release burndown chart shows the amount of work remaining at the start of each iteration. This becomes a powerful visual indicator of how quickly a team is moving toward its goal. 
+The vertical axis shows the number of story points remaining in the project. (It could just as easily show the number of ideal days remaining.) Iterations are shown across the horizontal axis. A release burndown chart shows the amount of work remaining at the start of each iteration. This becomes a powerful visual indicator of how quickly a team is moving toward its goal.
 
 Alternatively, the burndown chart may show a burn up because work has been added to the release. Think of this as equivalent to a sailboat making eight miles per hour of progress but sailing directly into a current running 12 miles per hour in the opposite direction. In the sailboat’s case, it ends up farther away from its initial target. However, in the case of the software project, the added work may be the result of the team having learned something that directs them at a more valuable release.
 
@@ -1309,3 +1309,134 @@ Individual Velocity
 Some teams refer to individual velocity as the number of story points or ideal days completed by an individual team member. Do not track individual velocity. Tracking individual velocity leads to behavior that works against the success of the project. Suppose it has been announced that individual velocity will be measured and tracked from iteration to iteration. How do you think individuals will respond? If I am forced to choose between finishing a story on my own and helping someone else, what incentive does measuring individual velocity give me?
 
 Individuals should be given every incentive possible to work as a team. If the team’s throughput is increased by me helping someone else, that’s what I should do. Team velocity matters; individual velocity doesn’t. It’s not even a metric of passing interest. As further argument against measuring individual velocity, you shouldn’t even be able to calculate. Most user stories should be written such that they need to be worked on by more than one person, such as a user interface designer, programmer, database engineer, and a tester. If most of your stories can be completed by a single person, you should reconsider how your stories are written. Normally this means they need to be written at a higher level so that work from multiple individuals is included with each.
+
+
+21. Communicating About Plans
+=============================
+
+In this chapter we will look at some specific ways to communicate about plans. However, more important than specifically what we communicate is how we approach the work of communicating about estimates and plans. We want all communication, but especially communication about estimates and plans, to be frequent, honest, and two-way. Frequent communication about plans is important because of how often an agile plan is updated. For example, even if a team does rolling lookahead planning (as described in Chapter 18, “Planning the Multi-Team Project”), their release plan may only show what will be developed in the next few iterations. The user stories that will be developed through the rest of the release may be included in the release plan, but they will not be sequenced beyond the horizon of the lookahead plan and may only be listed as broad themes.
+
+We cannot (and do not want to) produce a plan on the first day and leave it alone for three to six months. Plans are updated throughout the project and these updates need to be communicated. Failing to do so ignores the valuable feedback loops that can improve the desirability and success of the product and the usefulness of the plan. During the short timebox of an iteration it is important for team members to see daily variations in the burndown chart so that they can make adjustments in order to complete all the work of the iteration. Over the longer period of a release, project stakeholders and participants need insight into progress against and revisions to the release plan.
+
+Honest communication is important if the development team and customer team are to trust each other. If the developers learn, for example, that the product owner has been telling them artificial dates, they will no longer trust her. Similarly, if developers give estimates that the product owner knows are unrealistic then trust will disappear here as well. I worked with a team recently that told me their executives ask for more work than can reasonably be expected because "that way if they get 80%, they're happy." The theory was that the executives would get 80% of whatever they asked for so they knew to ask for more than needed.
+
+Without trust it is hard to have honest communication so the loss of trust must be taken very seriously. If a developer knows that a given task will take much longer than currently expected, she needs to feel safe sharing that knowledge with the rest of the team, including her manager. If this type of honest communicaiton is discouraged, problems such as this will remain hidden longer. It is important that communication about estimating and planning be two-way because we want to encourage dialogue and discussion about the plan so that we make sure we always have the best possible plan (given current knowledge) for delivering value to the organization. We want to iterate and refine plans based on feedback and new knowledge. Because of this we need dialogue about plans, not one-way presentations.
+
+Finally, make it your responsibility to make sure that all recipients understand the message you are delivering. They need to not only hear the message, but also understand it. If, for example, you are a project manager delivering the message that the project is behind schedule, do it in such a manner that no one can fail to understand. This is one of the reasons that agile teams favor big, visible charts as a way of communicating—with no more than a handful of big, visible charts hanging in the team’s workspace it is likely that everyone on the project team will understand the significance of each. To the contrary, if the news that a project is behind is “clearly” shown on page 32 of a 40-page weekly status report, it’s quite likely that no one knows it.
+
+
+Communicating the Plan
+----------------------
+
+When asked about the schedule for a project, it is tempting to sum the number of story points to be delivered, divide by a guess of velocity, and say something like "we'll ship on June 14, which is 7.2 iterations from now." This is wrong because it gives the impression that the knowledge from which we construct the plan is sufficiently precise as to support this type of estimate. When possible, include with your communication of a target date either your degree of confidence in the estimate, a range of possible dates, or both. For example, you may say:
+
+* I am 90% sure we’ll complete the planned functionality by July 31
+* Based on our assumptions about the project size and team performance, the project will take three to four months.
+
+As an example of this type of communication, Ron Jeffries has suggested saying something like this:
+
+  Right now, this appears to be a 200-point project. Based on our performance on other projects (or a random guess), with N programmers on it, and your intimate involvement in the project, a project of this size will take between 4 and 6 months. However, we will be shipping software to you every two weeks, and we’ll be ticking off these feature stories to your satisfaction. The good news is that if you’re not satisfied, you can stop. The better news is that if you become satisfied before all the features are done, you can stop. The bad news is that you need to work with us to make it clear just what your satisfaction means. The best news is that whenever there are enough features working to make the program useful, you can ask us to prepare it for deployment, and we’ll do that. As we go forward, we’ll all see how fast we’re progressing, and our estimate of the time needed will improve. In every case, you’ll see what is going on, you’ll see concrete evidence of useful software running the tests that you specify, and you’ll know everything as soon as I know it.
+
+Some companies have become accustomed to communicating project schedules through the familiar Gantt chart, as shown in Figure 21.1. Gantt charts have earned a bad reputation, but this is because of how they are often used to predict, schedule, and coordinate tasks. Despite these challenges in their use, a Gantt chart can be a great tool for showing the allocation of features to iterations. There are a couple of minor but key differences between what is shown in the Figure 21.1 and a more traditional Gantt chart. First, Figure 21.1 stops at the feature level and does not decompose each user story into its constituent tasks. What is shown then is a feature breakdown structure rather than a work breakdown structure of the project. Because it is the completion of features, rather than the completion of the tasks that add up to a feature, that adds value to a product, the Gantt chart is drawn showing features. Second, each feature is shown to take the full length of the iteration into which it is scheduled. A feature may be done mid-way through an iteration but it is not made available to the organization until the end of the iteration so that is what the Gantt chart reflects. Third, no resource allocations are shown in Figure 21.1. Because the whole team is responsible for the delivery of all features there is no benefit in putting Mary’s name next to one feature and Vadim’s next to another. Of course, if you’re producing a Gantt chart showing the work of multiple teams you may want to indicate whole team responsibility by assigning features (or really entire iterations) to Team 1 or Team 2, and so on.
+
+
+Communicating Progress
+----------------------
+
+Naturally, the burndown charts of Chapter 19, "Monitoring The Release Plan," are a primary way of communicating progress. Progress on a release burndown chart is a function of the amount of work remaining and the velocity of the team. The simple way to predict the number of iterations remaining is to take the number of points remaining to be developed and divide this by the team’s velocity and then round up to next whole number. However, measures of velocity are imprecise and we need to expect velocity to fluctuate. When forecasting the number of iterations remaining, it is generally best to use a range of probable velocities.
+
+In selecting a range of velocity values, I typically consider up to the last eight iterations. Many teams stay together that long, but going back beyond eight iterations starts to feel like ancient history to me. If you don’t have eight iterations, use what you have. From these prior iterations, I look at three values:
+
+  1. The velocity of the most recent iteration
+  2. The average (mean) velocity
+  3. The average (mean) velocity of the three slowest iterations
+
+These three values present a good picture of what just happened, a "long term" average, and a worst-case of what could happen. I use these three different velocity values to forecast approximately how much more work may be completed by a given date. While I look for trends in velocity, many projects have too few iterations for velocity trends to become either apparent or relevant. If I notice what appears to be a trend toward an increasing velocity I am pleased but don’t act on it. I would never draw a trend line through Figure 21.2, for example, and predict that the team’s velocity will be 20 in the next iteration. Similarly, if velocity appeared to be headed downward, I would figure out and remove the cause of the decline rather than plan on velocity continuing to drop. Calculating the three expected velocity values allows the product owner and team to make predictions about the amount of work that can be completed before a planned release date.
+
+
+An End of Iteration Summary
+---------------------------
+
+Yes, it may not seem agile to suggest writing an end of iteration summary report. But, almost every manager I talk to asks me if I do so. After I answer in the affirmative I am almost always asked to share the template I use. You’ll have to decide for yourself whether you want to take the time to do this. I find that I can complete this summary document in less than 30 minutes per iteration. I tend to favor two-week iterations on most projects so this means I invest at most 15 minutes per week in this.
+
+(an example report is given on P.235)
+
+
+=================================
+Part VI. Why Agile Planning Works
+=================================
+
+
+22. Why Agile Planning Works
+============================
+
+First, remember the purpose of estimating and planning. Planning is an attempt to find an optimal solution to the overall product development question: features, resources, and schedule. Changing any one of these causes changes in the others. While planning, we are exploring the entire spectrum of possible solutions of how to mix these three parameters such that we create the best product possible. The estimates and plans that we create must be sufficient for serving as the basis for decisons that will be made by the organization.
+
+
+Re-planning Occurs Frequently
+-----------------------------
+
+At the start of each new iteration a plan for that iteration is created. The release plan is updated either after each iteration or, at worst, after every few iterations. Acknowledging the impossibility of creating a perfect plan goes a long way toward reducing the anxiety that accompanies such a goal (Githens 1998). Knowing that a plan can be revised at the start of the next iteration shifts a team's focus from creating a perfect plan (an impossible goal) to creating a plan that is useful right now.
+
+An agile estimating and planning process recognizes that our knowledge is always incomplete and requires that plans be revised as we learn. As a team learns more about the product they are building, new features are added to the release plan. As the team learns more about the technologies they are using or about how well they are working together, expectations about their rate of progress are adjusted. For a plan to remain useful, this new knowledge needs to be incorporated into the plan.
+
+
+Estimation Of Size and Duration Are Seperated
+---------------------------------------------
+
+A common planning flaw (on traditional as well as many agile teams) is confusing estimates of size and duration. Clearly the size of an effort and the time needed to complete that effort are related, but there are many additional factors that affect duration. A project of a given size will take programmers of different skill and experience levels different amounts of time. Similarly, duration is affected by the size of the team working on the project. Agile estimating and planning succeed because estimates of size and duration are separated. We start by estimating the size of a project’s user stories in story points. Because story points are abstract and notional they are pure estimates of size. We then estimate a rate of progress, which we call velocity. Our estimates of size and velocity are then combined to arrive at an estimate of duration. Our estimating and planning process benefits from this clear and total separation of estimates of size and duration.
+
+
+Plans Are Made At Different Levels
+----------------------------------
+
+Because agile plans cover three different levels—the release, the iteration, and the current day—each plan can be made with a different level of precision. Having plans with different time horizons and different levels of precision has two main benefits. First, it conveys the reality that the different plans are created for different reasons. The daily plan, as committed to by each participant in a team's daily meeting, is fairly precise: individuals express commitments to complete, or at least make progress on, specific tasks during the day. The iteration plan is less precise, listing the user stories that will be developed during an iteration and the tasks thought necessary to do so. Because each user story is imperfectly specified, there is also some vagueness around what it means to say the story will be developed in the iteration. Finally, the release plan is the least precise of all containing only a prioritized list of desired user stories and one or more estimates of how much of the desired functionality is likely to be delivered by the desired release date.
+
+The second benefit of planning at different levels is that it helps the team view the project from different perspectives. An iteration plan is necessary for completing the highly coordinated work of a cross-functional team within a short iteration. A release plan provides a broader perspective on the project and ensures that the team does not lose the forest of the release for the trees of an iteration. A team that works iteration to iteration without awareness of a more distant goal runs the risk of continually pursuing short-term goals while missing out on targeting a truly lucrative longer-term goal. Short-term may be inconsistent with the desired long-term result.
+
+
+Plans Are Based On Features, Not Tasks
+--------------------------------------
+
+A traditional plan in the form of a Gantt chart, PERT chart, or work breakdown structure focuses on the tasks needed to create a product. An agile plan focuses instead on the features that will be needed in the product. This is a key distinction because it forces the team to think about the product at the right level—the features. When features are developed iteratively there is less need for upfront thinking about the specific tasks necessary. The work of an iteration emerges and the team will think of or discover all of the tasks as they are needed. What’s more important is that the team think about the features that are being developed. Colleague Jim Highsmith (2004b) has stated that “agile planning is ‘better’ planning because it utilizes features (stories, etc.) rather than tasks. It is easy to plan an entire project using standard tasks without really understanding the product being built. When planning by feature, the team has a much better understanding of the product.” At a task level, many project plans look the same; every agile plan is specific to the product being developed.
+
+
+Small Stories Keep Work Flowing
+-------------------------------
+
+From queuing theory (Poppendieck and Poppendieck 2003; Reinertsen 1997) we learn the importance of focusing on cycle time, the amount of time something takes to go from the start of a process to the end of that process. On a software project, cycle time is the time from when the team begins work on a feature until it delivers value to users. The shorter the cycle time the better. A key influence on cycle time is the variability in the time it takes to develop a new feature. One of the best ways to reduce variability is to work with reasonably small and similarly-sized units of work. The estimating and planning process outlined in this book supports this by advising that teams estimate their short-term work within approximately one order of magnitude. Larger user stories can exist further down a project’s prioritized list of work. However, as those features near the the top of the list (when they will be scheduled into an iteration that is beginning) they are disaggregated into smaller pieces.
+
+
+Work In Progress Is Eliminated Every Iteration
+----------------------------------------------
+
+High amounts of work in process slow down a team. On a software project, work in process exists on any feature that the team has started developing but has not yet finished. The more work in process there is, the longer any new feature will take to develop as the new feature must follow along behind the already started work. (Or, the new feature needs to be expedited, jumping ahead of the work in process but that just compounds the problem for the next feature that cannot be expedited.) So, work in process leads to increased cycle times. And in the previous section we learned the importance of maintaining a short cycle time. One of the reasons why agile planning succeeds is that all work in process is eliminated at the end of each iteration. Because work is not automatically rolled forward from one iteration to the next, each iteration is planned afresh. This means that work on a feature not fully implemented in one iteration will not necessarily be continued in the next. It often will be, but there’s no guarantee. This has the effect of eliminating all work in process at the start of each iteration. Because work in process is eliminated at the start of each iteration, teams are more easily able to work efficiently in short iterations. This means a shorter feedback loop from users to the project team, which leads to faster learning a well as more timely risk mitigation and control.
+
+
+Tracking Is At The Team Level
+-----------------------------
+
+Traditional approaches to estimating and planning measure and reward progress at the individual team member level. This leads to a variety of problems. For example, if finishing a task early results in a programmer being accused of giving a padded estimate for the task, the programmer will learn not to finish early. Rather than finish early she won’t report a task as complete until its deadline. Agile estimating and planning successfully avoid this type of problem by tracking progress only at the team level. This is one of the reasons that Chapter 14, “Iteration Planning,” included the advice that individuals should refrain from signing up for specific tasks during iteration planning. Similarly, there are no individual burndown charts prepared, only a team-wide burndown chart.
+
+
+Uncertainty Is Acknowledged And Planned For
+-------------------------------------------
+
+Many traditional, prescriptive plans make the mistake of believing that features can be locked down at the beginning of a project. Plans are then made that do not allow changes or force changes through an onerous change control process. This leads us to delivering projects with features that users don’t want. When we create a plan early in a project and do not update the plan as we acquire new knowledge, we lose the opportunity to synchronize the plan with reality. With an agile approach to estimating and planning, teams acknowledge both end and means uncertainty. End uncertainty (about the product ultimately being built) is reduced as product increments are shown to potential users and other stakeholders at the end of each iteration. Their feedback and responses are used to fine-tune future plans. Means uncertainty (about how the product will be built) is reduced as the team learns more about the technologies in use and themselves.
+
+
+A Dozen Guidelines for Agile Estimating and Planning
+----------------------------------------------------
+
+1. Involve the whole team.
+2. Plan at different levels.
+3. Keep estimates of size and duration separate by using different units.
+4. Express uncertainty in either the functionality or the date.
+5. Replan often.
+6. Track and communicate progress.
+7. Acknowledge the importance of learning.
+8. Plan features of the right size.
+9. Prioritize features.
+10. Base estimates and plans on facts.
+11. Leave some slack.
+12. Coordinate teams through lookahead planning.
