@@ -1,0 +1,69 @@
+Table of Contents
+=================
+
+* Preface
+* Chapter 1       -       Introduction
+* Chapter 2       -       Mathematical Preliminaries
+
+Part I - Untyped Systems
+------------------------
+
+* Chapter 3       -       Untyped Arithmetic Expressions
+* Chapter 4       -       An ML Implementation of Arithmetic Expressions
+* Chapter 5       -       The Untyped Lambda-Calculus
+* Chapter 6       -       Nameless Representation of Terms
+* Chapter 7       -       An ML Implementation of the Lambda-Calculus
+
+Part II - Simple Types
+----------------------
+
+* Chapter 8       -       Typed Arithmetic Expressions
+* Chapter 9       -       Simply Typed Lambda-Calculus
+* Chapter 10      -       An ML Implementation of Simple Types
+* Chapter 11      -       Simple Extensions
+* Chapter 12      -       Normalization
+* Chapter 13      -       References
+* Chapter 14      -       Exceptions
+
+Part III - Subtyping
+--------------------
+
+* Chapter 15      -       Subtyping
+* Chapter 16      -       Metatheory of Subtyping
+* Chapter 17      -       An ML Implementation of Subtyping
+* Chapter 18      -       Case Study: Imperative Objects
+* Chapter 19      -       Case Study: Featherweight Java
+
+Part IV - Recursive Types
+-------------------------
+
+* Chapter 20      -       Recursive Types
+* Chapter 21      -       Metatheory of Recursive Types
+
+Part V - Polymorphism
+---------------------
+
+* Chapter 22      -       Type Reconstruction
+* Chapter 23      -       Universal Types
+* Chapter 24      -       Existential Types
+* Chapter 25      -       An ML Implementation of System F
+* Chapter 26      -       Bounded Quantification
+* Chapter 27      -       Case Study: Imperative Objects, Redux
+* Chapter 28      -       Metatheory of Bounded Quantification
+
+Part VI - Higher-Order Systems
+------------------------------
+
+* Chapter 29      -       Type Operators and Kinding
+* Chapter 30      -       Higher-Order Polymorphism
+* Chapter 31      -       Higher-Order Subtyping
+* Chapter 32      -       Case Study: Purely Functional Objects
+
+Part VII - Appendices
+---------------------
+
+* Appendix A      -       Solutions to Selected Exercises
+* Appendix B      -       Notational Conventions
+* References
+* Index
+* List of Figures 
