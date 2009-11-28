@@ -181,3 +181,59 @@ Thus, if we could decide whether any subtype statement is provable, then we coul
 We should emphasize, again, that the undecidability of the subtype relation does not imply that the semi-algorithm for subtyping developed is either unsound or incomplete. If the statement Г |- S <: T is provable according to the declarative subtyping rules, then the algorithm will definitely terminate and yield true. If Г |- S <: T is not provable according to the declarative subtyping rules, then the algorithm will either diverge or yield false. The point is that a given subtyping statement may fail to be provable from the algorithmic rules in two different ways: either by generating an infinite sequence of subgoals (meaning that there is no finite derivation with this conclusion) or else by leading to an obvious inconsistency like Top <: S->T. The subtyping algorithm can detect one of these cases, but not the other.
 
 Does the undecidability of full F<:: mean that the system is useless in practice? Actually, it is generally held that the undecidability of F<:: is not, per se, a terribly serious deficiency. For one thing, it has been shown (Ghelli, 1995) that, in order to cause the subtype checker to diverge, we must present it with a goal with three quite special properties, each one of which is difficult to imagine programmers creating by accident. Also, there are a number of popular languages whose typechecking or type reconstruction problems are, in principle, either extremely expensive—like ML and Haskell or even undecidable, like C++ and λProlog (Felty, Gunter, Hannan, Miller, Nadathur, and Scedrov, 1988). In fact, experience has shown the lack of joins and meets mentioned to be a significantly more problematic shortcoming of full F<::than its undecidability.
+
+
+Joins and Meets
+---------------
+
+A desirable property of languages with subtyping is the existence of a join for every pair of types S and T - that is, a type J that is minimal among all the common supertypes of S and T. We show in this section that the subtype relation of kernel F<: does indeed have a join for every S and T, as well as a meet for every S and T with at least one subtype in common, by giving algorithms for calculating them. On the other hand, both of these properties fail for full F<:.
+
+We write Г |- S V T = J for "J is the join of S and T in context Г" and Г |- S ∧ T = M for "M is the meet of S and T in Г." The algorithms for calculating these relations are defined simultaneously in below. Note that some of the cases in each definition overlap; to read the definitions as deterministic algorithms, we stipulate that the first clause that applies is always chosen.
+
+Г |- S V T = T, if Г |- S <: T
+             S, if Г |- T <: S
+             J, if S = X, X <: U <- Г, Г |- U V T = J
+             J, if T = X, X <: U <- Г, Г |- S V U = J
+             M1->J2, if S = S1->S2, T = T1->T2, Г |- S1 ∧ T1 = M1, Г |- S2 V T2 = J2
+             "X<:U1.J2, if S = "X<:U1.S2, T = "X<:U1.T2, Г,X<:U1 |- S2 V T2 = J2
+             Top, otherwise
+
+Г |- S ∧ T = S, if Г |- S <: T
+             T, if Г |- T <: S
+             J1->M2, if S = S1->S2, T = T1->T2, Г |- S1 V T1 = J1, Г |- S2 ∧ T2 = M2
+             "X<:U1.M2, if S = "X<:U1.S2, T = "X<:U1.T2, Г,X<:U1 |- S2 ∧ T2 = M2
+             fail, otherwise
+
+It is easy to check that V and ∧ are total functions, in the sense that V always returns a type and ∧ either returns a type or fails. We just observe that the total weight (see definition above) of S and T with respect to Г is always reduced in recursive calls.
+
+Now let us verify that these definitions actually calculate joins and meets. The argument is divided into two parts: First we show that the calculated join is an upper bound of S and T and the meet (when it exists) is a lower bound; Then we show that the calculated join is less than every common upper bound of S and T and that the meet is greater than every common lower bound (and exists whenever S and T have a common lower bound).
+
+Proposition: 1. If Г |- S V T = J, then Г |- S <: J and Г |- T <: J.
+             2. If Г |- S ∧ T = M, then Г |- M <: S and Г |- M <: T.
+
+Proposition: 1. If Г |- S <: V and Г |- T <: V, then Г |- S V T = J for some J with Г |- J <: V.
+             2. If Г |- L <: S and Г |- L <: T, then Г |- S ∧ T = M for some M with Г |- L <: M.
+
+
+Bounded Existentials
+--------------------
+
+To extend the kernel F<: typechecking algorithm to a language with existential types, we must deal with one additional subtlety. Recall the declarative elimination rule for existentials:
+
+  Г |- t1:{$X,T12}    Г,X,x:T12 |- t2:T2
+  --------------------------------------    T-UNPACK
+  Г |- let {X,x}=t1 in t2:T2
+
+We remarked that the type variable X appears in the context in which t2's type is calculated in the second premise but not in the context of the rule's conclusion. This means that the type T2 must not contain X free, since any free occurrences of X will be out of scope in the conclusion. We observed that the change in the context from premise t o conclusion corresponds to anegative shift of variable indices in T2, when we represent types in the nameless deBruijn format; this shift will fail if T2 happens to contain X free.
+
+What are the implications of this observation for a minimal typing algorithm for a language with existentials? In particular, what should we do with an expression like t = let {X,x} = p in x, where p has type {$X,Nat->X}? The most natural type of the body x is Nat->X, which mentions the bound variable X. However, according to the declarative typing relation (with the subsumption rule), x also has the types Nat->Top and Top. Since neither of these mentions X, the whole term t can legally be assigned the types Nat->Top and Top in the declarative system. More generally, we are always free to promote the body of an unpacking expression to any type that does not involve the bound type variable X and then apply T-UNPACK. So, if we want our minimal typing algorithm to be complete, it should not simply fail when it encounters an unpacking expression where the minimal type T2 of the body contains a free occurrence of the bound variable X. Instead, it should try to promote T2 to some supertype that does not mention X. The key observation that we need to make this work is that the set of X-free supertypes of a given type always has a minimal element.
+
+(The unpack rule to bounded existential is so complicated, check book if you're interested.)
+
+For full F<: with bounded existentials, the situation is more problematic, as might be expected. Ghelli and Pierce (1998) give an example of a type T, a context Г, and a variable X such that the set of X-free supertypes T under Г has no minimal element. It immediately follows that the typing relation for this system lacks minimal types.
+
+
+Bounded Quantification and the Bottom Type
+------------------------------------------
+
+The addition of a minimal Bot type somewhat complicates the metatheoretic properties of F<:. The reason for this is that, in a type of the form "X<:Bot.T, the variable X is actually a synonym for Bot inside T, since X is a subtype of Bot by assumption and Bot is a subtype of X by the rule S-BOT. This, in turn, means that pairs of types such as "X<:Bot.X->X and "X<:Bot.Bot->Bot are equivalent in the subtype relation, even though they are not syntactically identical. Moreover, if the ambient context contains the assumptions X<:Bot and Y<:Bot, then the types X->Y and Y->X are equivalent even though neither of them mentions Bot explicitly. Despite these difficulties, the essential properties of kernel F<: can still be established in the presence of Bot.
