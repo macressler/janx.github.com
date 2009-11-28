@@ -1,0 +1,314 @@
+Higher Order Polymorphism
+=========================
+
+In this chapter, we combine type operators with the polymorphism of System F, yielding a well-known system called Fω (Girard, 1972). The definition of Fω is a straightforward combination of features from λω and System F. However, proving the basic properties of this system (in particular, preservation and progress) requires somewhat harder work than most of the systems we have seen, because we must deal with the fact that type-checking now requires evaluation at the level of types. These proofs will be the main job of this chapter.
+
+
+Definitions
+-----------
+
+System Fω is formed by combining System F and λω, adding kinding annotations (X::K) in places where type variables are bound (i.e., in type abstractions and quantifiers). The formal definition for the system with just universal quantifiers (not existentials) is given below:
+
+-> " =>                          Extended λω and System F
+---------------------------------------------------------
+Syntax
+t ::=                             terms
+      x                           variable
+      λx:T.t                      abstraction
+      t t                         application
+      λX::K.t                     type abstraction
+      t [T]                       type application
+
+v ::=                             values
+      λx:T.t                      abstraction value
+      λX::K.t                     type abstraction value
+
+T ::=                             types
+      X                           type variable
+      T->T                        type of functions
+      "X::K.T                     universal type
+      λX::K.T                     operator abstraction
+      T T                         operator application
+
+Г ::=                             contexts
+      O                           empty context
+      Г,x:T                       term variable binding
+      Г,X::K                      type variable binding
+
+K ::=                             kinds
+      *                           kind of proper types
+      K->K                        kind of operators
+
+
+Evaluation                        (t->t')
+
+t1 -> t1'
+---------------                   E-APP1
+t1 t2 -> t1' t2
+
+t2 -> t2'
+---------------                   E-APP2
+v1 t2 -> v1 t2'
+
+(λx:T11.t12)v2 -> [x |-> v2]t12   E-APPABS
+
+t1 -> t1'
+-------------------               E-TAPP
+t1 [T2] -> t1' [T2]
+
+(λX::K11.t12)[T2] -> [X |-> T2]t12    E-TAPPTABS
+
+Kinding                           (Г |- T::K)
+
+X::K <- Г
+---------                         K-TVAR
+Г |- X::K
+
+Г,X::K1 |- T2::K2
+------------------------          K-ABS
+Г |- λX::K1.T2 :: K1->K2
+
+Г |- T1::K11=>K12    Г |- T2::K11
+--------------------------------- K-APP
+Г |- T1 T2::K12
+
+Г |- T1::*    Г |- T2::*
+------------------------          K-ARROW
+Г |- T1->T2::*
+
+Г,X::K1 |- T2::*
+------------------------          K-ALL
+Г |- "X::K1.T2::*
+
+Type equivalence                  (S ≡ T)
+
+T ≡ T                             Q-REFL
+
+T ≡ S
+-----                             Q-SYMM
+S ≡ T
+
+S ≡ U    U ≡ T
+--------------                    Q-TRANS
+S ≡ T
+
+S1 ≡ T1    S2 ≡ T2
+------------------                Q-ARROW
+S1->S2 ≡ T1->T2
+
+S2 ≡ T2
+---------------------             Q-ALL
+"X::K1.S2 ≡ "X::K1.T2
+
+S2 ≡ T2
+---------------------             Q-ABS
+λX::K1.S2 ≡ λX::K1.T2
+
+S1 ≡ T1    S2 ≡ T2
+------------------                Q-APP
+S1 S2 ≡ T1 T2
+
+(λX::K11.T12)T2 ≡ [X |-> T2]T12   Q-APPABS
+
+Typing                            (Г |- t:T)
+
+x:T <- Г
+--------                          T-VAR
+Г |- x:T
+
+Г |- T1::*    Г,x:T1 |- t2:T2
+-----------------------------     T-ABS
+Г |- λx:T1.t2 : T1->T2
+
+Г |- t1:T11->T12    Г |- t2:T11
+-------------------------------   T-APP
+Г |- t1 t2 : T12
+
+Г,X::K1 |- t2:T2
+-------------------------------   T-TABS
+Г |- λX::K1.t2 : "X::K1.T2
+
+Г |- t1:"X::K11.T12    Г |- T2:K11
+----------------------------------    T-TABS
+Г |- t1 [T2] : [X |-> T2]T12
+
+Г |- t:S    S ≡ T    Г |- T::*
+------------------------------    T-EQ
+Г |- t:T
+
+We abbreviate "X::*.T as "X.T and {$X::*,T} as {$X,T}, so that terms of System F can be read directly as terms of Fω.
+
+Similarly, we obtain the higher-order variant of existential types by generalizing bindings from X to X::K in the original presentation of existentials:
+
+T ::= ...                         types
+      {$X::K,T}                   existential type
+
+Evaluation                        (t->t')
+
+let {X,x} = ({*T11,v12} as T1) in t2
+  -> [X |-> T11][x |-> v12]t2     E-UNPACKPACK
+
+t12 -> t12'
+-------------------------------------    E-PACK
+{*T11,t12} as T1 -> {*T11,t12'} as T1
+
+Kinding                           (Г |- T::K)
+
+Г,X::K1 |- T2::*
+------------------------          K-SOME
+Г |- {$X::K1,T2}::*
+
+Type equivalence                  (S ≡ T)
+
+S2 ≡ T2
+-------------------------         Q-SOME
+{$X::K1.S2} ≡ {$X::K1.T2}
+
+Typing                            (Г |- t:T)
+
+Г |- t2:[X |-> U]T2    Г |- {$X::K1,T2}::*
+------------------------------------------    T-PACK
+Г |- {*U,t2} as {$X::K1,T2} : {$X::K1,T2}
+
+Г |- t1:{$X::K11,T12}    Г,X::K11,x:T12 |- t2:T2
+------------------------------------------------    T-UNPACK
+Г |- let {X,x} = t1 in t2 : T2
+
+
+Example
+-------
+
+Recall the encoding of abstract data types in terms of existentials. Suppose now that we want to implement an ADT of pairs, in the same way as we earlier implemented ADTs of types like counters. This ADT should provide operations for building pairs and taking them apart. Moreover, we would like these operations to be polymorphic, so that we can use them to build and use pairs of elements from any types S and T. That is, the abstract type that we provide should not be a proper type, but rather an abstract type constructor (or operator). It should be abstract in the same sense as the earlier ADTs: for each S and T, the pair operation should take an element of S and one of T and return an element of Pair S T, while fst and snd should take a Pair S T and return, respectively, an S or a T, and these facts should be all that a client of our abstraction knows about it.
+
+From these requirements, we can read off the signature that we want our pair ADT to present to the world:
+
+  PairSig = {$Pair::*=>*=>*,
+             {pair: "X."Y. X->Y->(Pair X Y),
+              fst: "X."Y. (Pair X Y)->X,
+              snd: "X."Y. (Pair X Y)->Y}
+            };
+
+That is, an implementation of pairs should provide a type operator Pair plus polymorphic functions pair, fst, and snd of the given types. Here is one way of building a package with this type:
+
+  pairADT = {*λX.λY. "R.(X->Y->R)->R,
+              {pair = λX.λY. λx:X.λy:Y. λR. λp:X->Y->R. p x y,
+               fst = λX.λY. λp:"R.(X->Y->R)->R. p [X] (λx:X. λy:Y. x),
+               snd = λX.λY. λp:"R.(X->Y->R)->R. p [Y] (λx:X. λy:Y. y)
+              }
+            } as PairSig;
+  > pairADT : PairSig
+
+The hidden representation type is the operator λX.λY. "R. (X->Y->R)->R that we have used before to represent pairs. The components pair, fst, and snd of the body are appropriate polymorphic functions. Having defined pairADT, we can unpack it in the usual way.
+
+  let {Pair,pair}=pairADT in pair.fst [Nat] [Bool] (pair.pair [Nat] [Bool] 5 true);
+  > 5 : Nat
+
+
+Properties
+----------
+
+Lemma [Strengthening]: If Г,x:S,Δ |- T::K, then Г,Δ |- T::K.
+
+Lemma [Permutation and Weakening]: Suppose we have contexts Г and Δ such that Δ is a well-formed permutation of Г, Σ for some context Σ - that is, Δ is a permutation of an extension of Г.
+
+  1. If Г |- T::K, then Δ |- T::K.
+  2. If Г |- t:T, then Δ |- t:T.
+
+Lemma [Term Substitution]: If Г,x:S,Δ |- t:T and Г |- s:S, then Г, Δ |- [x |-> s]t:T.
+
+Lemma [Type Substitution]: 1. If Г,Y::J,Δ |- T::K and Г |- S::J, then Г,[Y |-> S]Δ |- [Y |-> S]T::K.
+                           2. If T ≡ U, then [Y |-> S]T ≡ [Y |-> S]U.
+                           3. If Г,Y::J,Δ |- t:T and Г |- S::J, then Г,[Y |-> S]Δ |-> [Y |-> S]t:[Y |-> S]T.
+
+
+Type Equivalence and Reduction
+------------------------------
+
+For establishing the properties of typing in Fω, it is convenient to use a directed variant of the type equivalence relation, called parallel reduction (see Figure below). The differences from type equivalence are that the rules of symmetry and transitivity are dropped, and that the QR-APPABS rule allows reductions in the subphrases of the redex. Dropping symmetry gives the reduction relation a more "computational" feel, with (λX::K11.T12)T2 reducing to [X |-> T2]T12, but not the other way around; this directedness makes the relation easier to analyze, e.g., in the proof of Lemma below. Dropping transitivity and allowing reduction of the components at the same time as reducing a lambda-redex are technicalities: we make these changes to obtain a relation with the single-step diamond property stated in Lemma below.
+
+Parallel reduction                (S-=>T)
+
+T -=> T                           QR-REFL
+
+S1-=>T1    S2-=>T2
+------------------                QR-ARROW
+S1->S2 -=> T1->T2
+
+S2-=>T2
+---------------------             QR-ALL
+"X::K1.S2 -=> "X:K1.T2
+
+S2-=>T2
+-----------------------           QR-ABS
+λX::K1.S2 -=> λX::K1.T2
+
+S1-=>T1    S2-=>T2
+------------------                QR-APP
+S1 S2 -=> T1 T2
+
+S12-=>T12    S2-=>T2
+--------------------------------- QR-APPABS
+(λX::K11.S12)S2 -=> [X |-> T2]T12
+
+A key property of the parallel reduction relation is that its transitive and symmetric closure, written <=>* , coincides with type equivalence.
+
+Lemma: S ≡ T iff S <=>* T.
+
+Moreover, parallel reduction is easily seen to be confluent, as the next few lemmas show. (Confluence is often called the Church-Rosser property.)
+
+Lemma: If S -=> S′, then [Y |-> S]T -=> [Y |-> S′]T for any type T.
+
+Lemma: If S -=> S′ and T -=> T′, then [Y !-> S]T -=> [Y |-> S′]T′.
+
+Lemma [Single-Step Diamond Property of Reduction]: If S -=> T and S -=> U, then there is some type V such that T -=> V and U -=> V.
+
+Lemma [Confluence]: If S -=>* T and S -=>* U, then there is some type V such that T -=>* V and U -=>* V.
+
+Proposition: If S <=>* T, then there is some U such that S -=>* U and T -=>* U.
+
+This brings us to the crucial observation relating equivalence and reduction: if two types are equivalent, then they share a common reduct. This gives us the structure we need to prove the inversion properties that follow.
+
+Corollary: If S ≡ T, then there is some U such that S -=>* U and T -=>* U.
+
+We are now almost ready for the main proof that types are preserved during reduction. The only other thing we need is, as usual, an inversion lemma that, given a typing derivation whose conclusion has a certain shape, tells us about the shape of its subderivations. This lemma, in turn, depends on a simple observation about parallel reduction.
+
+Lemma [Preservation of Shapes Under Reduction]: 1. If S1->S2 -=>* T, then T = T1->T2 with S1 -=>* T1 and S2 -=>* T2.
+                                                2. If "X::K1.S2 -=>* T, then T = "X::K1.T2 with S2 -=>* T2.
+
+Lemma [Inversion]: 1. If Г |- λx:S1.s2 : T1->T2, then T1 ≡ S1 and Г,x:S1.s2 : T2. Also, Г |-> S1::*.
+                   2. If Г |- λX::J1.s2 : "X::K1.T2, then J1 = K1 and Г,X::J1 |- s2:T2.
+
+Theorem [Preservation]: If Г |- t:T and t -> t′, then Г |- t′:T.
+
+Lemma [Canonical Forms]: 1. If t is a closed value with |- t:T1->T2, then t is an abstraction.
+                         2. If t is a closed value with |- t:"X::K1.T2, then t is a type abstraction.
+
+Theorem [Progress]: Suppose t is a closed, well-typed term (that is, |- t:T for some T). Then either t is a value or else there is some t′ with t -> t′.
+
+In the definition of Fω we took some pains to ensure the well-kindedness of the types we can derive for terms using the rules. In particular, T-ABS checks that the type annotation on a lambda-abstraction is well formed before adding it to the context, and T-EQ checks that the type T being attributed to t has kind *. The precise sense in which these checks ensure well-formedness is given by the following proposition.
+
+Definition: A context Г is said to be well formed if (1) Г is empty, or (2) Г = Г1,x:T with Г1 well formed and Г |- T::*, or (3) Г = Г1,X::K with Г1 well formed.
+
+Proposition: If Г |- t:T and Г is well formed, then Г |- T::*.
+
+Space constraints preclude the inclusion in this book of a full proof of decidability for Fω - i.e., a typechecking algorithm and proofs of its soundness, completeness, and termination - but almost all the required ideas are already familiar from the minimal typing algorithm for System F<:.
+
+
+Fragments of Fω
+---------------
+
+Intuitively, it is clear that both λ-> and System F are contained in Fω. We can make this intuition precise by defining a hierarchy of systems, F1, F2, F3, etc., whose limit is Fω.
+
+Definition: In System F1, the only kind is * and no quantification (") or abstraction (λ) over types is permitted. The remaining systems are defined with reference to a hierarchy of kinds at level i, defined as follows:
+
+  * K1 = |
+  * Ki+1 = {*} U {J -=> K | J <- Ki and K <- Ki+1}
+  * Kω = U1≤i Ki
+
+In System F2, we still have only kind * and no lambda-abstraction at the level of types, but we allow quantification over proper types (of kind *). In F3, we allow quantification over type operators (i.e., we can write type expressions of the form "X::K.T, where K<-K3) and introduce abstraction over proper types (i.e., we consider type expressions of the form λX::*.T, giving them kinds like *-=>*). In general, Fi+1 permits quantification over types with kinds in Ki+1 and abstraction over types with kinds in Ki.
+
+(Jan: it looks => and -=> is both used for kinds arrow)
+
+F1 is just our simply typed lambda-calculus, λ->. Its definition is superficially more complicated than we defined before because it includes kinding and type equivalence relations, but these are both trivial: every syntactically well formed type is also well kinded, with kind *, and the only type equivalent to a type T is T itself. F2 is our System F; its position in this hierarchy is the reason why it is often called the second-order lambda-calculus. F3 is the first system where the kinding and type equivalence relations become non-degenerate.
+
+Interestingly, all the programs in this book live in F3. (Strictly speaking, the type operators Object and Class in later are in F4, since their argument is a type operator of kind (*=>*)=>*, but we could just as well treat these two as abbreviation mechanisms of the metalanguage rather than full-fledged expressions of the calculus, as we did with Pair before, since in the examples using Object and Class we do not need to quantify over types of this kind.) On the other hand, restricting our programming language to F3 instead of using full Fω does not actually simplify things very much, in terms of either implementation difficulty or metatheoretic intricacy, since the key mechanisms of type operator abstraction and type equivalence are already present at this level.
