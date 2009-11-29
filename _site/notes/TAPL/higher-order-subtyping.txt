@@ -1,0 +1,213 @@
+Higher Order Subtyping
+======================
+
+The last system we will consider, called Fω<: ("F-omega-sub"), is again a combination of features we have previously studied in isolation—this time, of type operators and subtyping. It can be viewed as the extension of System F<:, the second-order polymorphic lambda-calculus with bounded quantification, with type operators. The most interesting new feature is the extension of the subtyping relation from kind * to types of higher kinds.
+
+Several different versions of  have been proposed, varying in expressiveness and metatheoretic complexity. The one used here is very close to that of Pierce and Steffen (1994), one of the simplest. We will not prove any properties of the system; interested readers are referred to Pierce and Steffen (1994), or to Compagnoni (1994) or Abadi and Cardelli (1996), which treat similar systems.
+
+
+Intuitions
+----------
+
+The interaction of subtyping and bounded quantification with type operators raises several design issues in the formulation of the combined system. We discuss these briefly before proceeding to the definition of the system. The first question is whether, in the presence of subtyping, type operators like λX::K1.T2 should be generalized to bounded type operators of the form λX<:T1.T2. We choose simplicity over regularity in this chapter, defining a system with bounded quantification and unbounded type operators.
+
+The next issue is how to extend the subtype relation to include type operators. There are several alternatives. The simplest one, which we choose here, is to lift the subtype relation on proper types pointwise to type operators. For abstractions, we say that λX.S is a subtype of λX.T whenever applying both to any argument U yields types that are in the subtype relation. For example, λX.Top->X is a subtype of λX.X->Top because Top->U is a subtype of U->Top for every U. Equivalently, we can say that λX.S is a subtype of λX.T if S is a subtype of T when we hold X abstract, making no assumptions about its subtypes and supertypes. The latter view leads directly to the S-ABS rule.
+
+Conversely, if F and G are type operators with F <: G, then F U <: G U (S-APP). Note that this rule applies only when F and G are applied to the same argument U - knowing that F is pointwise a subtype of G tells us nothing about their behavior when applied to different arguments. (Some more complex variants of that do consider this case)
+
+Having lifted subtyping from kind * to kind *=>*, we can repeat the process for more complex kinds. For example, if P and Q are type operators of kind *=>*=>*, then we say P <: Q if, for each U, the application P U is a subtype of Q U in kind *=>*.
+
+A useful side effect of this definition is that the subtype relations for higher kinds all have maximal elements. If we let Top[*] = Top and define(maximal elements of higher kinds)
+
+Top[K1=>K2] =def= λX::K1.Top[K2]
+
+then a simple induction shows that Г |- S<:Top[K] (whenever S has kind K).
+
+The step from ordinary bounded quantifiers to higher-order bounded quantifiers is a straightforward one.  inherits from F<:bounded quantifiers of the form "X<:T1.T2. Generalizing to higher-order (i.e., to quantification over type operators) requires no change to this syntax: we just observe that T1 here may be any type expression, including a type operator. The unbounded higher-order quantifiers that we inherit from Fω can be treated as abbreviations for bounded quantifiers with maximal bounds—i.e., we regard "X::K1.T2 as an abbreviation for "X<:Top[K1].T2.
+
+Lastly, inherits Fω<: from F<: the issue of whether to use the more tractable kernel variant or the more powerful full variant of the rule S-All. We choose the kernel variant here; the full variant also makes semantic sense, but its metatheoretic properties (even those that one would expect should hold, by analogy with full F<:) have not yet been established.
+
+
+Definitions
+-----------
+
+-> " => <: Top                    Based Fω and Kernel F:<
+---------------------------------------------------------
+Syntax
+t ::=                             terms
+      x                           variable
+      λx:T.t                      abstraction
+      t t                         application
+      λX<:T.t                     type abstraction
+      t [T]                       type application
+
+v ::=                             values
+      λx:T.t                      abstraction value
+      λX<:T.t                     type abstraction value
+
+T ::=                             types
+      X                           type variable
+      T->T                        type of functions
+      "X<:T.T                     universal type
+      λX::K.T                     operator abstraction
+      T T                         operator application
+
+Г ::=                             contexts
+      O                           empty context
+      Г,x:T                       term variable binding
+      Г,X<:T                      type variable binding
+
+K ::=                             kinds
+      *                           kind of proper types
+      K->K                        kind of operators
+
+
+Evaluation                        (t->t')
+
+t1 -> t1'
+---------------                   E-APP1
+t1 t2 -> t1' t2
+
+t2 -> t2'
+---------------                   E-APP2
+v1 t2 -> v1 t2'
+
+(λx:T11.t12)v2 -> [x |-> v2]t12   E-APPABS
+
+t1 -> t1'
+-------------------               E-TAPP
+t1 [T2] -> t1' [T2]
+
+(λX<:T11.t12)[T2] -> [X |-> T2]t12    E-TAPPTABS
+
+Kinding                           (Г |- T::K)
+
+Г |- Top::*                       K-TOP
+
+X<:T <- Г    Г |- T::K
+----------------------            K-TVAR
+Г |- X::K
+
+Г,X<:Top[K1] |- T2::K2
+------------------------          K-ABS
+Г |- λX::K1.T2 :: K1->K2
+
+Г |- T1::K11=>K12    Г |- T2::K11
+--------------------------------- K-APP
+Г |- T1 T2::K12
+
+Г |- T1::*    Г |- T2::*
+------------------------          K-ARROW
+Г |- T1->T2::*
+
+Г,X<:T1 |- T2::*
+------------------------          K-ALL
+Г |- "X<:T1.T2::*
+
+Type equivalence                  (S ≡ T)
+
+T ≡ T                             Q-REFL
+
+T ≡ S
+-----                             Q-SYMM
+S ≡ T
+
+S ≡ U    U ≡ T
+--------------                    Q-TRANS
+S ≡ T
+
+S1 ≡ T1    S2 ≡ T2
+------------------                Q-ARROW
+S1->S2 ≡ T1->T2
+
+S1 ≡ T1    S2 ≡ T2
+---------------------             Q-ALL
+"X<:S1.S2 ≡ "X<:T1.T2
+
+S2 ≡ T2
+---------------------             Q-ABS
+λX::K1.S2 ≡ λX::K1.T2
+
+S1 ≡ T1    S2 ≡ T2
+------------------                Q-APP
+S1 S2 ≡ T1 T2
+
+(λX::K11.T12)T2 ≡ [X |-> T2]T12   Q-APPABS
+
+Subtyping                         (Г |- S <: T)
+
+Г |- S<:U    Г |- U<:T    Г |- U::K
+-----------------------------------    S-TRANS
+Г |- S<:T
+
+Г |- S::*
+-----------                       S-TOP
+Г |- S<:Top
+
+Г |- T1<:S1    Г |- S2<:T2
+--------------------------        S-ARROW
+Г |- S1->S2 <: T1<:T2
+
+X<:T <- Г
+---------                         S-TVAR
+Г |- X<:T
+
+Г |- U1::K1    Г,X<:U1 |- S2<:T2
+--------------------------------  S-ALL
+Г |- "X<:U1.S2 <: "X<:U1.T2
+
+Г,X<:Top[K1] |- S2<:T2
+---------------------------       S-ABS
+Г |- λX::K1.S2 <: λX::K1.T2
+
+Г |- S1<:T1
+-----------------                 S-APP
+Г |- S1 U <: T1 U
+
+Г |- S::K    Г |- T::K    S ≡ T
+-------------------------------   S-EQ
+Г |- S<:T
+
+Typing                            (Г |- t:T)
+
+x:T <- Г
+--------                          T-VAR
+Г |- x:T
+
+Г |- T1::*    Г,x:T1 |- t2:T2
+-----------------------------     T-ABS
+Г |- λx:T1.t2 : T1->T2
+
+Г |- t1:T11->T12    Г |- t2:T11
+-------------------------------   T-APP
+Г |- t1 t2 : T12
+
+Г,X<:T1 |- t2:T2
+-------------------------------   T-TABS
+Г |- λX<:T1.t2 : "X<:T1.T2
+
+Г |- t1:"X<:T11.T12    Г |- T2<:T11
+----------------------------------    T-TAPP
+Г |- t1 [T2] : [X |-> T2]T12
+
+One technicality in the definition is that, although the system provides two different sorts of binding for type variables (X::K in type operators and X<:T in quantifiers), we allow only the latter form of binding in contexts. When we move an X::K binder from the right-hand side of the turnstile to the left, in rules K-ABS and S-ABS, we change it to X<:Top[K]. Another fine point is that the rules S-REFL from F<: and T-EQ from Fω are dropped in . Instances of the old S-REFL are immediate consequences of S-EQ and Q-REFL, while T-EQ is derivable from T-SUB and S-EQ.
+
+
+Properties
+----------
+
+(Jan: ignored. Too complicated.)
+
+The pointwise definition of subtyping between type operators can be generalized to allow subtyping between applications of different type operators to different arguments (F S <: G T) if we refine the kind system so that it tracks the polarity of type operators. We says that an operator F is covariant if F S <: F T whenever S <: T and contravariant if F T <: F S whenever S <: T. If we introduce two new subtyping rules reflecting these properties
+
+Г |- S<:T    F is covariant
+---------------------------
+Г |- F S <: F T
+
+Г |- S<:T    F is contravariant
+-------------------------------
+Г |- F T <: F S
+
+then it follows (by transitivity) that F S <: G T if F <: G, S <: T, and G is covariant. To make all this work, we also need to mark type variables with their polarities, and to restrict higher-order quantifiers to range only over operators with certain polarities. Versions of with polarities have been considered by Cardelli (1990), Steffen (1998), and Duggan and Compagnoni (1999).
+
+Another possible generalization of the presentation of Fω<: used here is generalizing unbounded type operators λX::K1.T2 to bounded type operators λX<:T1.T2. This is an appealing step, because it matches the way we generalized quantifiers to bounded quantifiers when we formed F<: by adding subtyping to System F. On the other hand, it substantially complicates the system, since we must also generalize the kind system to include kinds like "X<:T1.K2; this, in turn, introduces a mutual dependency between the kinding and subtyping rules that requires significant work to untangle. See Compagnoni and Goguen (1997a; 1997b).
