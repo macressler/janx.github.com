@@ -1,0 +1,352 @@
+Purely Functional Objects
+=========================
+
+
+Simple Objects
+--------------
+
+  Counter = {$X, {state:X, methods:{get:X->Nat, inc:X->X}}};
+
+For the first few sections of this chapter, we will use the type {x:Nat} as the representation type of all our objects. We will consistently use the abbreviation CounterR when we are talking about the internal state type.
+
+  CounterR = {x:Nat};
+
+A counter object is an element of the type Counter, defined according to the rule for existential introduction (T-PACK).
+
+  c = {*CounterR, {state = {x=5}, methods = {get = λr:CounterR. r.x, inc = λr:CounterR. {x=succ(r.x)}}}} as Counter;
+  > c : Counter
+
+Invoking the methods of a Counter involves unpacking it, selecting the appropriate field from its methods, and applying it to the state,
+
+  sendget = λc:Counter. let {X,body} = c in body.methods.get(body.state);
+  > sendget : Counter -> Nat
+
+and finally (in the case of inc, which must return a new object, not just a bare number) repackaging the result into a new object with the same representation type and methods as the original.
+
+  sendinc = λc:Counter. let {X,body} = c in {*X, {state = body.methods.inc(body.state), methods = body.methods}} as Counter;
+  > sendinc : Counter -> Counter
+
+These basic functions can be used to build up more complex terms that manipulate Counter objects.
+
+  addthree = λc:Counter. sendinc (sendinc (sendinc c));
+  > addthree : Counter -> Counter
+
+
+Subtyping
+---------
+
+A pleasant feature of this existential encoding of objects is that the subtype inclusions that we expect between object types follow directly from the subtyping rules for existentials and records. To check this, recall the subtyping rule for existential types. (We use only the kernel variant of the rule here; the power of the full version is not needed. In fact, we do not need bounded existentials at all in this chapter—the bounds of all our existentials are Top)
+
+  Г,X<:U |- S2<:T2
+  -----------------------------    S-SOME
+  Г |- {$X<:U,S2} <: {$X<:U,T2}
+
+This rule tells us immediately that if we define an object type with more methods than Counter, e.g.,
+
+  ResetCounter = {$X, {state:X, methods:{get: X->Nat, inc:X->X, reset:X->X}}};
+
+then it will be a subtype of Counter, i.e., ResetCounter <: Counter. This means that, if we define a reset counter object,
+
+  rc = {*CounterR, {state = {x=0}, methods = {get = λr:CounterR. r.x, inc = λr:CounterR. {x=succ(r.x)}, reset = λr:CounterR. {x=0}}}} as ResetCounter;
+  > rc : ResetCounter
+
+we can use subsumption to pass this object to functions defined on Counter, such sendget, sendinc, and addthree:
+
+  rc3 = addthree rc;
+  > rc3 : Counter
+
+Notice, though, that we lose type information when we do this: the type of rc3 here is just Counter, not ResetCounter.
+
+
+Bounded Quantification
+----------------------
+
+Of course, it was precisely this sort of information loss due to subsumption that motivated the introduction of bounded quantification. However, bounded quantification by itself is not quite enough - to be useful in addressing the problem at hand, it needs to be enriched with some additional mechanism.
+
+To see why, observe that the obvious refinement of the type of sendinc using bounded quantification is "C<:Counter. C->C. If we had a sendinc of this type, then we could write addthree as
+
+  addthree = λC<:Counter. λc:C. sendinc [C] (sendinc [C] (sendinc [C] c));
+  > addthree : "C<:Counter. C -> C
+
+and apply it to rc to obtain a result of type ResetCounter.
+
+  rc3 = addthree [ResetCounter] rc;
+  > rc3 : ResetCounter
+
+Unfortunately, there is no way to write such a function - or rather, no way to write a function that behaves the way we want and give it this type. We can, of course, write an identity function that belongs to this type,
+
+  wrongsendinc = λC<:Counter. λc:C. c;
+  > wrongsendinc : "C<:Counter. C -> C
+
+but if we try to refine the real implementation of sendinc from above by adding a bounded type abstraction at the front, we get something that fails to typecheck.
+
+  sendinc = λC<:Counter. λc:C. let {X,body} = c in {*X, {state = body.methods.inc(body.state), methods = body.methods}} as C;
+  > Error: existential type expected
+
+The problem here is in the last line. The annotation as C tells the typechecker "use the existential type C for the package being created here." But C is not an existential type - it is a type variable. This is not just a silly restriction of the typing rules that we have defined - e.g., a consequence of the fact that the rules do not "know" that every subtype of an existential type is an existential type. On the contrary, it would actually be wrong to give the package
+
+  {*X, {state = body.methods.inc(body.state), methods = body.methods}}
+
+the type C. Observe, for example, that the type
+
+  {$X, {state:X, methods:{get:X->Nat,inc:X->X}, junk:Bool}}
+
+is a subtype of Counter. But the package above certainly does not have this type: it lacks the field junk. So it is not the case that, for any subtype C of Counter, the body of sendinc above "really" has type C, if only the typing rules could see it. Indeed, it can be shown (e.g., by appealing to a denotational model for F<: - see Robinson and Tennent, 1988) that, in pure F<:, types of the form "C<:T.C->C contain only identity functions.
+
+Several ways of addressing this shortcoming of F<: have been proposed. One possibility is to move from F<: to and use higher-order bounded quantification to give yet more refined types to functions like sendinc. Another possibility is to keep the type "C<:Counter.C->C, but to add features to the language that can be used to build interesting inhabitants of this type. A final possibility is simply to add references to the language.
+
+The development that follows combines two of these methods— Fω<: to address the problem with quantification over object types that we noticed in the previous section, and a new primitive for polymorphic record update to address a related problem that arises in the treatment of instance variables.
+
+
+Interface Types
+---------------
+
+Using type operators, we can express Counter as the combination of two pieces
+
+  Counter = Object CounterM;
+
+where
+
+  CounterM = λR. {get: R->Nat, inc:R->R};
+
+is a type operator of kind *=>* representing the specific method interface of counter objects and
+
+  Object = λM::*=>*. {$X, {state:X, methods:M X}};
+
+is a type operator of kind (*=>*)=>* that captures the common structure of all object types. What we achieve by this reformulation is a separation of the varying part (the method interface), where we want to allow subtyping, from the fixed skeleton of objects (the existential packaging, and the pair of state and methods), where we do not because it gets in the way of the repackaging.
+
+We need bounded quantification over a type operator to achieve this splitting because it allows us to pull out the method interface from an object type, even though the interface mentions the existentially bound state type X, by abstracting the method interface itself on X. The interface thus becomes a "parametric parameter." The iterated character of the parameterization here is reflected both in the kind of Object and in the steps by which the application Object CounterM is simplified: first, CounterM is substituted into the body of Object, yielding
+
+  {$X, {state:X, methods:(λR. {get: R->Nat, inc:R->R}) X}}
+
+and then X is substituted into the body of CounterM, yielding
+
+  {$X, {state:X, methods:{get:X->Nat,inc:X->X}}}.
+
+If we split ResetCounter in the same way,
+
+  ResetCounterM = λR. {get: R->Nat, inc:R->R, reset:R->R};
+  ResetCounter = Object ResetCounterM;
+
+then we have not only
+
+  ResetCounter <: Counter
+
+as before but also
+
+  ResetCounterM <: CounterM
+
+by the rules above for subtyping between type operators. That is, our separation of object types into generic boilerplate plus a specific interface gives us a meaningful sense of interface subtyping that is separate from the subtype relations between complete object types. Interface subtyping is closely related - both conceptually and technically - to the idea of matching introduced by Bruce et al. (1997) and further studied by Abadi and Cardelli (1995; 1996).
+
+
+Sending Messages to Objects
+---------------------------
+
+We can now repair the broken version of sendinc by abstracting over sub-interfaces of CounterM rather than sub-types of Counter.
+
+  sendinc = λM<:CounterM. λc:Object M. let {X, b} = c in {*X, {state = b.methods.inc(b.state), methods = b.methods}} as Object M;
+  > sendinc : "M<:CounterM. Object M -> Object M
+
+Intuitively, the type of sendinc can be read "give me an object interface refining the interface of counters, then give me an object with that interface, and I'll return you another object with the same interface."
+
+To invoke the methods of counter and reset counter objects, we instantiate the polymorphic method invocation functions with the appropriate interface signature, CounterM or ResetCounterM (assuming sendget and sendreset have been defined analogously).
+
+  sendget [CounterM] (sendinc [CounterM] c);
+  > 6 : Nat
+
+  sendget [ResetCounterM] (sendreset [ResetCounterM] (sendinc [ResetCounterM] rc));
+  > 0 : Nat
+
+
+Simple Classes
+--------------
+
+Now let us consider classes, beginning with simple classes without self. Before we defined a simple class (for the imperative object encoding, where objects were records of methods) to be a function from states to objects - a way of manufacturing multiple objects with the same methods but each with a freshly allocated set of instance variables. In this chapter, an object is more than just a record of methods: it includes a representation type and a state as well. On the other hand, since this is a purely functional model, each of the methods takes the state as a parameter (and, if necessary, returns an object with an updated state), so we don't need to pass the state to the class at object-creation time. In fact, a class here - given that we are still assuming that all objects use the same representation type - can be viewed as simply a record of methods,
+
+  counterClass = {get = λr:CounterR. r.x, inc = λr:CounterR. {x=succ(r.x)}} as {get:CounterR->Nat, inc:CounterR->CounterR};
+  > counterClass : {get:CounterR->Nat, inc:CounterR->CounterR}
+
+or, using the CounterM operator to write the annotation more tersely:
+
+  counterClass = {get = λr:CounterR. r.x, inc = λr:CounterR. {x=succ(r.x)}} as CounterM CounterR;
+  > counterClass : CounterM CounterR
+
+We build instances of such classes by supplying an initial value for the state and packaging this state with the methods (i.e., the class) into an object.
+
+  c = {*CounterR, {state = {x=0}, methods = counterClass}} as Counter;
+  > c : Counter
+
+Defining a subclass is simply a matter of building a new record of methods, copying some of its fields from a previously defined one.
+
+  resetCounterClass = let super = counterClass in {get = super.get, inc = super.inc, reset = λr:CounterR. {x=0}} as ResetCounterM CounterR;
+  > resetCounterClass : ResetCounterM CounterR
+
+To generalize these simple classes to handle the same sorts of examples that we closed before, two more things are needed: the ability to add new instance variables in subclasses, and a treatment of self.
+
+
+Polymorphic Update
+------------------
+
+To add instance variables to classes, we need to add one new mechanism - a primitive for in-place polymorphic update of record fields and an associated refinement to record types. The need for these features arises from the fact that allowing variation in instance variables between classes means making superclasses polymorphic in the instance variables of their subclasses. Let us look at how this happens.
+
+Suppose that we want to define a subclass of resetCounterClass, adding a backup method that saves the current value of the counter and changing the behavior of reset to revert to this saved value instead of to a constant initial value. To hold this saved value, we will need to extend our state type from {x:Nat} to {x:Nat, old:Nat}. This difference in representations immediately creates a technical difficulty. Our ability to reuse the inc method from resetCounterClass when defining backupCounterClass depends on this method behaving the same in both classes. However, if the sets of instance variables are different, then it does not behave quite the same: the inc of a ResetCounter expects a state of type {x:Nat} and returns a new state of the same type, while the inc of BackupCounter expects and produces states of type {x:Nat,old:Nat}.
+
+To resolve this difficulty, it suffices to observe that the inc method does not really need to know that the state type is {x:Nat} or {x:Nat,old:Nat}, but only that the state contains an instance variable x. In other words, we can unify these two methods by giving them both type "S<:{x:Nat}.S->S.
+
+Now the same difficulty arises with states as with whole objects above: the type "S<:{x:Nat}.S->S in our present language is inhabited only by the identity function. Again, to address this difficulty, we need some mechanism that permits a more precise form of bounded quantification; here, the most direct mechanism is to add a primitive for polymorphic update of record fields. If r is a record with a field x of type T and t is a term of type T, then we write r<-x=t to mean "a record that is just like r except that its x field has the value t." Note that this is a purely functional form of update operation—it does not change r, but instead makes a clone with a different x field.
+
+Using this record update primitive, a function that captures the intended behavior of the inc method body can be written roughly as follows:
+
+  f = λX<:{a:Nat}. λr:X. r<-a=succ(r.a);
+
+However, we have to be a little careful. A naive typing rule for the update operator would be:
+
+  Г |- r:R    Г |- R<:{lj:Tj}    Г |- t:Tj
+  ----------------------------------------
+  Г |- r<-lj=t : R
+
+But this rule is unsound. For example, suppose we have:
+
+  s = {x={a=5,b=6},y=true};
+
+Since s : {x:{a:Nat,b:Nat},y:Bool}, and {x:{a:Nat,b:Nat},y:Bool} <: {x:{a:Nat}}, the above rule would allow us to derive
+
+  s<-x={a=8} : {x:{a:Nat,b:Nat},y:Bool},
+
+    which would be wrong, since s←x={a=8} reduces to {x={a=8},y=true}.
+
+This problem was caused by the use of depth subtyping on the field x to derive {x:{a:Nat,b:Nat},y:Bool} <: {x:{a:Nat}}. Depth subtyping should not be allowed in fields that might be updated. We can achieve this by the simple expedient of annotating such fields with a special mark, written #.
+
+The rules for these "updatable records" and for the update operation itself are given in Figure below. We refine the syntax of record types so that every field is annotated with a variance tag that indicates whether depth subtyping is allowed - # to forbid subtyping in this field and the empty string to permit it (choosing the empty string here means that unmarked records will behave as they always have). The depth subtyping rule S-RCDDEPTH is refined to allow subtyping only in unmarked fields. Finally, we add a subtyping rule S-RCDVARIANCE that permits marks on fields to be changed from # to the empty string - in other words, to "forget" that a given field is updatable. The typing rule for the update primitive demands that the field being replaced is marked #. The E-UPDATE rule implements the update operation.
+
+-> " <: Top [] <-               Based on F<: with records
+---------------------------------------------------------
+t ::=                             terms
+      {fi li = ti, i<-1..n}       records
+      t<-l=t                      filed update
+
+T ::=                             types
+      {fi li:Ti, i<-1..n}         type of records
+
+f ::= #                           invariant (updatable) field
+      (ommitted)                  covariant (fixed) field
+      
+
+{fj lj=vj, j<-1..n}<-li=v -> {fj lj=vj,j<-1..i-1, fi li=v, fk lk=vk,k<-i+1..n}    E-UPDATEV
+
+{fi li=vi, i<-1..n}.lj = vj       E-PROJRCD
+
+tj -> tj'
+---------------------------------------------------------------------------------------------------------    E-RCD
+[fi li=vi,i<-1..j-1, fj lj=tj, fk lk=tk,k<-j+1..n} -> {fi li=vi,i<-1..j-1, fj lj=tj', fk lk=tk,k<-j+1..n}
+
+
+Г |- {fi li:Ti,i<-1..n+1} <: {fj lj:Tj,j<-1..n}
+
+for each i    Г |- Si<:Ti    if fi=# then Г |- Ti<:Si
+-----------------------------------------------------    S-RCDDEPTH
+Г |- {fi li:Si,i<-1..n} <: {fi li:Ti,i<-1..n}
+
+Г |- {...#li:Si...} <:{...li:Si...}    S-RCDVARIANCE
+
+
+for each i    Г |- ti:Ti
+------------------------------------------    T-RCD
+Г |- {fi li=ti,i<-1..n}:{fi li:Ti,i<-1..n}
+
+Г |- t1:{fi li:Ti,i<-1..n}
+--------------------------        T-PROJ
+Г |- t1.lj:Tj
+
+Г |- r:R    Г |- R<:{#lj:Tj}   Г |- t:Tj
+----------------------------------------    T-UPDATE
+Г |- r<-lj=t : R
+
+
+The function f above is now written like this,
+
+  f = λX<:{#a:Nat}. λr:X. r<-a = succ(r.a);
+  > f : "X<:{#a:Nat}. X -> X
+
+and used like this:
+
+  r = {#a=0, b=true};
+  f [{#a:Nat,b:Bool}] r;
+  > {#a=1, b=true} : {#a:Nat, b:Bool}
+
+The soundness of the update operation rests on the following observation about the refined subtype relation: If |- R, <:{#l:T1}, then R = {...#l:R1 ...} with |- R1<:T1 and |- T1<:R1.
+
+
+Adding Instance Variables
+-------------------------
+
+Using the features from the previous section, we can write a counterClass that is polymorphic in the type of the internal state.
+
+  CounterR = {#x:Nat};
+
+  counterClass = λR<:CounterR. {get = λs:R. s.x, inc = λs:R. s<-x=succ(s.x)} as CounterM R;
+  > counterClass : "R<:CounterR. CounterM R
+
+To build an object from the new counterClass, we simply supply CounterR as the representation type:
+
+  c = {*CounterR, {state = {#x=0}, methods = counterClass [CounterR]}} as Object CounterM;
+  > c : Counter
+
+Note that objects built from the new class have the same type Counter = Object CounterM as the ones above: the changes to the treatment of instance variables are entirely internal to the classes. The method invocation functions above can also be used with objects instantiated from the new classes.
+
+We can write resetCounterClass in the same style.
+
+  resetCounterClass = λR<:CounterR. let super = counterClass [R] in {get = super.get, inc = super.inc, reset = λs:R. s<-x=0} as ResetCounterM R;
+  > resetCounterClass : "R<:CounterR. ResetCounterM R
+
+Finally, we can write a backupCounterClass, this time abstracting over a subtype of BackupCounterR (which was the point of the whole exercise).
+
+  BackupCounterM = λR. {get:R->Nat,inc:R->R,reset:R->R,backup:R->R};
+  BackupCounterR = {#x:Nat,#old:Nat};
+
+  backupCounterClass = λR<:BackupCounterR. let super = resetCounterClass [R] in {get = super.get, inc = super.inc, reset = λs:R. s<-x=s.old, backup = λs:R. s<-old=s.x} as BackupCounterM R;
+  > backupCounterClass : "R<:BackupCounterR. BackupCounterM R
+
+
+Classes with "Self"
+-------------------
+
+We saw how to extend imperative classes with a mechanism allowing the methods of a class to refer to each other recursively before. This extension also makes sense in the purely functional setting.
+
+We begin by abstracting counterClass on a collection of methods self appropriate for the same representation type R.
+
+  counterClass = λR<:CounterR. λself: Unit->CounterM R. λ_:Unit. {get = λs:R. s.x, inc = λs:R. s<-x=succ(s.x)} as CounterM R;
+
+The Unit argument to the class is used to postpone evaluation during the fix operation that creates the methods of an object. The type of self includes a matching Unit abstraction.
+
+To build an object from this class, we take the fixed point of the function counterClass and apply it to unit.
+
+  c = {*CounterR, {state = {#x=0}, methods = fix (counterClass [CounterR]) unit}} as Object CounterM;
+  > c : Counter
+
+We next define a subclass offering a set operation, with the following interface:
+
+  SetCounterM = λR. {get: R->Nat, set:R->Nat->R, inc:R->R};
+
+The implementation of setCounterClass defines a set method and uses the set and get methods from self in the implementation of its inc method:
+
+  setCounterClass = λR<:CounterR. λself: Unit->SetCounterM R. λ_:Unit.
+                      let super = counterClass [R] self unit in
+                        {get = super.get, set = λs:R. λn:Nat. s<-x=n, inc = λs:R. (self unit).set s (succ((self unit).get s))} as SetCounterM R;
+
+Finally, bringing together all the mechanisms from the chapter, we can build a subclass of instrumented counters whose set operation counts the number of times that it has been called.
+
+  InstrCounterM = λR. {get: R->Nat, set:R->Nat->R, inc:R->R, accesses:R->Nat};
+  InstrCounterR = {#x:Nat,#count:Nat};
+
+  instrCounterClass = λR<:InstrCounterR. λself: Unit->InstrCounterM R. λ_:Unit.
+                        let super = setCounterClass [R] self unit in
+                          {get = super.get, set = λs:R. λn:Nat. let r = super.set s n in r<-count=succ(r.count), inc = super.inc, accesses = λs:R. s.count} as InstrCounterM R;
+
+Note that calls to inc are included in the access count, since inc is implemented in terms of the set method from self. To wrap up, let's build an instrumented counter object and send it some messages.
+
+  ic = {*InstrCounterR, {state = {#x=0,#count=0}, methods = fix (instrCounterClass [InstrCounterR]) unit}} as Object InstrCounterM;
+  > ic : Object InstrCounterM
+
+  sendaccesses [InstrCounterM] (sendinc [InstrCounterM] ic);
+  > 1 : Nat
