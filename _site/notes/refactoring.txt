@@ -1,0 +1,23 @@
+(J: This file contains notes on "refactoring" and "refactoring, ruby edition", sometimes I'll put an 'O' or 'R' at the end of line to denote this is from original refactoring book or ruby edition, or 'OR' which says this note is from both edition.)
+
+Refactoring is risky. It requires changes to working code that can introduce subtle bugs. Refactoring, if not done properly, can set you back days, even weeks. And refactoring becomes riskier when practiced informally or ad hoc. O
+
+Refactoring is the process of changing a software system in such a way that it does not alter the external behavior of the code yet improves its internal structure. It is a disciplined way to clean up code that minimizes the chances of introducing bugs. OR
+
+Is this not just an aesthetic judgment, a dislike of ugly code? It is until we want to change the system. The interpreter doesn’t care whether the code is ugly or clean. But when we change the system, there is a human involved, and humans do care. A poorly designed system is hard to change. Hard because it is hard to figure out where the changes are needed. If it is hard to figure out what to change, there is a strong chance that the programmer will make a mistake and introduce bugs. OR
+
+(J: I think this is why we should refactor *before* we start on a new story, not *after* we complete a story. Refactor after a story complete is meaningless, it won't make the application better to use, it's only an aesthetic work; refactor before we begin a new story is meaningful, it will make the code easy to change, it's pragmatic.)
+
+When you find you have to add a feature to a program, and the program’s code is not structured in a convenient way to add the feature, first refactor the program to make it easy to add the feature, then add the feature. OR
+
+Before you start refactoring, check that you have a solid suite of tests. These tests must be self-checking (assertions). R
+
+While refactoring you should focus on clarity, and then later focus on performance as a separate activity. Almost all the time extra method calls won’t matter; in the rare cases they do, they can be dealt with later. Indeed by refactoring you often get opportunities to make better performance improvements. R
+
+(J: so when you write fresh new code, what should bear in mind? make the code clean & fast, if you can't, make it clean, and make it fast later.)
+
+Most refactorings reduce the amount of code, but this one increases it. That's because Java 1.1 requires a lot of statements to set up a summing loop. Even a simple summing loop with one line of code per element needs six lines of support around it. It's an idiom that is obvious to any programmer but is a lot of lines all the same. O
+
+(J: see why I left Java?)
+
+It is a bad idea to do a case based on an attribute of another object. If you must use a case statement, it should be on your own data, not on someone else’s. R
