@@ -1,14 +1,84 @@
 (J: This file contains notes on "refactoring" and "refactoring, ruby edition", sometimes I'll put an 'O' or 'R' at the end of line to denote this is from original refactoring book or ruby edition, or 'OR' which says this note is from both edition.)
 
+
+What is Refactoring
+-------------------
+
 Refactoring is risky. It requires changes to working code that can introduce subtle bugs. Refactoring, if not done properly, can set you back days, even weeks. And refactoring becomes riskier when practiced informally or ad hoc. O
 
 Refactoring is the process of changing a software system in such a way that it does not alter the external behavior of the code yet improves its internal structure. It is a disciplined way to clean up code that minimizes the chances of introducing bugs. OR
+
+Refactoring (noun): A change made to the internal structure of software to make it easier to understand and cheaper to modify without changing its observable behavior. OR
+Refactor (verb): To restructure software by applying a series of refactorings without changing its observable behavior. OR
+
+
+Why should we refactor
+----------------------
+
+Refactoring Improves the Design of Software
+Refactoring Makes Software Easier to Understand
+Refactoring Helps You Find Bugs
+Refactoring Helps You Program Faster
+
+
+When should we refactor
+-----------------------
 
 Is this not just an aesthetic judgment, a dislike of ugly code? It is until we want to change the system. The interpreter doesn’t care whether the code is ugly or clean. But when we change the system, there is a human involved, and humans do care. A poorly designed system is hard to change. Hard because it is hard to figure out where the changes are needed. If it is hard to figure out what to change, there is a strong chance that the programmer will make a mistake and introduce bugs. OR
 
 (J: I think this is why we should refactor *before* we start on a new story, not *after* we complete a story. Refactor after a story complete is meaningless, it won't make the application better to use, it's only an aesthetic work; refactor before we begin a new story is meaningful, it will make the code easy to change, it's pragmatic.)
 
 When you find you have to add a feature to a program, and the program’s code is not structured in a convenient way to add the feature, first refactor the program to make it easy to add the feature, then add the feature. OR
+
+Rule of Three: Here’s a guideline Don Roberts gave me: The first time you do something, you just do it. The second time you do something similar, you wince at the duplication, but you do the duplicate thing anyway. The third time you do something similar, you refactor. R
+
+* Refactor When You Add Function
+
+  The most common time to refactor is when I want to add a new feature to some software. Often the first reason to refactor here is to help me understand some code I need to modify. This code may have been written by someone else, or I may have written it. Whenever I have to think to understand what the code is doing, I ask myself if I can refactor the code to make that understanding more immediately apparent. Then I refactor it. This is partly for the next time I pass by here, but mostly it’s because I can understand more things if I clarify the code as I’m going along. The other driver of refactoring here is a design that does not help me add a feature easily. R
+
+* Refactor When You Need to Fix a Bug
+
+  A bug is a sign you need refactoring, because the code was not clear enough for you to see there was a bug.
+
+* Refactor As You Do a Code Review
+
+  Code reviews help spread knowledge through a development team. Reviews help more experienced developers pass knowledge to less experienced people. They help more people understand more aspects of a large software system. They are also important in writing clear code. My code may look clear to me but not to my team. That’s inevitable—it’s hard for people to put themselves in the shoes of someone unfamiliar with the things they are working on. Reviews also give the opportunity for more people to suggest useful ideas.
+
+* Refactoring for Greater Understanding (aka, Refactor to the Same Thing)
+
+
+Why refactor works
+------------------
+
+Programs have two kinds of value: What they can do for you today and what they can do for you tomorrow. You can’t program long without realizing that what the system does today is only a part of the story. If you can get today’s work done today, but you do it in such a way that you can’t possibly get tomorrow’s work done tomorrow, then you lose. 
+
+
+Problems with refactoring
+-------------------------
+
+Changing Interfaces: if a refactoring changes a published interface, you have to retain both the old interface and the new one
+
+Databases: The addition of a rigorous one-click deployment process with database migrations as part of that process certainly helps. Write tests for your migrations. The migration task can still take a very long time, and in some systems regular modification of the schema may not be feasible. One way to deal with this problem is to place a separate layer of software between your object model and your database model. That way you can isolate the changes to the two different models. 
+
+Design Changes That Are Difficult to Refactor
+
+
+When not to refactor
+--------------------
+
+A clear sign of the need to rewrite is when the current code just does not work. You may discover this only by trying to test it and discovering that the code is so full of bugs that you cannot stabilize it. Remember, code has to work mostly correctly before you refactor.
+
+Another time you should avoid refactoring is when you are close to a deadline. At that point the productivity gain from refactoring would appear after the deadline and thus be too late. 
+
+Other than when you are very close to a deadline, however, you should not put off refactoring because you haven’t got time. Experience with several projects has shown that a bout of refactoring results in increased productivity. Not having enough time usually is a sign that you need to do some refactoring.
+
+The most costly refactoring is refactoring for academic purposes. Refactoring for academic purposes is in direct conflict with delivering working software. In your career you will likely find many lines of code that you do not agree with; however, disagreeing with implementation is not a good enough reason to refactor code. If the code currently hinders your ability to deliver software (or will in the future), you can refactor, but changing code because you philosophically disagree is simply wrong.
+
+
+How should we refactor
+----------------------
+
+(J: two kinds of refacotr: add indirection, remove indirection)
 
 Before you start refactoring, check that you have a solid suite of tests. These tests must be self-checking (assertions). R
 
@@ -21,3 +91,6 @@ Most refactorings reduce the amount of code, but this one increases it. That's b
 (J: see why I left Java?)
 
 It is a bad idea to do a case based on an attribute of another object. If you must use a case statement, it should be on your own data, not on someone else’s. R
+
+When you use refactoring to develop software, you divide your time between two distinct activities: adding function and refactoring. When you add function, you shouldn’t be changing existing code; you are just adding new capabilities. You can measure your progress by adding tests and getting the tests to work. When you refactor, you make a point of not adding function; you only restructure the code. You don’t add any tests (unless you find a case you missed earlier); you only restructure the code. Additionally, you only change tests when you absolutely need to in order to cope with a change in an interface. OR
+
