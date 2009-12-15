@@ -1,15 +1,12 @@
-(J: This file contains notes on "refactoring" and "refactoring, ruby edition", sometimes I'll put an 'O' or 'R' at the end of line to denote this is from original refactoring book or ruby edition, or 'OR' which says this note is from both edition.)
-
-
 What is Refactoring
 -------------------
 
-Refactoring is risky. It requires changes to working code that can introduce subtle bugs. Refactoring, if not done properly, can set you back days, even weeks. And refactoring becomes riskier when practiced informally or ad hoc. O
+Refactoring is risky. It requires changes to working code that can introduce subtle bugs. Refactoring, if not done properly, can set you back days, even weeks. And refactoring becomes riskier when practiced informally or ad hoc.
 
-Refactoring is the process of changing a software system in such a way that it does not alter the external behavior of the code yet improves its internal structure. It is a disciplined way to clean up code that minimizes the chances of introducing bugs. OR
+Refactoring is the process of changing a software system in such a way that it does not alter the external behavior of the code yet improves its internal structure. It is a disciplined way to clean up code that minimizes the chances of introducing bugs.
 
-Refactoring (noun): A change made to the internal structure of software to make it easier to understand and cheaper to modify without changing its observable behavior. OR
-Refactor (verb): To restructure software by applying a series of refactorings without changing its observable behavior. OR
+Refactoring (noun): A change made to the internal structure of software to make it easier to understand and cheaper to modify without changing its observable behavior.
+Refactor (verb): To restructure software by applying a series of refactorings without changing its observable behavior.
 
 
 Why should we refactor
@@ -24,17 +21,17 @@ Refactoring Helps You Program Faster
 When should we refactor
 -----------------------
 
-Is this not just an aesthetic judgment, a dislike of ugly code? It is until we want to change the system. The interpreter doesn’t care whether the code is ugly or clean. But when we change the system, there is a human involved, and humans do care. A poorly designed system is hard to change. Hard because it is hard to figure out where the changes are needed. If it is hard to figure out what to change, there is a strong chance that the programmer will make a mistake and introduce bugs. OR
+Is this not just an aesthetic judgment, a dislike of ugly code? It is until we want to change the system. The interpreter doesn’t care whether the code is ugly or clean. But when we change the system, there is a human involved, and humans do care. A poorly designed system is hard to change. Hard because it is hard to figure out where the changes are needed. If it is hard to figure out what to change, there is a strong chance that the programmer will make a mistake and introduce bugs.
 
 (J: I think this is why we should refactor *before* we start on a new story, not *after* we complete a story. Refactor after a story complete is meaningless, it won't make the application better to use, it's only an aesthetic work; refactor before we begin a new story is meaningful, it will make the code easy to change, it's pragmatic.)
 
-When you find you have to add a feature to a program, and the program’s code is not structured in a convenient way to add the feature, first refactor the program to make it easy to add the feature, then add the feature. OR
+When you find you have to add a feature to a program, and the program’s code is not structured in a convenient way to add the feature, first refactor the program to make it easy to add the feature, then add the feature.
 
-Rule of Three: Here’s a guideline Don Roberts gave me: The first time you do something, you just do it. The second time you do something similar, you wince at the duplication, but you do the duplicate thing anyway. The third time you do something similar, you refactor. R
+Rule of Three: Here’s a guideline Don Roberts gave me: The first time you do something, you just do it. The second time you do something similar, you wince at the duplication, but you do the duplicate thing anyway. The third time you do something similar, you refactor.
 
 * Refactor When You Add Function
 
-  The most common time to refactor is when I want to add a new feature to some software. Often the first reason to refactor here is to help me understand some code I need to modify. This code may have been written by someone else, or I may have written it. Whenever I have to think to understand what the code is doing, I ask myself if I can refactor the code to make that understanding more immediately apparent. Then I refactor it. This is partly for the next time I pass by here, but mostly it’s because I can understand more things if I clarify the code as I’m going along. The other driver of refactoring here is a design that does not help me add a feature easily. R
+  The most common time to refactor is when I want to add a new feature to some software. Often the first reason to refactor here is to help me understand some code I need to modify. This code may have been written by someone else, or I may have written it. Whenever I have to think to understand what the code is doing, I ask myself if I can refactor the code to make that understanding more immediately apparent. Then I refactor it. This is partly for the next time I pass by here, but mostly it’s because I can understand more things if I clarify the code as I’m going along. The other driver of refactoring here is a design that does not help me add a feature easily.
 
 * Refactor When You Need to Fix a Bug
 
@@ -80,17 +77,72 @@ How should we refactor
 
 (J: two kinds of refacotr: add indirection, remove indirection)
 
-Before you start refactoring, check that you have a solid suite of tests. These tests must be self-checking (assertions). R
+Before you start refactoring, check that you have a solid suite of tests. These tests must be self-checking (assertions).
 
-While refactoring you should focus on clarity, and then later focus on performance as a separate activity. Almost all the time extra method calls won’t matter; in the rare cases they do, they can be dealt with later. Indeed by refactoring you often get opportunities to make better performance improvements. R
+While refactoring you should focus on clarity, and then later focus on performance as a separate activity. Almost all the time extra method calls won’t matter; in the rare cases they do, they can be dealt with later. Indeed by refactoring you often get opportunities to make better performance improvements.
 
 (J: so when you write fresh new code, what should bear in mind? make the code clean & fast, if you can't, make it clean, and make it fast later.)
 
-Most refactorings reduce the amount of code, but this one increases it. That's because Java 1.1 requires a lot of statements to set up a summing loop. Even a simple summing loop with one line of code per element needs six lines of support around it. It's an idiom that is obvious to any programmer but is a lot of lines all the same. O
+Most refactorings reduce the amount of code, but this one increases it. That's because Java 1.1 requires a lot of statements to set up a summing loop. Even a simple summing loop with one line of code per element needs six lines of support around it. It's an idiom that is obvious to any programmer but is a lot of lines all the same.
 
 (J: see why I left Java?)
 
-It is a bad idea to do a case based on an attribute of another object. If you must use a case statement, it should be on your own data, not on someone else’s. R
+It is a bad idea to do a case based on an attribute of another object. If you must use a case statement, it should be on your own data, not on someone else’s.
 
-When you use refactoring to develop software, you divide your time between two distinct activities: adding function and refactoring. When you add function, you shouldn’t be changing existing code; you are just adding new capabilities. You can measure your progress by adding tests and getting the tests to work. When you refactor, you make a point of not adding function; you only restructure the code. You don’t add any tests (unless you find a case you missed earlier); you only restructure the code. Additionally, you only change tests when you absolutely need to in order to cope with a change in an interface. OR
+When you use refactoring to develop software, you divide your time between two distinct activities: adding function and refactoring. When you add function, you shouldn’t be changing existing code; you are just adding new capabilities. You can measure your progress by adding tests and getting the tests to work. When you refactor, you make a point of not adding function; you only restructure the code. You don’t add any tests (unless you find a case you missed earlier); you only restructure the code. Additionally, you only change tests when you absolutely need to in order to cope with a change in an interface.
 
+
+Bad Smells
+----------
+
+* Duplicated Code
+
+* Long Method: The real key to making it easy to understand small methods is good naming. If you have a good name for a method you don’t need to look at the body. A heuristic we follow is that whenever we feel the need to comment something, we write a method instead. Such a method contains the code that was commented but is named after the intention of the code rather than how it does it. We may do this on a group of lines or on as little as a single line of code. We do this even if the method call is longer than the code it replaces, provided the method name explains the purpose of the code. The key here is not method length but the semantic distance between what the method does and how it does it.
+
+* Large Class
+
+* Long Parameter List: In our early programming days we were taught to pass in as parameters everything needed by a routine. This was understandable because the alternative was global data, and global data is evil and usually painful. Objects change this situation because if you don’t have something you need, you can always ask another object to get it for you. Thus with objects you don’t pass in everything the method needs; instead you pass enough so that the method can get to everything it needs. A lot of what a method needs is available on the method’s host class. In object-oriented programs parameter lists tend to be much smaller than in traditional programs.
+
+* Divergent Change: Divergent change occurs when one class is commonly changed in different ways for different reasons. (J: single responsibility)
+
+* Shotgun Surgery: Shotgun surgery is similar to divergent change but is the opposite. You whiff this when every time you make a kind of change, you have to make a lot of little changes to a lot of different classes. Divergent change is one class that suffers many kinds of changes, and shotgun surgery is one change that alters many classes. Either way you want to arrange things so that, ideally, there is a one-to-one link between common changes and classes.
+
+(J: mapping between Class and Change .. brilliant. Is OO a way to model our world? NO.)
+
+* Feature Envy: The whole point of objects is that they are a technique to package data with the processes used on that data. A classic smell is a method that seems more interested in a class other than the one it actually is in. The fundamental rule of thumb is to put things together that change together.
+
+* Data Clumps
+
+* Primitive Obsession
+
+* Case Statement: Most times when you see a case statement you should consider polymorphism. If you only have a few cases that affect a single method, and you don’t expect them to change, then polymorphism is overkill. 
+
+* Parallel Inheritance Hierachies: Parallel inheritance hierarchies is really a special case of shotgun surgery. In this case, every time you make a subclass of one class, you also have to make a subclass of another. The general strategy for eliminating the duplication is to make sure that instances of one hierarchy refer to instances of the other. If you use Move Method and Move Field, the hierarchy on the referring class disappears. (J: I still don't understand how to fix this ..)
+
+* Useless/Lazy Class
+
+* Speculative Generality: speculative useless codes
+
+* Temporary Field: Sometimes you see an object in which an instance variable is set only in certain circumstances. Such code is difficult to understand, because you expect an object to need all of its variables. Trying to understand why a variable is there when it doesn’t seem to be used can drive you nuts. Use Extract Class to create a home for the poor orphan variables. Put all the code that concerns the variables into the component. You may also be able to eliminate conditional code by using Introduce Null Object to create an alternative component for when the variables aren’t valid. A common case of temporary field occurs when a complicated algorithm needs several variables. Because the implementer didn’t want to pass around a huge parameter list (who does?), he put them in instance variables. But the instance variables are valid only during the algorithm; in other contexts they are just plain confusing. In this case you can use Extract Class with these variables and the methods that require them. The new object is a Method Object [Beck].
+
+* Message Chains: Navigating this way means the client is coupled to the structure of the navigation. Any change to the intermediate relationships causes the client to have to change. But not all message chains are bad. In principle you can apply Hide Delegate to potentially every object in the chain, but doing this often turns every intermediate object into a middle man. Often a better alternative is to see what the resulting object is used for. See whether you can use Extract Method to take a piece of the code that uses it and then Move Method to push it down the chain. If several clients of one of the objects in the chain want to navigate the rest of the way, add a method to do that.
+
+* Middle Man: You look at a class’s interface and find half the methods are delegating to this other class. After a while it is time to use Remove Middle Man and talk to the object that really knows what’s going on. If only a few methods aren’t doing much, use Inline Method to inline them into the caller. If there is additional behavior, you can use Replace Delegation with Hierarchy to turn the real object into a module and include it in the middle man. That allows you to extend behavior without chasing all that delegation.
+
+* Inappropriate Intimacy
+
+* Alternative Classes with Different Interfaces (J: classes which do the same thing but have different interface)
+
+* Incomplete Library Class: Reuse is often touted as the purpose of objects. We think reuse is overrated (we just use). Library may lack sth., we need to fix them. (J: this looks like a relative useless smell)
+
+* Data Class (Thin model)
+
+* Refused Bequest: Subclasses get to inherit the methods and data of their parents. But what if they don’t want or need what they are given? They are given all these great gifts and pick just a few to play with. The traditional story is that this means the hierarchy is wrong. You need to create a new sibling class and use Push Down Method to push all the unused methods to the sibling. That way the parent holds only what is common. You’ll guess from our snide use of “traditional” that we aren’t going to advise this, at least not all the time. We do subclassing to reuse a bit of behavior all the time, and we find it a perfectly good way of doing business. There is a smell, we can’t deny it, but usually it isn’t a strong smell. So we say that if the refused bequest is causing confusion and problems, follow the traditional advice. However, don’t feel you have to do it all the time. Nine times out of ten this smell is too faint to be worth cleaning. The smell of refused bequest is much stronger if the subclass is reusing behavior but does not want to support the public methods of the superclass. We don’t mind refusing implementations, but refusing public methods gets us on our high horses. In this case, however, don’t fiddle with the hierarchy; you want to gut it by applying Replace Inheritance with Delegation.
+
+* Comments: In our olfactory analogy, comments aren’t a bad smell; indeed they are a sweet smell. The reason we mention comments here is that comments often are used as a deodorant. It’s surprising how often you look at thickly commented code and notice that the comments are there because the code is bad. When you feel the need to write a comment, first try to refactor the code so that any comment becomes superfluous. A good time to use a comment is when you don’t know what to do. In addition to describing what is going on, comments can indicate areas in which you aren’t sure. A comment is a good place to say why you did something. This kind of information helps future modifiers, especially forgetful ones.
+
+* Metaprogramming Madness
+
+* Disjointed API: Libraries are often written with flexibility as the number one priority. The author needs to build in this flexibility so that her library can be used by many different people in many different ways. This flexibility often presents itself as a relatively fine-grained, disjointed API, with many configuration options. More often than not, an individual project will not take advantage of all the configuration options. The same configuration options will be used over and over. If this is the case, use Introduce Gateway to interact with the API in a simplified way. Introduce Expression Builder can be applied to both internal and external APIs to interact with the public interface in a more fluent manner.
+
+* Repetitive Boilerplate: Introduce Class Annotation involves annotating a class by calling a class method from the class definition in the same way that attr_reader is called. Most code isn’t simple enough to declare in this way, but when the purpose of the code can be captured clearly in a declarative statement, Introduce Class Annotation can clarify the intention of your code.
