@@ -1,3 +1,5 @@
+(J: some paragraph is ended with an 'R', which means those are new stuff in ruby edition)
+
 What is Refactoring
 -------------------
 
@@ -141,8 +143,26 @@ Bad Smells
 
 * Comments: In our olfactory analogy, comments aren’t a bad smell; indeed they are a sweet smell. The reason we mention comments here is that comments often are used as a deodorant. It’s surprising how often you look at thickly commented code and notice that the comments are there because the code is bad. When you feel the need to write a comment, first try to refactor the code so that any comment becomes superfluous. A good time to use a comment is when you don’t know what to do. In addition to describing what is going on, comments can indicate areas in which you aren’t sure. A comment is a good place to say why you did something. This kind of information helps future modifiers, especially forgetful ones.
 
-* Metaprogramming Madness
+* Metaprogramming Madness. R
 
-* Disjointed API: Libraries are often written with flexibility as the number one priority. The author needs to build in this flexibility so that her library can be used by many different people in many different ways. This flexibility often presents itself as a relatively fine-grained, disjointed API, with many configuration options. More often than not, an individual project will not take advantage of all the configuration options. The same configuration options will be used over and over. If this is the case, use Introduce Gateway to interact with the API in a simplified way. Introduce Expression Builder can be applied to both internal and external APIs to interact with the public interface in a more fluent manner.
+* Disjointed API: Libraries are often written with flexibility as the number one priority. The author needs to build in this flexibility so that her library can be used by many different people in many different ways. This flexibility often presents itself as a relatively fine-grained, disjointed API, with many configuration options. More often than not, an individual project will not take advantage of all the configuration options. The same configuration options will be used over and over. If this is the case, use Introduce Gateway to interact with the API in a simplified way. Introduce Expression Builder can be applied to both internal and external APIs to interact with the public interface in a more fluent manner. R
 
-* Repetitive Boilerplate: Introduce Class Annotation involves annotating a class by calling a class method from the class definition in the same way that attr_reader is called. Most code isn’t simple enough to declare in this way, but when the purpose of the code can be captured clearly in a declarative statement, Introduce Class Annotation can clarify the intention of your code.
+* Repetitive Boilerplate: Introduce Class Annotation involves annotating a class by calling a class method from the class definition in the same way that attr_reader is called. Most code isn’t simple enough to declare in this way, but when the purpose of the code can be captured clearly in a declarative statement, Introduce Class Annotation can clarify the intention of your code. R
+
+
+Building Tests
+--------------
+
+(J: Refactoring require tests. In short: tests is the foundation of refactoring. If you want to refactor code which have no tests, add auto tests for it first.)
+
+The tests I’m talking about are developer tests. I write them to improve my productivity as a programmer. Making the quality assurance department happy is just a side effect. Quality assurance tests are a different animal. They are written to ensure the software as a whole works. They provide quality assurance to the customer and don’t care about programmer productivity. They should be developed by a different team, one who delights in finding bugs. This team uses heavyweight tools and techniques to help them do this.
+
+When you get a bug report, start by writing a unit test that exposes the bug.
+
+Now we should continue adding more tests. The style I follow is to look at all the things the class should do and test each one of them for any conditions that might cause the class to fail. This is not the same as “test every public method,” which some programmers advocate. Testing should be risk driven; remember, you are trying to find bugs now or in the future. So I don’t test accessors that just read and write. Because they are so simple, I’m not likely to find a bug there.
+
+It is better to write and run incomplete tests than not to run complete tests. Think of the boundary conditions under which things might go wrong and concentrate your tests there.
+
+When do you stop? I’m sure you have heard many times that you cannot prove a program has no bugs by testing. That’s true but does not affect the ability of testing to speed up programming. I’ve seen various proposals for rules to ensure you have tested every combination of everything. It’s worth taking a look at these, but don’t let them get to you. There is a point of diminishing returns with testing, and there is the danger that by trying to write too many tests, you become discouraged and end up not writing any. You should concentrate on where the risk is. Look at the code and see where it becomes complex. Look at the function and consider the likely areas of error. Your tests will not find every bug, but as you refactor you will understand the program better and thus find more bugs. Although I always start refactoring with a test suite, I invariably add to it as I go along.
+
+A difference between test code and production code is that it is okay to copy and edit test code.
