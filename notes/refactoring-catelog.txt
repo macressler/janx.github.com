@@ -5,7 +5,79 @@ A large part of my refactoring is composing methods to package code properly. Al
 
 * Extract Method: Turn the fragment into a method whose name explains the purpose of the method. 
 
-                  I prefer short, well-named methods for several reasons. First, it increases the chances that other methods can use a method when the method is finely grained. Second, it allows the higher-level methods to read more like a series of comments. Overriding also is easier when the methods are finely grained. It does take a little getting used to if you are used to seeing larger methods. And small methods really work only when you have good names, so you need to pay attention to naming. People sometimes ask me what length I look for in a method. To me length is not the issue. The key is the semantic distance between the method name and the method body. If extracting improves clarity, do it, even if the name is longer than the code you have extracted.
+    I prefer short, well-named methods for several reasons. First, it increases the chances that other methods can use a method when the method is finely grained. Second, it allows the higher-level methods to read more like a series of comments. Overriding also is easier when the methods are finely grained. It does take a little getting used to if you are used to seeing larger methods. And small methods really work only when you have good names, so you need to pay attention to naming. People sometimes ask me what length I look for in a method. To me length is not the issue. The key is the semantic distance between the method name and the method body. If extracting improves clarity, do it, even if the name is longer than the code you have extracted.
 
-                  Name it by what it does, not by how it does it. If the code you want to extract is very simple, such as a single message or function call, you should extract it if the name of the new method reveals the intention of the code in a better way. If you can’t come up with a more meaningful name, don’t extract the code.
+    Name it by what it does, not by how it does it. If the code you want to extract is very simple, such as a single message or function call, you should extract it if the name of the new method reveals the intention of the code in a better way. If you can’t come up with a more meaningful name, don’t extract the code.
 
+* Inline Method: A method’s body is just as clear as its name. Put the method’s body into the body of its callers and remove the method. Another time to use Inline Method is when you have a group of methods that seem badly factored. You can inline them all into one big method and then re-extract the methods.
+
+* Inline Temp: You have a temp that is assigned to once with a simple expression, and the temp is getting in the way of other refactorings. Replace all references to that temp with the expression.
+
+* Replace Temp with Query: You are using a temporary variable to hold the result of an expression. Extract the expression into a method. Replace all references to the temp with the expression. The new method can then be used in other methods.
+
+    The problem with temps is that they are temporary and local. Because they can be seen only in the context of the method in which they are used, temps tend to encourage longer methods, because that’s the only way you can reach the temp. By replacing the temp with a query method, any method in the class can get at the information. That helps a lot in coming up with cleaner code for the class. Replace Temp with Query often is a vital step before Extract Method. Local variables make it difficult to extract, so replace as many variables as you can with queries. The straightforward cases of this refactoring are those in which temps are assigned only to once and those in which the expression that generates the assignment is free of side effects. Other cases are trickier but possible.
+
+    Temps often are used to store summary information in loops. The entire loop can be extracted into a method; this removes several lines of noisy code. Sometimes a loop may be used to sum up multiple values. When this is the case, duplicate the loop for each temp so that you can replace each temp with a query. The loop should be simple, so there is little danger in duplicating the code. You may be concerned about performance in this case. As with other performance issues, let it slide for the moment. Nine times out of ten, it won’t matter. When it does matter, you will fix the problem during optimization. With your code better factored, you often find more powerful optimizations that you would have missed without refactoring. If worse comes to worst, it’s easy to put the temp back.
+
+(J: temp vars will confuse your brain)
+
+* Replace Temp with Chain: You are using a temporary variable to hold the result of an expression. Change the methods to support chaining, thus removing the need for a temp. (R)
+
+    At first glance, Replace Temp With Chain might seem to be in direct contrast to Hide Delegate. The important difference is that Hide Delegate should be used to hide the fact that an object of one type needs to delegate to an object of another type. It is about encapsulation—the calling object should not reach down through a series of subordinate objects to request information—it should tell the nearest object to do a job for it. Replace Temp With Chain, on the other hand, involves only one object. It’s about improving the fluency of one object by allowing chaining of its method calls.
+
+* Introduce Explainning Variable: You have a complicated expression. Put the result of the expression, or parts of the expression, in a temporary variable with a name that explains the purpose.
+
+    In this, and the two refactorings that follow, we introduce temporary variables. It should be stated that temps should not be introduced lightly. Extraneous temporary variables are not a good thing: They can clutter method bodies and distract the reader, hindering their understanding of the code. So why do we introduce them? It turns out that in some circumstances, temporary variables can make code a little less ugly. But whenever I’m tempted to introduce a temporary variable, I ask myself if there’s another option. In the case of Introduce Explaining Variable, I almost always prefer to use Extract Method if I can. A temp can only be used within the context of one method. A method is useful throughout the object and to other objects. There are times, however, when other local variables make it difficult to use Extract Method. That’s when I bite the bullet and use a temp.
+
+(J: extract method is better, but when you can't extract method, introduce explainning var)
+
+* Split Temporary Variable: You have a temporary variable assigned to more than once, but it is not a loop variable nor a collecting temporary variable. Make a separate temporary variable for each assignment.
+
+    Temporary variables are made for various uses. Some of these uses naturally lead to the temps being assigned to several times. Loop variables change for each run around a loop. Collecting temporary variables [Beck] collect together some value that is built up during the method. Many other temporaries are used to hold the result of a long-winded bit of code for easy reference later. These kinds of variables should be set only once. That they are set more than once is a sign that they have more than one responsibility within the method. Any variable with more than one responsibility should be replaced with a temp for each responsibility. Using a temp for two different things is confusing for the reader.
+
+* Remove Assignments to Parameters: The code assigns to a parameter. Use a temporary variable instead.
+
+* Replace Method with Method Object: You have a long method that uses local variables in such a way that you cannot apply Extract Method. Turn the method into its own object so that all the local variables become instance variables on that object. You can then decompose the method into other methods on the same object.
+
+* Substitute Algorithm: You want to replace an algorithm with one that is clearer. Replace the body of the method with the new algorithm.
+
+* Replace Loop with Collection Closure Method: You are processing the elements of a collection in a loop. Replace the loop with a collection closure method. (J: use Enumerable module more). If you finish a line with a period, Ruby knows not to treat the end of line as a statement terminator. When the series of pipes and filters becomes so complex that it’s no longer easy to understand, you might want to consider writing a custom traversal method whose name explains the purpose of the traversal. (R)
+
+* Extract Surrounding Method: You have two methods that contain nearly identical code. The variance is in the middle of the method. Extract the duplication into a method that accepts a block and yields back to the caller to execute the unique code. (R)
+
+* Introduce Class Annotation: You have a method whose implementation steps are so common that they can safely be hidden away. Declare the behavior by calling a class method from the class definition. (R)
+
+* Introduce Named Parameter: The parameters in a method call cannot easily be deduced from the name of the method you are calling. Convert the parameter list into a Hash, and use the keys of the Hash as names for the parameters. (R)
+
+    So much of object-oriented design depends on the effectiveness of the abstractions that you create. Let’s say you have object A that delegates to object B, which in turn delegates to object C. It is much easier to understand the algorithm if each object can be synthesized in isolation by the reader. To provide for this, the clarity of the public interface of the object being delegated to is important. If object B’s public interface represents a cohesive piece of behavior with a well-named class, well-named methods, and parameter lists that make sense given the name of the method, a reader is less likely to have to delve into the details of object B to understand object A. Without this clear abstraction around the behavior of object B, the reader will have to move back and forth between object A and object B (and perhaps object C as well), and understanding of the algorithm will be much more difficult.
+
+* Remove Named Parameter: The fluency that the named parameter brings is no longer worth the complexity on the receiver. Convert the named parameter Hash to a standard parameter list. (R)
+
+    Introduce Named Parameter brings a fluency to the calling code that can be beneficial. But named parameters do come at a price—they add complexity to the receiving method. The parameters are clumped together into one Hash, which can rarely have a better name than “params” or “options”, because the parameters contained within the Hash are not cohesive enough to have a domain-related name. Even if they are named well, it is impossible to tell exactly the contents of the Hash, without examining the method body or the calling code. Most of the time, this added complexity is worth the increased readability on the calling side, but sometimes the receiver changes in such a way that the added complexity is no longer justified. Perhaps the number of parameters has reduced, or one of the optional parameters becomes required, so we remove the required parameter from the named parameter Hash. Or perhaps we perform Extract Method or Extract Class and take only one of the parameters with us. The newly created method or class might now be able to be named in such a way that the parameter is obvious. In these cases, you want to remove the named parameter.
+
+* Remove Unused Default Parameter: A parameter has a default value, but the method is never called without the parameter. Remove the default value. Unused flexibility in software is a bad thing. Maintenance of this flexibility takes time, allows opportunities for bugs, and makes refactoring more difficult. (R)
+
+* Dynamic Method Definition: You have methods that can be defined more concisely if defined dynamically. Define the methods dynamically. (R)
+  - Using def_each to Define Similar Methods
+  - Defining Instance Methods with a Class Annotation
+  - Defining Methods By Extending a Dynamically Defined Module
+
+* Replace Dynamic Receptor: with Dynamic Method Definition: You have methods you want to handle dynamically without the pain of debugging method_missing. Use dynamic method definition to define the necessary methods. (R)
+
+    Debugging classes that use method_missing can often be painful. At best you often get a NoMethodError on an object that you didn’t expect, and at worst you get stack level too deep (SystemStackError). There are times that method_missing is required. If the object must support unexpected method calls you may not be able to avoid the use of method_missing. However, often you know how an object will be used and using Dynamic Method Definition you can achieve the same behavior without relying on method_missing.
+
+* Isolate Dynamic Receptor: A class utilizing method_missing has become painful to alter. Introduce a new class and move the method_missing logic to that class. (R)
+
+    Despite the added complexity, method_missing is a powerful tool that needs to be used when the interface of a class cannot be predetermined. On those occasions I like to use Isolate Dynamic Receptor to move the method_missing behavior to a new class: a class whose sole responsibility is to handle the method_missing cases. By design the functionality of method_missing should handle any unknown message, but how do you know if you’ve broken something by adding an explicitly defined method? The solution to this problem is to introduce an additional class that has the single responsibility of handling the dynamic method calls. 
+
+    Very often it’s possible to know all valid method calls ahead of time, in which case I prefer Replace Dynamic Receptor with Dynamic Method Definition.
+
+(J: method_missing is evil)
+
+* Move Eval from Runtime to Parse Time: You need to use eval but want to limit the number of times eval is necessary. Move the use of eval from within the method definition to defining the method itself. (R)
+
+    As Donald Knuth once said, “Premature optimization is the root of all evil”. I’ll never advocate for premature optimization, but this refactoring can be helpful when you determine that eval is a source of performance pain. The Kernel#eval method can be the right solution in some cases, but it is almost always more expensive (in terms of performance) than its alternatives. In the cases where eval is necessary, it’s often better to move an eval call from runtime to parse time.
+
+    The only step to do this refactoring is Expand the scope of the string being eval’d. It’s also worth noting that evaluating the entire method definition allows you to change the define_method to def in this example. All current versions of Ruby execute methods defined with def significantly faster than methods defined using define_method; therefore, this refactoring could yield benefits for multiple reasons. Of course, you should always measure to ensure that you’ve actually refactored in the right direction.
+
+(J: this is tricky)
