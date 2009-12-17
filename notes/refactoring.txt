@@ -1,4 +1,4 @@
-(J: some paragraph is ended with an 'R', which means those are new stuff in ruby edition)
+(J: some paragraph is ended with an 'O'/'R', which means those are stuff only in original/ruby edition)
 
 What is Refactoring
 -------------------
@@ -166,3 +166,18 @@ It is better to write and run incomplete tests than not to run complete tests. T
 When do you stop? I’m sure you have heard many times that you cannot prove a program has no bugs by testing. That’s true but does not affect the ability of testing to speed up programming. I’ve seen various proposals for rules to ensure you have tested every combination of everything. It’s worth taking a look at these, but don’t let them get to you. There is a point of diminishing returns with testing, and there is the danger that by trying to write too many tests, you become discouraged and end up not writing any. You should concentrate on where the risk is. Look at the code and see where it becomes complex. Look at the function and consider the likely areas of error. Your tests will not find every bug, but as you refactor you will understand the program better and thus find more bugs. Although I always start refactoring with a test suite, I invariably add to it as I go along.
 
 A difference between test code and production code is that it is okay to copy and edit test code.
+
+
+Finding References
+------------------
+
+Don't just search and replace blindly. Inspect each reference to ensure it really refers to the thing you are replacing. You can be clever with your search pattern, but I always check mentally to ensure I am making the right replacement. If you can use the same method name on different classes or methods of different signatures on the same class, there are too many chances you will get it wrong.
+
+In a strongly typed language, you can let the compiler help you do the hunting. You can often remove the old feature and let the compiler find the dangling references. The good thing about this is that the compiler will catch every dangling reference. However, there are problems with this technique. First, the compiler will become confused when a feature is declared more than once in an inheritance hierarchy. This is particularly true when you are looking at a method that is overridden several times. If you are working in a hierarchy, use the text search to see whether any other class declares the method you are manipulating. The second problem is that the compiler may be too slow to be effective. If so, use a text search first; at least the compiler double-checks your work. This only works when you intend to remove the feature. Often you want to look at all the uses to decide what to do next. In these cases you have to use the text search alternative. A third problem is that the compiler can't catch uses of the reflection API. This is one reason to be wary of using reflection. If your system uses reflection you will have to use text searches to find things and put additional weight on your testing. In a number of places I suggest compiling without testing in situations in which the compiler usually catches errors. If you use reflection, all such bets are off, and you should test with many of these compiles. O
+
+
+Refactoring and Patterns
+------------------------
+
+Many of the refactorings, such as Replace Type Code with State/Strategy and Form Template Method are about introducing patterns into a system. As the essential Gang of Four book says, "Design Patterns ... provide targets for your refactorings." There is a natural relation between patterns and refactorings. Patterns are where you want to be; refactorings are ways to get there from somewhere else. I don't have refactorings for all known patterns in this book, not even for all the Gang of Four patterns [Gang of Four]. This is another aspect of the incompleteness of this catalog. I hope someday the gap will be closed. O
+
