@@ -81,3 +81,50 @@ A large part of my refactoring is composing methods to package code properly. Al
     The only step to do this refactoring is Expand the scope of the string being eval’d. It’s also worth noting that evaluating the entire method definition allows you to change the define_method to def in this example. All current versions of Ruby execute methods defined with def significantly faster than methods defined using define_method; therefore, this refactoring could yield benefits for multiple reasons. Of course, you should always measure to ensure that you’ve actually refactored in the right direction.
 
 (J: this is tricky)
+
+
+Moving Features Between Objects
+-------------------------------
+
+One of the most fundamental, if not the fundamental, decision in object design is deciding where to put responsibilities.
+
+* Move Method: A method is, or will be, using or used by more features of another class than the class on which it is defined. Create a new method with a similar body in the class it uses most. Either turn the old method into a simple delegation, or remove it altogether.
+
+    Moving methods is the bread and butter of refactoring. I move methods when classes have too much behavior or when classes are collaborating too much and are too highly coupled. By moving methods around, I can make the classes simpler, and they end up being a more crisp implementation of a set of responsibilities.
+
+* Move Field: A field is, or will be, used by another class more than the class on which it is defined. Create a new attribute reader (and if necessary, a writer) in the target class, and change all its users.
+
+    Moving state and behavior between classes is the essence of refactoring. As the system develops, you find the need for new classes and the need to shuffle responsibilities around. A design decision that is reasonable and correct one week can become incorrect in another. That is not a problem; the only problem is not to do something about it.
+
+    I consider moving a field if I see more methods on another class using the information in the field than the class itself. I may choose to move the methods; this decision is based on interface. But if the methods seem sensible where they are, I move the field. Another reason for field moving is when doing Extract Class. In that case the fields go first and then the methods.
+
+* Extract Class: You have one class doing work that should be done by two. Create a new class and move the relevant fields and methods from the old class into the new class.
+
+    If I choose to expose the class, I need to consider the dangers of aliasing. If I expose the telephone number and a client changes the area code in that object, how do I feel about it? It may not be a direct client that makes this change. It might be the client of a client of a client.  I have the following options:
+
+      • I accept that any object may change any part of the telephone number. This makes the telephone number a reference object, and I should consider Change Value to Reference. In this case the person would be the access point for the telephone number.
+
+      • I don’t want anybody to change the value of the telephone number without going through the person. I should make the telephone number immutable.
+
+      • A third option that reduces that confusion is to clone and then freeze the telephone number before passing it out.
+
+    Extract Class is a common technique for improving the liveness of a concurrent program because it allows you to have separate locks on the two resulting classes. If you don’t need to lock both objects you don’t have to. For more on this see Brian Goetz’s book Java Concurrency in Practice [Goetz]. However, there is a danger there. If you need to ensure that both objects are locked together, you get into the area of transactions and other kinds of shared locks. This is complex territory and requires heavier machinery than it is typically worth. Transactions are useful when you use them, but writing transaction managers is more than most programmers should attempt.
+
+* Inline Class: A class isn’t doing very much. Move all its features into another class and delete it.
+
+* Hide Delegate: A client is calling a delegate class of an object. Create methods on the server to hide the delegate.
+
+    One of the keys, if not the key, to objects is encapsulation. Encapsulation means that objects need to know less about other parts of the system. Then when things change, fewer objects need to be told about the change - which makes the change easier to make.
+
+* Remove Middle Man: A class is doing too much simple delegation. Get the client to call the delegate directly. (J: reversion of Hide Delegate)
+
+    In the motivation for Hide Delegate, I talked about the advantages of encapsulating the use of a delegated object. There is a price for this. The price is that every time the client wants to use a new feature of the delegate, you have to add a simple delegating method to the server. After adding features for a while, it becomes painful. The server class is just a middle man, and perhaps it’s time for
+the client to call the delegate directly.
+
+    It’s hard to figure out what the right amount of hiding is. Fortunately, with Hide Delegate and Remove Middle Man it does not matter so much. You can adjust your system as time goes on. As the system changes, the basis for how much you hide also changes. A good encapsulation six months ago may be awkward now. Refactoring means you never have to say you’re sorry: You just fix it.
+
+(J: I'm not convinced. I think most time you don't need these two refactoring.)
+
+* Introducing Foreign Method: A server class you are using needs an additional method, but you can't modify the class. Create a method in the client class with an instance of the server class as its first argument. (O)
+
+* Introduce Local Extension: A server class you are using needs several additional methods, but you can't modify the class. Create a new class that contains these extra methods. Make this extension class a subclass or a wrapper of the original. (O)
