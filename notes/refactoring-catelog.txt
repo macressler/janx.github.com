@@ -175,7 +175,9 @@ Organizing Data
       end
     end
 
-* Replace Hash with Object: You have a Hash that stores several different types of objects, and is passed around and used for more than one purpose. Replace the Hash with an object that has a field for each key.
+* Duplicate Observed Data: You have domain data available only in a GUI control, and domain methods need access. Copy the data to a domain object. Set up an observer to synchronize the two pieces of data. (O)
+
+* Replace Hash with Object: You have a Hash that stores several different types of objects, and is passed around and used for more than one purpose. Replace the Hash with an object that has a field for each key. (R)
 
 * Change Unidirectional Association to Bidirectional: You have two classes that need to use each other’s features, but there is only a one-way link. Add back pointers, and change modifiers to update both sets.
 
@@ -191,13 +193,19 @@ Organizing Data
 
 * Replace Magic Number with Symbolic Constant: You have a literal number with a particular meaning. Create a constant, name it after the meaning, and replace the number with it.
 
+* Encapsulate Field: There is a public field. Make it private and provide accessors. (O)
+
 * Encapsulate Collection: A method returns a collection. Make it return a copy of the collection (J: collection.dup) and provide add/remove methods.
 
     Often a class contains a collection of instances. This collection might be an Array or a Hash. Such cases often have the usual attribute reader and writer for the collection. However, collections should use a protocol slightly different from that for other kinds of data. The attribute reader should not return the collection object itself, because that allows clients to manipulate the contents of the collection without the owning class knowing what is going on. It also reveals too much to clients about the object’s internal data structures. An attribute reader for a multivalued attribute should return something that prevents manipulation of the collection and hides unnecessary details about its structure. In addition there should not be an attribute writer for the collection: rather, there should be operations to add and remove elements. This gives the owning object control over adding and removing elements from the collection. With this protocol the collection is properly encapsulated, which reduces the coupling of the owning class to its clients.
 
 * Replace Record with Data Class: You need to interface with a record structure in a traditional programming environment. Make a dumb data object for the record.
 
-* Replace Type Code with Polymorphism: You have a type code that affects the behavior of a class. Replace the type code with classes: one for each type code variant.
+* Replace Type Code with Class: A class has a numeric type code that does not affect its behavior. Replace the number with a new class. (O) (J: this looks like a bad refactoring)
+
+* Replace Type Code with Subclasses: You have an immutable type code that affects the behavior of a class. Replace the type code with subclasses. (O)
+
+* Replace Type Code with Polymorphism: You have a type code that affects the behavior of a class. Replace the type code with classes: one for each type code variant. (R)
 
     There are three different refactorings to consider when you’re trying to remove conditional logic: Replace Type Code with Polymorphism, Replace Type Code with Module Extension, or Replace Type Code with State/Strategy. The choice depends on relatively subtle design differences.
 
@@ -207,7 +215,7 @@ Organizing Data
 
     The great thing about Ruby is that you can do Replace Type Code with Polymorphism without inheritance or implementing an interface.
 
-* Replace Type Code with Module Extension: You have a type code that affects the behavior of a class. Replace the type code with dynamic module extension.
+* Replace Type Code with Module Extension: You have a type code that affects the behavior of a class. Replace the type code with dynamic module extension. (R)
 
 * Replace Type Code with State/Strategy: You have a type code that affects the behavior of a class and the type code changes at runtime. Replace the type code with a state object.
 
@@ -215,10 +223,10 @@ Organizing Data
 
     You create subclasses to add features or allow behavior to vary. One form of variant behavior is the constant method [Beck]. A constant method is one that returns a hard-coded value. This can be useful on subclasses that return different values for an accessor. You define the accessor in the superclass and override it with different values on the subclass. Although constant methods are useful, a subclass that consists only of constant methods is not doing enough to justify its existence. You can remove such subclasses completely by putting fields in the superclass. By doing that you remove the extra complexity of the subclasses.
 
-* Lazily Initialized Attribute: Initialize an attribute on access instead of at construction time. (J: ||=)
+* Lazily Initialized Attribute: Initialize an attribute on access instead of at construction time. (R) (J: ||=)
 
     Using ||= for Lazily Initialized Attributes is a common idiom; however, this idiom falls down when nil or false are valid values for the attribute. Use instance_variable_defined? then.
 
-* Eagerly Initialized Attribute: Initialize an attribute at construction time instead of on the first access. (J: I prefer eager loading in most place)
+* Eagerly Initialized Attribute: Initialize an attribute at construction time instead of on the first access. (R) (J: I prefer eager loading in most place)
 
     The motivation for converting attributes to be eagerly initialized is for code readability purposes. Lazily initialized attributes change their value upon access. Lazily initialized attributes can be problematic to debug because their values change upon access. Eagerly Initialized Attributes initialize their attributes in the constructor of the class. This leads to encapsulating all initialization logic in the constructor and consistent results when querying the value of the instance variable.
