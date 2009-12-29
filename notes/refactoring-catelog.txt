@@ -128,3 +128,97 @@ the client to call the delegate directly.
 * Introducing Foreign Method: A server class you are using needs an additional method, but you can't modify the class. Create a method in the client class with an instance of the server class as its first argument. (O)
 
 * Introduce Local Extension: A server class you are using needs several additional methods, but you can't modify the class. Create a new class that contains these extra methods. Make this extension class a subclass or a wrapper of the original. (O)
+
+
+Organizing Data
+---------------
+
+* Self Encapsulate Field: You are accessing a field directly, but the coupling to the field is becoming awkward. Create getting and setting methods for the field and use only those to access the field.
+
+    When it comes to accessing fields, there are two schools of thought. One is that within the class where the variable is defined, you should access the variable freely (direct variable access). The other school is that even within the class, you should always use accessors (indirect variable access). Debates between the two can be heated. (See also the discussion in Smalltalk Best Practices [Beck].)
+    
+    Essentially the advantages of indirect variable access are that it allows a subclass to override how to get that information with a method and that it supports more flexibility in managing the data, such as lazy initialization, which initializes the value only when you need to use it. The advantage of direct variable access is that the code is easier to read. You don’t need to stop and say, “This is just a getting method.” I’m always of two minds with this choice. I’m usually happy to do what the rest of the team wants to do. Left to myself, though, I like to use direct variable access as a first resort, until it gets in the way. Once things start becoming awkward, I switch to indirect variable access. Refactoring gives you the freedom to change your mind.
+    
+    The most important time to use Self Encapsulate Field is when you are accessing a field in a superclass but you want to override this variable access with a computed value in the subclass. Self-encapsulating the field is the first step. After that you can override the getting and setting methods as you need to.
+
+    When you are using self-encapsulation you have to be careful about using the setting method in the constructor. Often it is assumed that you use the setting method for changes after the object is created, so you may have different behavior in the setter than you have when initializing. In cases like this I prefer using either direct access from the constructor or a separate initialization method.
+
+* Replace Data Value with Object: You have a data item that needs additional data or behavior. Turn the data item into an object. (J: the object here is merely a value object, we can add things to it later, but not now. Value object means immutable, whenever you do assignment you're creating a new object, not modify old object. This step can be followed by next refactoring.)
+
+* Change Value to Reference: You have a class with many equal instances that you want to replace with a single object. Turn the object into a reference object.
+
+    You can make a useful classification of objects in many systems: reference objects and value objects. Reference objects are things like customer or account. Each object stands for one object in the real world, and you use the object identity to test whether they are equal. Value objects are things like date or money. They are defined entirely through their data values. You don’t mind that copies exist; you may have hundreds of “1/1/2010” objects around your system. You do need to tell whether two of the objects are equal, so you need to override the eql? method (and the hash method too).
+
+    The decision between reference and value is not always clear. Sometimes you start with a simple value with a small amount of immutable data. Then you want to give it some changeable data and ensure that the changes ripple to everyone referring to the object. At this point you need to turn it into a reference object.
+
+(J: this is a tricky refactoring, involved Factory pattern to gurantee same object have same identity. read book!)
+
+* Change Reference to Value: You have a reference object that is small, immutable, and awkward to manage. Turn it into a value object.
+
+    As with Change Value to Reference, the decision between a reference and a value object is not always clear. It is a decision that often needs reversing. The trigger for going from a reference to a value is that working with the reference object becomes awkward. Reference objects have to be controlled in some way. You always need to ask the controller for the appropriate object. The nks also can be awkward. Value objects are particularly useful for distributed and concurrent systems.
+
+    An important property of value objects is that they should be immutable. Any time you invoke a query on one, you should get the same result. If this is true, there is no problem having many objects represent the same thing. If the value is mutable, you have to ensure that changing any object also updates all the other objects that represent the same thing. That’s so much of a pain that the easiest thing to do is to make it a reference object. It’s important to be clear on what immutable means. If you have a money class with a currency and a value, that’s usually an immutable value object. That does not mean your salary cannot change. It means that to change your salary, you need to replace the existing money object with a new money object rather than changing the amount on an existing money object. Your relationship can change, but the money object itself does not.
+
+* Replace Array with Object: You have an Array in which certain elements mean different things. Replace the Array with an object that has a field for each element.
+
+  Trick: Refactor with Deprecation
+
+    class Module
+      def deprecate(methodName, &block)
+        module_eval <<-END
+          alias_method :deprecated_#{methodName}, :#{methodName}
+          def #{methodName}(*args, &block)
+            $stderr.puts "Warning: calling deprecated method #{self}.#{methodName}. This method will be removed in a future release."
+            deprecated_#{methodName}(*args, &block)
+          end
+        END
+      end
+    end
+
+* Replace Hash with Object: You have a Hash that stores several different types of objects, and is passed around and used for more than one purpose. Replace the Hash with an object that has a field for each key.
+
+* Change Unidirectional Association to Bidirectional: You have two classes that need to use each other’s features, but there is only a one-way link. Add back pointers, and change modifiers to update both sets.
+
+    The idiom is awkward enough that you should have tests, at least until you are comfortable with the idiom. Because I usually don’t bother testing accessors (the risk is not high enough), this is the rare case of a refactoring that adds a test.
+
+    Who should take the responsibility?
+
+    • If both objects are reference objects and the association is one to many, then the object that has the one reference is the controller. (That is, if one customer has many orders, the order controls the association.)
+    • If one object is a component of the other, the composite should control the association.
+    • If both objects are reference objects and the association is many to many, it doesn’t matter whether the order or the customer controls the association.
+
+* Change Bidirectional Association to Unidirectional: You have a two-way association but one class no longer needs features from the other. Drop the unneeded end of the association.
+
+* Replace Magic Number with Symbolic Constant: You have a literal number with a particular meaning. Create a constant, name it after the meaning, and replace the number with it.
+
+* Encapsulate Collection: A method returns a collection. Make it return a copy of the collection (J: collection.dup) and provide add/remove methods.
+
+    Often a class contains a collection of instances. This collection might be an Array or a Hash. Such cases often have the usual attribute reader and writer for the collection. However, collections should use a protocol slightly different from that for other kinds of data. The attribute reader should not return the collection object itself, because that allows clients to manipulate the contents of the collection without the owning class knowing what is going on. It also reveals too much to clients about the object’s internal data structures. An attribute reader for a multivalued attribute should return something that prevents manipulation of the collection and hides unnecessary details about its structure. In addition there should not be an attribute writer for the collection: rather, there should be operations to add and remove elements. This gives the owning object control over adding and removing elements from the collection. With this protocol the collection is properly encapsulated, which reduces the coupling of the owning class to its clients.
+
+* Replace Record with Data Class: You need to interface with a record structure in a traditional programming environment. Make a dumb data object for the record.
+
+* Replace Type Code with Polymorphism: You have a type code that affects the behavior of a class. Replace the type code with classes: one for each type code variant.
+
+    There are three different refactorings to consider when you’re trying to remove conditional logic: Replace Type Code with Polymorphism, Replace Type Code with Module Extension, or Replace Type Code with State/Strategy. The choice depends on relatively subtle design differences.
+
+    If the methods that use the type code make up a large portion of the class, I use Replace Type Code with Polymorphism. It’s the simplest, and just takes advantage of Ruby’s duck-typing to remove the conditional statements. It involves blowing away the original class and replacing it with a new class for each type code. Since the original class was heavily reliant on the type code, it generally makes sense for the clients of the original class to construct an instance of one of the new type classes (because they were probably injecting the type into the original class anyway).
+
+    If the class has a large chunk of behavior that doesn’t use the type code, I choose either Replace Type Code with Module Extension or Replace Type Code with State/Strategy. These have the advantage of enabling me to change the type at runtime. In the former we extend a module, mixing in the module’s behavior onto the object. Instance variables are shared automatically between the object and the module, which can simplify things. Replace Type Code with State/Strategy uses delegation: The parent object delegates to the state object for state-specific behavior. The state object can be swapped out at runtime when a change in behavior is required. Because of the delegation, sharing of instance variables between the parent object and the state object can be awkward. So the question becomes, why would you choose State/Strategy over Module Extension? It turns out that you can’t unmix a module in Ruby, so removing undesired behavior can be difficult. When the state changes become complex enough that unwanted behavior cannot be removed or overridden, I choose Replace Type Code with State/Strategy.
+
+    The great thing about Ruby is that you can do Replace Type Code with Polymorphism without inheritance or implementing an interface.
+
+* Replace Type Code with Module Extension: You have a type code that affects the behavior of a class. Replace the type code with dynamic module extension.
+
+* Replace Type Code with State/Strategy: You have a type code that affects the behavior of a class and the type code changes at runtime. Replace the type code with a state object.
+
+* Replace Subclass with Fields: You have subclasses that vary only in methods that return constant data. Change the methods to superclass fields and eliminate the subclasses.
+
+    You create subclasses to add features or allow behavior to vary. One form of variant behavior is the constant method [Beck]. A constant method is one that returns a hard-coded value. This can be useful on subclasses that return different values for an accessor. You define the accessor in the superclass and override it with different values on the subclass. Although constant methods are useful, a subclass that consists only of constant methods is not doing enough to justify its existence. You can remove such subclasses completely by putting fields in the superclass. By doing that you remove the extra complexity of the subclasses.
+
+* Lazily Initialized Attribute: Initialize an attribute on access instead of at construction time. (J: ||=)
+
+    Using ||= for Lazily Initialized Attributes is a common idiom; however, this idiom falls down when nil or false are valid values for the attribute. Use instance_variable_defined? then.
+
+* Eagerly Initialized Attribute: Initialize an attribute at construction time instead of on the first access. (J: I prefer eager loading in most place)
+
+    The motivation for converting attributes to be eagerly initialized is for code readability purposes. Lazily initialized attributes change their value upon access. Lazily initialized attributes can be problematic to debug because their values change upon access. Eagerly Initialized Attributes initialize their attributes in the constructor of the class. This leads to encapsulating all initialization logic in the constructor and consistent results when querying the value of the instance variable.
