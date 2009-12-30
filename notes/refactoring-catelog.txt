@@ -230,3 +230,77 @@ Organizing Data
 * Eagerly Initialized Attribute: Initialize an attribute at construction time instead of on the first access. (R) (J: I prefer eager loading in most place)
 
     The motivation for converting attributes to be eagerly initialized is for code readability purposes. Lazily initialized attributes change their value upon access. Lazily initialized attributes can be problematic to debug because their values change upon access. Eagerly Initialized Attributes initialize their attributes in the constructor of the class. This leads to encapsulating all initialization logic in the constructor and consistent results when querying the value of the instance variable.
+
+
+Simplifying Conditional Expressions
+-----------------------------------
+
+* Decompose Conditional: You have a complicated conditional (if-then-else) statement. Extract methods from the condition, “then” part, and “else” parts.
+
+* Recompose Conditional: You have conditional code that is unnecessarily verbose and does not use the most readable Ruby construct. Replace the conditional code with the more idiomatic Ruby construct. (R) (J: ?: ternary to || idiom, in fact I think the first one is more clear)
+
+* Consolidate Conditional Expression: You have a sequence of conditional tests with the same result. Combine them into a single conditional expression (user && and ||) and extract it. If you think the checks are really independent and shouldn’t be thought of as a single check, don’t do the refactoring. Your code already communicates your intention.
+
+* Consolidate Duplicate Conditional Fragments: The same fragment of code is in all branches of a conditional expression. Move it outside the expression.
+
+* Remove Control Flag: You have a variable that is acting as a control flag for a series of boolean expressions. Use a break or return instead. (J: extract method and return is better)
+
+      done = false
+      until done do
+         if (condition)
+           # do something
+           done = true
+         end
+         value -= 1
+      end
+
+    Such control flags are more trouble than they are worth. They come from rules of structured programming that call for routines with one entry and one exit point. I agree with (and modern languages enforce) one entry point, but the one exit point rule leads you to convoluted conditionals with these awkward flags in the code. This is why languages have break and next (or continue) statements to get out of a complex conditional. It is often surprising what you can do when you get rid of a control flag. The real purpose of the conditional becomes so much clearer.
+
+* Replace Nested Conditional with Guard Clauses: A method has conditional behavior that does not make clear the normal path of execution. Use guard clauses for all the special cases.
+
+    I often find that conditional expressions come in two forms. The first form is a check where either course is part of the normal behavior. The second form is a situation in which one answer from the conditional indicates normal behavior and the other indicates an unusual condition. These kinds of conditionals have different intentions, and these intentions should come through in the code. If both are part of normal behavior, use a condition with an if and an else leg. If the condition is an unusual condition, check the condition and return if the condition is true. This kind of check is often called a guard clause [Beck].
+
+    The key point about Replace Nested Conditional with Guard Clauses is one of emphasis. If you are using an if-then-else construct you are giving equal weight to the if leg and the else leg. This communicates to the reader that the legs are equally likely and important. Instead the guard clause says, “This is rare, and if it happens, do something and get out.”
+
+* Replace Conditional with Polymorphism: You have a conditional that chooses different behavior depending on the type of an object. Move each leg of the conditional to a method in an object that can be called polymorphically.
+
+    Polymorphism gives you many advantages. The biggest gain occurs when this same set of conditions appears in many places in the program. If you want to add a new type, you have to find and update all the conditionals. But with polymorphism you just create a new class and provide the appropriate methods. Clients of the class don’t need to know about the polymorphism, which reduces the dependencies in your system and makes it easier to update.
+
+    Polymorphism in Ruby can be achieved in a couple of ways. In its simplest form, you can implement the same method signature on multiple objects and call these methods polymorphically. You can introduce a module hierarchy and have the method that is to be called polymorphically on the module. Or you can introduce an inheritance hierarchy and have the method that is to be called polymorphically on the subclasses. In each case, the mechanics are the same.
+
+* Introduce Null Object: You have repeated checks for a nil value. Replace the nil value with a null object.
+
+    The essence of polymorphism is that instead of asking an object what type it is and then invoking some behavior based on the answer, you just invoke the behavior. The object, depending on its type, does the right thing. (J: null object is a double. haskell Maybe monad is unbelievable elegant in this scenario ..)
+
+    An interesting characteristic of using null objects is that things almost never blow up. Because the null object responds to all the same messages as a real one, the system generally behaves normally. This can sometimes make it difficult to detect or find a problem, because nothing ever breaks. Of course, as soon as you begin inspecting the objects, you’ll find the null object somewhere where it shouldn’t be. Remember, null objects are always constant; nothing about them ever changes. Accordingly, we implement them using the Singleton pattern [Gang of Four]. Whenever you ask, for example, for a missing person, you always get the single instance of that class.
+
+    Ruby allows us two main options for implementing the null object. The traditional route (and the only one available in statically typed languages without extracting an interface on the original class) is to create a subclass of the source class. This way the null object will respond to all the messages that the source class responds to. This is convenient but may lead to bugs if the null object lands in a spot where the default behavior of the source class is undesirable. The other option is to create a new class that does not inherit from the source class, only defining the methods that you want to be able to handle from the null object. This may be more work but is less likely to introduce subtle misbehavior.
+
+    When not subclassing the source class, there’s another option to consider: whether to implement a message-eating null object. A message-eating null will accept any message sent to it and return another message-eating null object. Ruby’s nil, the single instance of NilClass, is not a message-eating null, but in some languages, including Objective-C, nil will accept any message. This provides an interesting halfway point between the levels of effort and risk undertaken with either of the options discussed previously. By making your null object eat all messages, you avoid any strange default behavior in the source class, but you also avoid having to implement every method that might be called on the null object.
+
+    There’s a third option for Introduce Null Object in Ruby: You could add methods to NilClass itself. While this option might be valid in certain specific cases, muddying the interface of NilClass or changing the behavior of such a low-level object should not be undertaken lightly. When deciding on a name for your Null Object, it is better to use a more meaningful and specific name (a la “UnknownCustomer” or even “MissingPerson”) and avoid the confusion or overloading of “null” or “nil,” respectively.
+
+    When carrying out this refactoring, you can have several kinds of null. Often there is a difference between having no customer (new building and not yet moved in) and having an unknown customer (we think there is someone there, but we don’t know who it is). If that is the case, you can build separate classes for the different null cases. Sometimes null objects actually can carry data, such as usage records for the unknown customer, so that we can bill the customers when we find out who they are. In essence there is a bigger pattern here, called special case. A special case class is a particular instance of a class with special behavior. So UnknownCustomer and NoCustomer would both be special cases of Customer. You often see special cases with numbers. Floating points in Java have special cases for positive and negative infinity and for not a number (NaN). The value of special cases is that they help reduce dealing with errors. Floating point operations don’t throw exceptions. Doing any operation with NaN yields another NaN in the same way that accessors on null objects usually result in other null objects.  
+
+* Introduce Assertion: A section of code assumes something about the state of the program. Make the assumption explicit with an assertion.
+
+    Often sections of code work only if certain conditions are true. This may be as simple as a square root calculation’s working only on a positive input value. With an object it may be assumed that at least one of a group of fields has a value in it. Such assumptions often are not stated but can only be decoded by looking through an algorithm. Sometimes the assumptions are stated with a comment. A better technique is to make the assumption explicit by writing an assertion.
+
+    An assertion is a conditional statement that is assumed to be always true. Failure of an assertion indicates programmer error. As such, assertion failures should always result in an exception. Assertions should never be used by other parts of the system. Indeed assertions usually are removed for production code. It is therefore important to signal something is an assertion. Assertions act as communication and debugging aids. In communication they help the reader understand the assumptions the code is making. In debugging, assertions can help catch bugs closer to their origin. I’ve noticed the debugging help is less important when I write self-testing code, but I still appreciate the value of assertions in communication.
+
+    Beware of overusing assertions. Don’t use assertions to check everything that you think is true for a section of code. Use assertions only to check things that need to be true. Overusing assertions can lead to duplicate logic that is awkward to maintain. Logic that covers an assumption is good because it forces you to rethink the section of the code. If the code works without the assertion, the assertion is confusing rather than helpful and may hinder modification in the future. Always ask whether the code still works if an assertion fails. If the code does work, remove the assertion. I often find I use Extract Method on the conditional inside the assertion. I either use it in several places and eliminate duplicate code or use it simply to clarify the intention of the condition.
+
+    One of the complications of assertions is that there is often no simple mechanism to putting them in. Assertions should be easily removable, so they don’t affect performance in production code. Having a utility module, such as Assertions, certainly helps. But with the flexibility of dynamic languages such as Ruby, we can go even further. By using a block as a parameter to our assert method, we can easily prevent the expression inside the block from being evaluated in production. If our Assertions module is implemented like this:
+
+      module Assertions
+        class AssertionFailedError < StandardError; end
+        def assert(&condition)
+           raise AssertionFailedError.new("Assertion Failed") unless condition.call
+        end
+      end
+
+    then we can easily overwrite the method with a no-op method during deployment to production:
+
+      Assertions.class_eval do
+        def assert; end;
+      end
