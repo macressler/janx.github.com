@@ -304,3 +304,65 @@ Simplifying Conditional Expressions
       Assertions.class_eval do
         def assert; end;
       end
+
+
+Making Method Calls Simpler
+---------------------------
+
+Doug Lea, author of Concurrent Programming in Java, gave me a warning about refactorings that reduce parameter lists. Concurrent programming often uses long parameter lists. Typically this occurs so that you can pass in parameters that are immutable, as built-ins and value objects often are. Usually you can replace long parameter lists with immutable objects, but otherwise you need to be cautious about this group of refactorings.
+
+One of the most valuable conventions I’ve used over the years is to clearly separate methods that change state (modifiers) from those that query state (queries).
+
+* Rename Method: The name of a method does not reveal its purpose. Change the name of the method. If you see a badly named method, it is imperative that you change it.
+
+* Add Parameter: A method needs more information from its caller. Add a parameter for an object that can pass on this information.
+
+* Remove Parameter: A parameter is no longer used by the method body. Remove it.
+
+* Separate Query from Modifier: You have a method that returns a value and also changes the state of an object. Create two methods, one for the query and one for the modification.
+
+    It is a good idea to clearly signal the difference between methods with side effects and those without. A good rule to follow is to say that any method that returns a value should not have observable side effects. Some programmers treat this as an absolute rule, including Bertrand Meyer, author of Object Oriented Software Constructionm [Meyer]. Note I use the phrase observable side effects. A common optimization is to cache the value of a query in a field so that repeated calls go perform better. Although this changes the state of the object with the cache, the change is not observable. Any sequence of queries will always return the same results for each query [Meyer].
+
+    If you are working in a multithreaded system, you know that doing test and set operations as a single action is an important idiom. Does this conflict with Separate Query from Modifier? I discussed this issue with Doug Lea, author of Concurrent Programming in Java, and concluded that it doesn’t. You do, however, need to do some additional things. It is still valuable to have separate query and modifier operations. However, you need to retain a third method that does both. The query-and-modify operation will call the separate query and modify methods and be synchronized. If the query and modify operations are not synchronized, you also might restrict their visibility to private level. That way you have a safe, synchronized operation decomposed into two easier-to-understand methods. These lower-level methods are then available for other uses.
+
+* Parameterize Method: Several methods do similar things but with different values contained in the method body. Create one method that uses a parameter for the different values.
+
+* Replace Parameter with Explicit Methods: You have a method that runs different code depending on the values of an enumerated parameter. Create a separate method for each value of the parameter. (reverse of Parameterize Method)
+
+    With the parameter, any programmer using the method needs not only to look at the methods on the class but also to determine a valid parameter value. The latter is often poorly documented. You shouldn’t use Replace Parameter with Explicit Methods when the parameter values are likely to change a lot. If this happens and you are just setting a field to the passed-in parameter, use a simple setter. If you need conditional behavior, you need Replace Conditional with Polymorphism.
+
+* Preserve Whole Object: You are getting several values from an object and passing these values as parameters in a method call. Send the whole object instead.
+
+    In addition to making the parameter list more robust to changes, Preserve Preserve Whole Object often makes the code more readable. Long parameter lists can Whole Object be hard to work with because both caller and callee have to remember which values were there. They also encourage duplicate code because the called object can’t take advantage of any other methods on the whole object to calculate intermediate values. There is a down-side. When you pass in values, the called object has a depen- dency on the values, but there isn’t any dependency to the object from which the values were extracted. Passing in the required object causes a dependency between the required object and the called object. If this is going to mess up your dependency structure, don’t use Preserve Whole Object.
+
+    That a called method uses a lot of values from another object is a signal that the called method should really be defined on the object from which the values come. When you are considering Preserve Whole Object, consider Move Method as an alternative. You may not already have the whole object defined. In this case you need Introduce Parameter Object. A common case is that a calling object passes several of its own data values as parameters. In this case you can make the call and pass in self instead of these values, if you have the appropriate accessor methods and you don’t mind the dependency.
+
+* Replace Parameter with Method: An object invokes a method, then passes the result as a parameter for a method. The receiver can also invoke this method. Remove the parameter and let the receiver invoke the method.
+
+    If a method can get a value that is passed in as parameter by another means, it should. Long parameter lists are difficult to understand, and we should reduce them as much as possible.
+
+* Introduce Parameter Object: You have a group of parameters that naturally go together. Replace them with an object.
+
+* Remove Setting Method: A field should be set at creation time and never altered. Remove any setting method for that field.
+
+* Hide Method: A method is not used by any other class. Make the method private.
+
+* Replace Constructor with Factory Method: You want to do more than simple construction when you create an object. Replace the constructor with a factory method.
+
+    The most obvious motivation for Replace Constructor with Factory Method is when you have conditional logic to determine the kind of object to create. If you need to do this conditional logic in more than one place, it’s time for a Factory Method.
+
+* Encapsulate Downcast: A method returns an object that needs to be downcasted by its callers. Move the downcast to within the method. (O)
+
+* Replace Error Code with Exception: A method returns a special code to indicate an error. Raise an exception instead.
+
+    Should the caller check for the error condition before calling the method, or should it rescue the exception? I look to the likelihood of the error condition occurring to help me decide. If the error is likely to occur in normal processing, then I would make the caller check the condition before calling. If the error is not likely to occur, then I would rescue the exception.
+
+* Replace Exception with Test: You are raising an exception on a condition the caller could have checked first. Change the caller to make the test first.
+
+    Exceptions should be used for exceptional behavior: behavior that is an unexpected error. They should not act as a substitute for conditional tests. If you can reasonably expect the caller to check the condition before calling the operation, you should provide a test, and the caller should use it.
+
+* Introduce Gateway: You want to interact with a complex API of an external system or resource in a simplified way. Introduce a Gateway that encapsulates access to an external system or resource. (R) (J: facade pattern?)
+
+* Introduce Expression Builder: You want to interact with a public interface in a more fluent manner and not muddy the interface of an existing object. Introduce an Expression Builder and create an interface specific to your application. (R)
+
+    APIs are usually designed to provide a set of self-standing methods on objects; ideally these methods can be understood individually. This is in contrast to a fluent interface that is designed around the readability of a whole expression. Fluent interfaces often lead to methods that make little sense individually. An Expression Builder provides a fluent interface as a separate layer on top of the regular API. It has one job—to supply the fluent interface - leaving the original object to provide the interface that can be understood on a method-by-method basis.
