@@ -366,3 +366,63 @@ One of the most valuable conventions I’ve used over the years is to clearly se
 * Introduce Expression Builder: You want to interact with a public interface in a more fluent manner and not muddy the interface of an existing object. Introduce an Expression Builder and create an interface specific to your application. (R)
 
     APIs are usually designed to provide a set of self-standing methods on objects; ideally these methods can be understood individually. This is in contrast to a fluent interface that is designed around the readability of a whole expression. Fluent interfaces often lead to methods that make little sense individually. An Expression Builder provides a fluent interface as a separate layer on top of the regular API. It has one job—to supply the fluent interface - leaving the original object to provide the interface that can be understood on a method-by-method basis.
+
+
+Dealing with Generalization
+---------------------------
+
+* Pull Up Field: Two subclasses have the same field. Move the field to the superclass. (O)
+
+* Pull Up Constructor Body: You have constructors on subclasses with mostly identical bodies. Create a superclass constructor; call this from the subclass methods. (O)
+
+* Pull Up Method: You have methods with identical results on subclasses. Move them to the superclass. You may also move identical methods from classes into module which included by both classes. (J: include constructor)
+
+* Push Down Method: Behavior on a superclass is relevant only for some of its subclasses. Move it to those subclasses. You may also move methods from module to classes included the module.
+
+* Push Down Field: A field is used only by some subclasses. Move the field to those subclasses. (O)
+
+* Extract Module: You have duplicated behavior in two or more classes. Create a new module and move the relevant behavior from the old class into the module, and include the module in the class. (R)
+
+    But Extract Module should be used with care. A module should have a single responsibility, just like a class. The methods within a module should be cohesive: They should make sense as a group. Too often I’ve seen modules become “junk-drawers” for behavior. They are created with the noble goal of removing duplication, but over time they become bloated. The methods don’t make sense together, and it becomes difficult to find a particular piece of behavior. And when existing behavior is hard to find, identifying and removing duplication is an onerous task. A module that is difficult to name without using words like “Helper” or “Assistant” is probably doing too much.
+
+    So the question becomes, when do you choose Extract Module over Extract Class? When we’re talking about the removal of duplication, use Extract Class whenever possible. Let’s say you have class A and class B. Behavior X is duplicated in A and B. If you can remove behavior X entirely from class A and B by extracting the behavior to class C and having instances of A and A delegate to an instance of C, then that’s great. A and B both have one less responsibility, the duplication has been removed, and C is now able to be reused and tested in isolation. If, however, behavior X only makes sense on class A and B, then Extract Module is a better choice. Perhaps a framework you are using looks for the behavior on class A and B, and the introduction of delegation would be messy.
+
+(J: remember module is in fact superclass in ruby)
+
+* Inline Module: The resultant indirection of the included module is no longer worth the duplication it is preventing. Merge the module into the including class. (R)
+
+* Extract Subclass: A class has features that are used only in some instances. Create a subclass for that subset of features. (J: This refactoring implies that features of a class should be intended to be used by its all instances)
+
+    The main trigger for use of Extract Subclass is the realization that a class has behavior used for some instances of the class and not for others. Sometimes this is signaled by a type code, in which case you can use Replace Type Code with Polymorphism, Replace Type Code with Module Extension, or Replace Type Code with State/Strategy. Another alternative to Extract Subclass is Extract Class. This is a choice between delegation and inheritance. Extract Subclass is usually simpler to do, but it has limitations. You can’t change the class-based behavior of an object once the object is created. You can change the class-based behavior with Extract Class simply by plugging in different components. Another limitation of subclasses is that you’re also only able to represent one variation, as a given class in Ruby can only inherit from one superclass directly. If you want the class to vary in several different ways, you have to use delegation or module extension for all but one of them.
+
+* Extract Superclass: You have two classes with similar features. Create a superclass and move the common features to the superclass. (O)
+
+* Introduce Inheritance: You have two classes with similar features. Make one of the classes a superclass and move the common features to the superclass. (R)
+
+    Objects provide a built-in mechanism to simplify this situation with inheritance. However, you often don’t notice the commonalities until you have created some classes, in which case you need to create the inheritance structure later. An alternative to Introduce Inheritance is Extract Class. The choice is essentially between inheritance and delegation. Inheritance is the simpler choice if the two classes share interface as well as behavior. If you make the wrong choice, you can always use Replace Inheritance with Delegation later. If you can’t use Extract Class, consider Extract Module. If you never intend to directly instantiate the superclass, the use of a module instead will better communicate this intention. If you make the wrong choice, it’s no big deal - you can always use Replace Abstract Superclass with Module later.
+
+(J: Here is an interesting difference between original and ruby edition: in Java we extract a superclass from two similar class; in Ruby we make one class as superclass of the other, because we don't need superclass which we won't instantiate in Ruby!)
+
+* Extract Interface: Several clients use the same subset of a class's interface, or two classes have part of their interfaces in common. Extract the subset into an interface. (O)
+
+* Collapse Hierarchy: A superclass and subclass (or module and the class that includes the module) are not very different. Merge them together.
+
+* Form Template Method: You have two methods in subclasses that perform similar steps in the same order, yet the steps are different. Get the steps into methods with the same signature, so that the original methods become the same. Then you can pull them up.
+
+    In Ruby, it is also possible to Form Template Method using the extension of modules. The class that extends the modules plays the role of the superclass, housing the sequence, while the modules implement the specific behavior. Notice that the implementation using extension of modules is similar to the inheritance example. So why use extend instead of inheritance? The answer is that you would use extend if the modules you were creating could be used to extend various classes.
+
+* Replace Inheritance with Delegation: A subclass uses only part of a superclass interface or does not want to inherit data. Create a field for the superclass, adjust methods to delegate to the superclass, and remove the subclassing.
+
+    Inheritance is a wonderful thing, but sometimes it isn’t what you want. Often you start inheriting from a class but then find that many of the superclass operations aren’t really true of the subclass. In this case you have an interface that’s not a true reflection of what the class does. Or you may find that you are inheriting a whole load of data that is not appropriate for the subclass. Or you may find that there are protected superclass methods that don’t make much sense with the subclass. You can live with the situation and use convention to say that although it is a subclass, it’s using only part of the superclass function. But that results in code that says one thing when your intention is something else—a confusion you should remove. By using delegation instead, you make it clear that you are making only partial use of the delegated class. You control which aspects of the interface to take and which to ignore. The cost is extra delegating methods that are boring to write but are too simple to go wrong.
+
+* Replace Delegation with Inheritance: You're using delegation and are often writing many simple delegations for the entire interface. Make the delegating class a subclass of the delegate. (O)
+
+* Replace Delegation with Hierarchy: You’re using delegation and are often writing many simple delegations for the entire interface. Make the delegate a module and include it into the delegating class. (R)
+
+    One situation to beware of is that in which the delegate is shared by more than one object and is mutable. In this case you can’t replace the delegate with a hierarchy because you’ll no longer share the data. Data sharing is a responsibility that cannot be transferred back to a module hierarchy. When the object is immutable, data sharing is not a problem, because you can just copy and nobody can tell.
+
+(J: again, we don't need superclass we won't instantiate in Ruby! We make such superclass a module.)
+
+* Replace Abstract Superclass with Module: You have an inheritance hierarchy, but never intend to explicitly instantiate an instance of the superclass. Replace the superclass with a module to better communicate your intention. (R)
+
+    In Java, it is possible to designate a class as abstract to prevent objects of that class from being instantiated explicitly. There is no such feature in Ruby. Writing intentional code is important, and it would be nice if we could communicate that instances of our abstract superclass are not meant to be instantiated directly. We could write some code to raise an error when the constructor is invoked, but if instead we replace the abstract superclass with a module, we can communicate our intention in a more idiomatic fashion.
