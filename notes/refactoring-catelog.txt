@@ -446,3 +446,26 @@ Big Refactoring
 * Extract Hierarchy: You have a class that is doing too much work, at least in part through many conditional statements. Create a hierarchy of classes in which each subclass represents a special case.
 
     If the variations can change during the life of the object, use Extract Class to pull that aspect into a separate class. (J: this is the rule to determine whether you should use delegation or inheritance)
+
+
+Putting It All Together
+-----------------------
+
+The list of techniques is only the beginning. It is the gate you must pass through. Without the techniques, you can’t manipulate the design of running programs. With them, you still can’t, but at least you can start. Why are all these wonderful techniques really only the beginning? Because you don’t yet know when to use them and when not to, when to start and when to stop, when to go and when to wait. It is the rhythm that makes for refactoring, not the individual notes. How will you know when you are really getting it? You’ll know when you start to calm down. When you feel absolute confidence that no matter how screwed up someone left it, you can make the code better, enough better to keep making progress.
+
+Mostly, though, you’ll know you’re getting it when you can stop with confidence. Stopping is the strongest move in the refactorer’s repertoire. You see a big goal - a host of subclasses can be eliminated. You begin to move toward that goal, each step small and sure, each step backed up by keeping all the tests running. You’re getting close. You only have two methods to unify in each of the subclasses, and then they can go away. That’s when it happens. You run out of gas. Maybe it’s getting late and you are becoming fatigued. Maybe you were wrong in the first place and you can’t really get rid of all of those subclasses. Maybe you don’t have the tests to back you up. Whatever the cause, your confidence is gone. You can’t make the next step with certainty. You don’t think you will screw anything up, but you’re not sure.
+
+That’s when you stop. If the code is already better, integrate and release what you’ve done. If it isn’t better, walk away. Flush it. Glad to have learned a lesson, pity it didn’t work out. What’s on for tomorrow? Tomorrow or the next day or the next month or maybe even next year (my personal record is nine years waiting for the second half of a refactoring), the insight comes. Either you understand why you were wrong, or you understand why you were right. In any case, the next step is clear. You take the step with the confidence you had when you started. Maybe you’re even a little abashed at how stupid you could have been not to have seen it all along. Don’t be. It happens to everyone. It’s a little like walking along a narrow trail above a 1,000-foot drop. As long as the light holds, you can step forward cautiously but with confidence. As soon as the sun sets, though, you’d better stop. You bed down for the night, sure the sun will rise again in the morning.
+
+This may sound mystical and vague. In a sense it is, because it is a new kind of relationship with your program. When you really understand refactoring, the design of the system is as fluid and plastic and moldable to you as the individual characters in a source code file. You can feel the whole design at once. You can see how it might flex and change—a little this way and this is possible; a little that way and that is possible.
+
+When you decide to undertake a large refactoring, try to pick off pieces that can be integrated back into the main development branch as quickly as possible. 
+
+The final thought I’ll leave you with is this: Never forget the two hats: The refactoring hat, and the new functionality hat. Only wear one hat at a time. When you refactor, you will inevitably discover code that doesn’t work correctly. You’ll find bugs, test cases to add or change, and other unrelated refactorings. Some of these might even be more important than the refactoring you’re currently working on. Resist temptation to mix an unfinished refactoring with one of these newfound tasks. If the newfound task truly is an immediate priority, abandon your refactoring. Revert the code and start a fresh. But if you decide to wear the refactoring hat, your goal is to leave the code computing exactly the same answers that it was when you found it; nothing more, nothing less. Once you develop the discipline and rhythm to juggle the two hats, you’ll find refactoring to be a rewarding and productive experience. Happy coding!
+
+
+Refactoring, Reuse, and Reality (O)
+-------------------------------
+
+Refactoring Tools (O)
+-----------------
