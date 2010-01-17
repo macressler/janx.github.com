@@ -1,0 +1,169 @@
+Type Theory
+-----------
+
+  T f (S x) { B; return y; }
+
+The declaration introduces a function called f that takes an argument, x of type S, performs calculations indicated as B, and returns a result, y of type T . If there is a type theory associated with the language, we should be able to prove a theorem of the following form:
+
+  If x has type S then the evaluation of f (x) yields a value of type T .
+
+The reasoning used in the proof is based on the syntactic form of the function body, B. If we can do this for all legal programs in a language L, we say that L is statically typed . If L is indeed statically typed:
+
+  A compiler for L can check the type correctness of all programs.
+  A program that is type-correct will not fail because of a type error when it is executed.
+
+A program that is type-correct may nevertheless fail in various ways. Type checking does not usually detect errors such as division by zero. (In general, most type checking systems assume that functions are total : a function with type S -> T , given a value of type S, will return a value of type T. Some commonly used functions are partial : for example x/y ≡ divide(x,y) is undefined for y = 0.) A program can be type-correct and yet give completely incorrect answers. In general:
+
+  Most PLs are not statically typed in the sense defined above, although the number of loopholes in the type system may be small.
+  A type-correct program may give incorrect answers.
+  Type theories for modern PLs, with objects, classes, inheritance, overloading, genericity, dynamic binding, and other features, are very complex.
+
+Type theory leads to attractive and interesting mathematics and, consequently, tends to be overvalued by the theoretical Computer Science community. The theory of program correctness is more difficult and has attracted less attention, although it is arguably more important.
+
+
+Regular Languages
+-----------------
+
+In the formal study of regular languages, we begin with an alphabet, Σ, which is a finite set of symbols. For example, we might have Σ = { 0, 1 }. The set of all finite strings, including the empty string, constructed from the symbols of Σ is written Σ*. We then introduce a variety of regular expressions, which we will refer to as RE here. (The abbreviation RE is also used to stand for “recursively enumerable”, but in this section it stands for “regular expression”.) Each form of RE is defined by the set of strings in Σ* that it generates. This set is called a “regular language”.
+
+  1. O/ is RE and denotes the empty set.
+  2. e (the string containing no symbols) is RE and denotes the set {e}.
+  3. For each symbol x ∈ Σ, x is RE and denotes the set { x }.
+  4. If r is RE with language R, then r* is RE and denotes the set R* (where R* = { x1 x2 . . . xn | n ≥ 0 ∧ xi ∈ R } ).
+  5. If r and s are RE with languages R and S respectively, then (r + s) is RE and denotes the set R U S.
+  6. If r and s are RE with languages R and S respectively, then (rs) is RE and denotes the set RS (where RS = { rs | r ∈ R ∧ s ∈ S } ).
+
+We add two further notations that serve solely as abbreviations.
+
+  1. The expression a^n represents the string aa . . . a containing n occurrences of the symbol a.
+  2. The expression a+ is an abbreviation for the RE aa∗ that denotes the set { a, aa, aaa, . . . }.
+
+We can use regular languages to describe the tokens (or lexemes) of most PLs. For example:
+
+  UC = A + B + ··· + Z
+  LC = a + b + ··· + z
+  LETTER = UC + LC
+  DIGIT = 0 + 1 + ··· + 9
+  IDENTIFIER = LETTER (LETTER + DIGIT)*
+  INTCONST = DIGIT+
+  FLOATCONST = DIGIT+ . DIGIT*
+  ....
+
+We can use a program such as lex to construct a lexical analyzer (scanner) from a regular expression that defines the tokens of a PL.
+
+  RE               Control Structure
+  -----------------------------------------------------------
+  x                statement
+  rs               statement; statement
+  r*               while expression do statement
+  r+s              if condition then statement else statement
+
+  RE               Data Structure
+  ----------------------------------
+  x                int n;
+  rs               struct { int n; float y; }
+  r^n              int a[n];
+  r*               int a[]
+  r+s              union { int n; float y; }
+
+These analogies suggest that the mechanisms for constructing REs — concatenation, alternation, and repetition — are somehow fundamental. In particular, the relation between the standard control structures and the standard data structures can be helpful in programming. In Jackson Structured Design (JSD), for example, the data structures appropriate for the application are selected first and then the program is constructed with the corresponding control structures. The limitations of REs are also interesting. When we move to the next level of the Chomsky hierarchy, Context Free Languages (CFLs), we obtain the benefits of recursion. The corresponding control structure is the procedure and the corresponding data structures are recursive structures such as lists and trees (Wirth 1976, page 163).
+
+
+Context Free Grammers
+---------------------
+
+Context free grammars for PLs are usually written in BNF (Backus-Naur Form). A grammar rule, or production, consists of a non-terminal symbol (the symbol being defined), a connector (usually ::= or ->), and a sequence of terminal and non-terminal symbols. The syntax for the assignment, for example, might be defined:
+
+  ASSIGNMENT -> VARIABLE “ := ” EXPRESSION
+
+Basic BNF provides no mechanism for choice: we must provide one rule for each possibility. Also, BNF provides no mechanism for repetition; we must use recursion instead. The following example illustrates both of these limitations.
+
+  SEQUENCE -> EMPTY
+  SEQUENCE -> STATEMENT SEQUENCE
+
+BNF has been extended in a variety of ways. With a few exceptions, most of the extended forms can be described simply: the sequence of symbols on the right of the connector is replaced by a regular expression. The extension enables us to express choice and repetition within a single rule. In grammars, the symbol | rather than + is used to denote choice.
+
+  STATEMENT = ASSIGNMENT | CONDITIONAL | · · ·
+  SEQUENCE = ( STATEMENT )*
+
+Extended BNF (EBNF) provides a more concise way of describing grammars than BNF. Just as parsers can be constructed from BNF grammars, they can be constructed from EBNF grammars.
+
+
+The Procedural Paradigm
+-----------------------
+
+The introduction of the von Neumann architecture was a crucial step in the development of electronic computers. The basic idea is that instructions can be encoded as data and stored in the memory of the computer. The first consequence of this idea is that changing and modifying the stored program is simple and efficient. In fact, changes can take place at electronic speeds, a very different situation from earlier computers that were programmed by plugging wires into panels. The second, and ultimately more far-reaching, consequence is that computers can process programs themselves, under program control. In particular, a computer can translate a program from one notation to another. Thus the stored-program concept led to the development of programming “languages”.
+
+The first PLs evolved from machine code. The first programs used numbers to refer to machine addresses. One of the first additions to programming notation was the use of symbolic names rather than numbers to represent addresses. This establishes the principle that a variable name stands for a memory location, a principle that influenced the subsequent development of PLs and is now known — perhaps inappropriately — as value semantics.
+
+The importance of subroutines and subroutine libraries was recognized before high-level programming languages had been developed, as the following quotation shows. The following advantages arise from the use of such a library:
+
+  1. It simplifies the task of preparing problems for the machine;
+  2. It enables routines to be more readily understood by other users, as conventions are standardized and the units of a routine are much larger, being subroutines instead of individual orders;
+  3. Library subroutines may be used directly, without detailed coding and punching;
+  4. Library subroutines are known to be correct, thus greatly reducing the overall chance of error in a complete routine, and making it much easier to locate errors.
+
+Another difficulty arises from the fact that, although it is desirable to have subroutines available to cover all possible requirements, it is also undesirable to allow the size of the resulting library to increase unduly. However, a subroutine can be made more versatile by the use of parameters associated with it, thus reducing the total size of the library.
+
+We may divide the parameters associated with subroutines into two classes.
+
+  EXTERNAL parameters, i.e. parameters which are fixed throughout the solution of a problem and arise solely from the use of the library;
+  INTERNAL parameters, i.e. parameters which vary during the solution of the problem.
+
+Subroutines may be divided into two types, which we have called OPEN and CLOSED. An open subroutine is one which is included in the routine as it stands whereas a closed subroutine is placed in an arbitrary position in the store and can be called into use by any part of the main routine. (Wheeler 1951)
+
+Machine code is a sequence of “orders” or “instructions” that the computer is expected to execute. The style of programming that this viewpoint developed became known as the “imperative” or “procedural” programming paradigm. In these notes, we use the term “procedural” rather than “imperative” because programs resemble “procedures” (in the English, non-technical sense) or recipes rather than “commands”. Confusingly, the individual steps of procedural PLs, such as Pascal and C, are often called “statements”, although in logic a “statement” is a sentence that is either true or false.
+
+By default, the commands of a procedural program are executed sequentially. Procedural PLs provide various ways of escaping from the sequence. The earliest mechanisms were the “jump” command, which transferred control to another part of the program, and the “jump and store link” command, which transferred control but also stored a “link” to which control would be returned after executing a subroutine.
+
+The data structures of these early languages were usually rather simple: typically primitive values (integers and floats) were provided, along with single- and multi-dimensioned arrays of primitive values.
+
+* FORTRAN: 1957. for IBM 704; Formula Translator; like assembly + math expressions; no recursion; no structure; unsafe memory allocation;
+
+* Algol 60: Independent of any company/computer; ACM require algorithm submissions described in Algol; Block structure and stacked Activation Record; Dynamic Arrays on stack; Call by Name translate parameter to trunk (procedure without param); Own variables (like static vars in C)
+
+* COBOL: Structured data and Data processing, the first time PL dealing with non-numbers, like text; implicit type conversion;
+
+* PL/I: Enhanced implicit type conversion (like js); storage class (control variable extent); explict allocation on heap; simple exception handling; Dommed to failure: "CobAlgoltran", universal language for all kinds of programming; a programmer could learn/use a subset of the language for a particular problem
+
+* Algol 68: Orthogonality; Specification described completely in formal language; Operator overloading, even priority can be altered; uniform notation for declarations and other entiies; collateral clause in which expressions will be evaluated in any order or concurrently; Collateral clauses provide a good, and early, example of the idea that a PL specification should intentionally leave some implementation details undefined; operator 'ref' for reference (* and & in C)
+
+* Pascal: demonstrate PL can be simple but powerful; Type system based on primitives and mechanisms for building structured types; data type declaration; static type checking; recursive data type; no implicit type conversion; development by stepwise refinement (Wirth); monolithic structure prevents independt complilation
+
+* Modula-2: learned from Pascal by Wirth; introduce module with sperated interface and implementation; coroutines
+
+* C: low level; simple; concise; pointer; system programming
+
+* Ada: the last major effort in procedural language design; a large and complex language that combines then-known programming features with little attempt at consolidation; the first widely-used language to provide full support for concurrency, with interactions checked by the compiler
+
+
+The Functional Paradigm
+-----------------------
+
+Procedural programming is based on instructions (“do something”) but, inevitably, procedural PLs also provide expressions (“calculate something”). The key insight of functional programming (FP) is that everything can be done with expressions: the commands are unnecessary.
+
+This point of view has a solid foundation in theory. Turing (1936) introduced an abstract model of “programming”, now known as the Turing machine. Kleene (1936) and Church (1941) introduced the theory of recursive functions. The two theories were later shown (by Kleene) to be equivalent: each had the same computational power. Other theories, such as Post production systems, were shown to have the same power. This important theoretical result shows that FP is not a complete waste of time but it does not tell us whether FP is useful or practical. To decide that, we must look at the functional programming languages (FPLs) that have actually been implemented.
+
+Most functional language support high order functions. Roughly, a high order function is a function that takes another function as a parameter or returns a function. More precisely:
+
+  A zeroth order expression contains only variables and constants.
+  A first order expression may also contain function invocations, but the results and parameters of functions are variables and constants (that is, zeroth order expressions).
+  In general, in an n-th order expression, the results and parameters of functions are (n−1)th order expressions.
+
+A high order expression is an n-th order expression with n ≥ 2. The same conventions apply in logic with “function” replaced by “function or predicate”. In first-order logic, quantifiers can bind variables only; in a high order logic, quantifiers can bind predicates.
+
+In procedural PLs, a name denotes a storage location (value semantics). In LISP, a name is a reference to an object, not a location (reference semantics). (consequence is there will be garbages - objects with no reference). A PL in which variable names are references to objects in memory is said to have reference semantics. All FPLs and most OOPLs have reference semantics.
+
+Note that reference semantics is not the same as “pointers” in languages such as Pascal and C. A pointer variable stands for a location in memory and therefore has value semantics; it just so happens that the location is used to store the address of another object.
+
+* LISP: 1958. provide list processing (like IPL or FLPL); prefix notation; high order functions and notation for functions; garbage collector; first compiler written in the language it compiles; lambda expressions to denote functions; dynamic scoping; interpretation
+
+        The close relationship between code and data in LISP mimics the von Neumann architecture at a higher level of abstraction; 
+
+        Another way to show that LISP was neater than Turing machines was to write a universal LISP function and show that it is briefer and more comprehensible than the description of a universal Turing machine. This was the LISP function eval [e, a], which computes the value of a LISP expression e, the second argument a being a list of assignments of values to variables. . . . Writing eval required inventing a notation for representing LISP functions as LISP data, and such a notation was devised for the purpose of the paper with no thought that it would be used to express LISP programs in practice. (McCarthy 1978)
+
+        The lambda expression itself cannot be evaluated. Consequently, LISP had to resort to programming tricks to make higher order functions work. For example, if we want to pass the squaring function as an argument to another function, we must wrap it up in a “special form”
+
+        Although dynamic scoping is natural for an interpreter, it is inefficient for a compiler. Interpreters are slow anyway, and the overhead of searching a linear list for a variable value just makes them slightly slower still. A compiler, however, has more efficient ways of accessing variables, and forcing it to maintain a linear list would be unacceptably inefficient. Consequently, early LISP systems had an unfortunate discrepancy: the interpreters used dynamic scoping and the compilers used static scoping. Some programs gave one answer when interpreted and another answer when compiled!
+
+* Scheme
