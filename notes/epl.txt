@@ -166,4 +166,8 @@ Note that reference semantics is not the same as “pointers” in languages suc
 
         Although dynamic scoping is natural for an interpreter, it is inefficient for a compiler. Interpreters are slow anyway, and the overhead of searching a linear list for a variable value just makes them slightly slower still. A compiler, however, has more efficient ways of accessing variables, and forcing it to maintain a linear list would be unacceptably inefficient. Consequently, early LISP systems had an unfortunate discrepancy: the interpreters used dynamic scoping and the compilers used static scoping. Some programs gave one answer when interpreted and another answer when compiled!
 
-* Scheme
+* Scheme: 1975. actors model (alpha operation); prove alpha == lambda; closure, is the value of function; lexical/static scoping; continuations; higher order functions + control of state = simple form of OOP
+
+* SASL: 1976. compile by combinator reduction; call by name optimization (call by need/lazy evaluation); short-circuit is lazy eval in fact
+
+* SML: "Standard" ML; "metalanguage", ML; reasoning about programs; statically typed; inferred types; function declaration by cases (pattern matching); function composition; currying
