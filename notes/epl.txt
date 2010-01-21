@@ -171,3 +171,62 @@ Note that reference semantics is not the same as “pointers” in languages suc
 * SASL: 1976. compile by combinator reduction; call by name optimization (call by need/lazy evaluation); short-circuit is lazy eval in fact
 
 * SML: "Standard" ML; "metalanguage", ML; reasoning about programs; statically typed; inferred types; function declaration by cases (pattern matching); function composition; currying
+
+
+Object Oriented Paradigm
+------------------------
+
+* Simula: 1965 (Simula I). coroutine; multiple stacks; classes; inheritance (prefix block); garbage collector
+
+    Deleting the procedure definitions and final statement from an Algol block gives a pure data record.
+    Deleting the final statement from an Algol block, leaving procedure definitions and data declarations, gives an abstract data object.
+    Adding coroutine constructs to Algol blocks provides quasi-parallel programming capabilities.
+    Adding a prefix mechanism to Algol blocks provides an abstraction mechanism (the class hierarchy).
+
+    Note that the class is syntactically more like a procedure than a data object: it has an (optional) formal parameter and it must be called with an actual parameter. It differs from an ordinary Algol procedure in that its AR remains on the heap after the invocation.
+
+* Smalltalk: 1972 (first compiler, based on BASIC). inspired by LISP and Simula; block; private data/public function; message exchange; single root inheritance; coroutines; garbage collector
+
+    Six principles:
+    1. Everything is an object.
+    2. Objects communicate by sending and receiving messages (in terms of objects).
+    3. Objects have their own memory (in terms of objects).
+    4. Every object is an instance of a class (which must be an object).
+    5. The class holds the shared behaviour for its instances (in the form of objects in a program list).
+    6. To [evaluate] a program list, control is passed to the first object and the remainder is treated as its message.
+
+    Compare to Simula:
+    1. Simula distinguishes primitive types, such as integer and real, from class types. In Smalltalk, “everything is an object”.
+    2. In particular, classes are objects in Smalltalk. To create a new instance of a class, you send a message to it. Since a class object must belong to a class, Smalltalk requires metaclasses.
+    3. Smalltalk effectively eliminates passive data. Since objects are “active” in the sense that they have methods, and everything is an object, there are no data primitives.
+    4. Smalltalk is a complete environment, not just a compiler. You can edit, compile, execute, and debug Smalltalk programs without ever leaving the Smalltalk environment.
+
+* CLU: 1974. information hiding; ADT; up/down (cast); mutable/immutable; modules/classes (clusters); safe encapsulation; generic cluster; exception handling
+
+    An abstract data type (ADT) specifies a type, a set of operations that may be performed on instances of the type, and the effects of these operations. The implementation of an ADT provides the actual operations that have the specified effects and also prevents programmers from doing anything else. The word “abstract” in CLU means “user defined”, or not built in to the language:
+
+    "I referred to the types as “abstract” because they are not provided directly by a programming languages but instead must be implemented by the user. An abstract type is abstract in the same way that a procedure is an abstract operation." (Liskov 1996, page 473) (J: what a bad name!)
+
+    This is not a universally accepted definition. Many people use the term ADT in the following sense: An abstract data type is a system consisting of three constituents:
+    1. some sets of objects;
+    2. a set of syntactic descriptions of the primitive functions;
+    3. a semantic description — that is, a sufficiently complete set of relationships that specify how the functions interact with each other. (Martin 1986)
+
+    The difference is that an ADT in CLU provides a particular implementation of the type (and, in fact, the implementation must be unique) whereas Martin’s definition requires only a specification.
+
+    Compare Simula to CLU, Simula:
+    1. does not provide encapsulation: clients could directly access the variables, as well as the functions, of a class;
+    2. does not provide “type generators” or, as we would say now, “generic types” (“templates” in C++);
+    3. associates operations with objects rather than types;
+    4. handles built-in and user-defined types differently — for example, instances of user-defined classes are always heap-allocated.
+
+    Heap is used for objects because:
+    1. Declarations are easy to implement because, for all types, space is allocated for a pointer. Stack allocation breaks encapsulation because the size of the object (which should be an implementation “secret”) must be known at the point of declaration.
+    2. Variable declaration is separated from object creation. This simplifies safe initialization.
+    3. Variable and object lifetimes are not tied. When the variable goes out of scope, the object continues to exist (there may be other references to it).
+    4. The meaning of assignment is independent of type. The statement x := E means simply that x becomes a reference (implemented as a pointer, of course) to E. There is no need to worry about the semantics of copying an object. Copying, if needed, should be provided by a member function of the class.
+    5. Reference semantics requires garbage collection. Although garbage collection has a run-time overhead, efficiency was not a primary goal of the CLU project. Furthermore, garbage collection eliminates memory leaks and dangling pointers, notorious sources of obscure errors.
+
+    Whereas Simula provides tools for the programmer and supports a methodology, CLU provides the same tools and enforces the methodology. The cost is an increase in complexity. Several keywords (rep, cvt, down, and up) are needed simply to maintain the distinction between abstract and representation types. In Simula, three concepts — procedures, classes, and records — are effectively made equivalent, resulting in significant simplification. In CLU, procedures, records, and clusters are three different things. The argument in favour of CLU is that the compiler will detect encapsulation and other errors. But is it the task of a compiler to prevent the programmer doing things that might be completely safe? Or should this role be delegated to a style checker, just as C programmers use both cc (the C compiler) and lint (the C style checker)?
+
+    The designers of CLU advocate defensive programming: "Of course, checking whether inputs [i.e., parameters of functions] are in the permitted subset of the domain takes time, and it is tempting not to bother with the checks, or to use them only while debugging, and suppress them during production. This is generally an unwise practice. It is better to develop the habit of defensive programming, that it writing each procedure to defend itself against errors. . . .  Defensive programming makes it easier to debug programs. . . ." (Liskov and Guttag 1986, page 100) (J: so static type and type checker is good)
