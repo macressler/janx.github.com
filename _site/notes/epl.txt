@@ -252,3 +252,21 @@ Kevo: All of the OOPLs previously described in this section are class-based lang
 CLOS: The Common LISP Object System is an extension to LISP that provides OOP. It has a number of interesting features, including “multi-methods” — the choice of a function is based on the class of all of its arguments rather than its first (possibly implicit) argument. CLOS also provides “before” and “after” methods — code defined in a superclass that is executed before or after the invocation of the function in a class.
 
 Self: Self is the perhaps the best-known prototype language. Considerable effort has been put into efficient implementation, to the extent that Self programs run at up to half of the speed of equivalent C++ programs. This is an impressive achievement, given that Self is considerably more flexible than C++.
+
+
+Backtracking Languages
+----------------------
+
+Backtracking languages are designed to solve problems with multiple answers, and to find as many answers as required.
+
+Prolog: first logic PL; "pure" Prolog programme is inefficient; cut; occurs check; GC
+
+    In the declarative reading, Prolog finds multiple results simply because they are there. In the procedure reading, multiple results are obtained by backtracking . Every point in the program at which there is more than one choice of a variable binding is called a choice point. The choice points define a tree: the root of the tree is the starting point of the program (the main goal) and each leaf of the tree represents either success (the goal is satisfied with the chosen bindings) or failure (the goal cannot be satisfied with these bindings). Prolog performs a depth-first search of this tree.
+
+    In Prolog, proving not(P) means “P cannot be proved” which means “P cannot be inferred from the facts and rules in the database”.
+
+    The Prolog system proceeds top-down. It attempts to match the entire goal to one of the rules and, having found a match, applies the same idea to the parts of the matched formulas. The “matching” process is called unification.
+
+    Prolog syntax corresponds to a restricted form of first-order predicate calculus called clausal form logic. It is not practical to use the full predicate calculus as a basis for a PL because it is undecidable. Clausal form logic is semi-decidable: there is an algorithm that will find a proof for any formula that is true in the logic. If a formula is false, the algorithm may fail after a finite time or may loop forever. The proof technique, called SLD resolution, was introduced by Robinson (1965). SLD stands for “S electing a literal, using a Linear strategy, restricted to Definite clauses”.
+
+    The proof of validity of SLD resolution assumes that unification is implemented with the occurs check. Unfortunately, the occurs check is expensive to implement and most Prolog systems omit it. Consequently, most Prolog systems are technically unsound, although problems are rare in practice. A Prolog program apparently has a straightforward interpretation as a statement in logic, but the interpretation is slightly misleading. For example, since Prolog works through the rules in the order in which they are written, the order is significant. Since the logical interpretation of a rule sequence is disjunction, it follows that disjunction in Prolog does not commute.
