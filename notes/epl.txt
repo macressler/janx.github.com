@@ -259,6 +259,8 @@ Backtracking Languages
 
 Backtracking languages are designed to solve problems with multiple answers, and to find as many answers as required.
 
+Constraint PLs are attracting increasing attention. A program is a set of constraints, expressed as equalities and inequalities, that must be satisfied. Prolog is strong in logical deduction but weak in numerical calculation; constraint PLs attempt to correct this imbalance.
+
 Prolog: first logic PL; "pure" Prolog programme is inefficient; cut; occurs check; GC
 
     In the declarative reading, Prolog finds multiple results simply because they are there. In the procedure reading, multiple results are obtained by backtracking . Every point in the program at which there is more than one choice of a variable binding is called a choice point. The choice points define a tree: the root of the tree is the starting point of the program (the main goal) and each leaf of the tree represents either success (the goal is satisfied with the chosen bindings) or failure (the goal cannot be satisfied with these bindings). Prolog performs a depth-first search of this tree.
@@ -270,3 +272,20 @@ Prolog: first logic PL; "pure" Prolog programme is inefficient; cut; occurs chec
     Prolog syntax corresponds to a restricted form of first-order predicate calculus called clausal form logic. It is not practical to use the full predicate calculus as a basis for a PL because it is undecidable. Clausal form logic is semi-decidable: there is an algorithm that will find a proof for any formula that is true in the logic. If a formula is false, the algorithm may fail after a finite time or may loop forever. The proof technique, called SLD resolution, was introduced by Robinson (1965). SLD stands for “S electing a literal, using a Linear strategy, restricted to Definite clauses”.
 
     The proof of validity of SLD resolution assumes that unification is implemented with the occurs check. Unfortunately, the occurs check is expensive to implement and most Prolog systems omit it. Consequently, most Prolog systems are technically unsound, although problems are rare in practice. A Prolog program apparently has a straightforward interpretation as a statement in logic, but the interpretation is slightly misleading. For example, since Prolog works through the rules in the order in which they are written, the order is significant. Since the logical interpretation of a rule sequence is disjunction, it follows that disjunction in Prolog does not commute.
+
+Alma-0: start from Modula-2, add many logic PL features;
+
+    (J: really interesting and powerful)
+    BES (boolean expression as statement)
+    SBE (statement sequence as boolean expression)
+    EITHER-ORELSE statement
+    SOME statement
+    COMMIT statement (like cut in prolog)
+    FORALL statement
+    EQ statement
+    MIX: call by mixed form, a new param passing mechanism (J: I guess this is a bug trigger)
+    KNOWN statement
+
+    The language Alma-0 has a declarative semantics in which the constructs described above correspond to logical formulas. It also has a procedural semantics that describes how the constructs can be efficiently executed, using backtracking. Alma-0 demonstrates that, if appropriate care is taken, it is possible to design PLs that smoothly combine paradigms without losing the advantages of either paradigm.
+
+    The interesting feature of Alma-0 is that it demonstrates that it is possible to start with a simple, well-defined language (Modula-2), remove features that are not required for the current purpose, and add a small number of simple, new features that provide expressive power when used together.
