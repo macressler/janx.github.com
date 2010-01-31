@@ -289,3 +289,102 @@ Alma-0: start from Modula-2, add many logic PL features;
     The language Alma-0 has a declarative semantics in which the constructs described above correspond to logical formulas. It also has a procedural semantics that describes how the constructs can be efficiently executed, using backtracking. Alma-0 demonstrates that, if appropriate care is taken, it is possible to design PLs that smoothly combine paradigms without losing the advantages of either paradigm.
 
     The interesting feature of Alma-0 is that it demonstrates that it is possible to start with a simple, well-defined language (Modula-2), remove features that are not required for the current purpose, and add a small number of simple, new features that provide expressive power when used together.
+
+
+Implementation
+--------------
+
+A compiler translates source language to machine language. Since practical compilation systems allow programs to be split into several components for compiling, there are usually several phases.
+
+  1. The components of the source program is compiled into object code.
+  2. The object code units and library functions required by the program are linked to form an executable file.
+  3. The executable file is loaded into memory and executed.
+
+All compilers perform some checks to ensure that the source code that they are translating is correct. 
+
+  * A FORTRAN compiler provides no checking between components. When the compiled components are linked, the linker will report subroutines that have not been defined but it will not detect discrepancies in the number of type of arguments. The result of such a discrepancy is, at best, run-time failure.
+
+  * C and C++ rely on the programmer to provide header files containing declarations and implementation files containing definitions. The compiler checks that declarations and definitions are compatible. Overloaded functions in C++ present a problem because one name may denote several functions. A key design decision in C++, however, was to use the standard linker (Stroustrup 1994, page 34). The solution is “name mangling” — the C++ compiler alters the names of functions by encoding their argument types in such a way that each function has a unique name.
+
+  * Modula-2 programs consist of interface modules and implementation modules. When the compiler compiles an implementation module, it reads all of the relevant interfaces and performs full checking. In practice, the interface modules are themselves compiled for efficiency, but this is not logically necessary.
+
+  * Eiffel programs consist of classes that are compiled separately. The compiler automatically derives an interface from the class declaration and uses the generated interfaces of other classes to perform full checking. Other OOPLs that use this method include Blue, Dee, and Java.
+
+An interpreter accepts source language and run-time input data and executes the program directly. It is possible to interpret without performing any translation at all, but this approach tends to be inefficient. Consequently, most interpreters do a certain amount of translation before executing the code. For example, the source program might be converted into an efficient internal representation, such as an abstract syntax tree, which is then “executed”. Interpreting is slower than executing compiled code, typically by a factor of 10 or more.
+
+Some programming environments, particularly those for LISP, provide both interpretation and compilation. In fact, some LISP environments allow source code and compiled code to be freely mixed.
+
+Byte Codes. Another mixed strategy consists of using a compiler to generate byte codes and an interpreter to execute the byte codes. The “byte codes”, as the name implies, are simply streams of bytes that represent the program: a machine language for an “abstract machine”. One of the first programming systems to be based on byte codes was the Pascal “P” compiler.
+
+    The advantage of byte code programs is that they can, in principle, be run on any machine. Thus byte codes provide a convenient way of implementing “portable” languages. The Pascal “P” compiler provided a simple method for porting Pascal to a new kind of machine. The “Pascal P package” consisted of the P-code compiler written in P-code. A Pascal implementor had to perform the following steps:
+
+      1. Write a P-code interpreter. Since P-code is quite simple, this is not a very arduous job.
+      2. Use the P-code interpreter to interpret the P-code compiler. This step yields a P-code program that can be used to translate Pascal programs to P-code. At this stage, the implementor has a working Pascal system, but it is inefficient because it depends on the P-code interpreter.
+      3. Modify the compiler source so that the compiler generates machine code for the new machine. This is a somewhat tedious task, but it is simplified by the fact that the compiler is written in Pascal.
+      4. Use the compiler created in step 2 to compile the modified compiler. The result of this step is a P-code program that translates Pascal to machine code.
+      5. Use the result of step 4 to compile the modified compiler. The result is a machine code program that translates Pascal to machine code — in other words, a Pascal compiler for the new machine.
+
+    With the exercise of due caution, the process described above (called bootstrapping ) can be simplified. For example, the first version of the compiler, created in step 2 does not have to compile the entire Pascal language, but only those parts that are needed by the compiler itself. The complete sequence of steps can be used to generate a Pascal compiler that can compile itself, but may be incomplete in other respects. When that compiler is available, it can be extended to compile the full language.
+
+Just In Time. “Just in time” (JIT) compilation is a recent strategy that is used for Java and a few research languages. The idea is that the program is interpreted, or perhaps compiled rapidly without optimization. As each statement is executed, efficient code is generated for it. This approach is based on the following assumptions:
+
+    1. in a typical run, much of the code of a program will not be executed;
+    2. if a statement has been executed once, it is likely to be executed again.
+
+    JIT provides fast response, because the program can be run immediately, and efficient execution, because the second and subsequent cycles of a loop are executed from efficiently compiled code. Thus JIT combines some of the advantages of interpretation and compilation.
+
+Interactive Systems: A PL can be designed for writing large programs that run autonomously or for interacting with the user. The categories overlap: PLs that can be used interactively, such as BASIC, LISP, SML, and Smalltalk, can also be used to develop large programs. The converse is not true: an interactive environment for C++ would not be very useful. An interactive PL is usually interpreted, but interpretation is not the only possible means of implementation. PLs that start out with interpreters often acquire compilers at a later stage — BASIC, LISP, and a number of other interactive PLs followed this pattern of development. A PL that is suitable for interactive use if programs can be described in small chunks. FPLs are often supported interactively because a programmer can build up a program as a collection of function definitions, where most functions are fairly small (e.g., they fit on a screen). Block structured languages, and modular languages, are less suitable for this kind of program development.
+
+There is a sharp distinction: either a PL is implemented with garbage collection (GC) or it is not. The implementor does not really have a choice. An implementation of LISP, Smalltalk, or Java without GC would be useless — programs would exhaust memory in a few minutes at most.  Conversely, it is almost impossible to implement C or C++ with GC, because programmers can perform arithmetic on pointers.
+
+The imperative PL community has been consistently reluctant to incorporate GC: there is no widely-used imperative PL that provides GC. The functional PL community has been equally consistent, but in the opposite direction. OOPL community is divided on this, but most of them provide GC.
+
+Conservative GC depends on the fact that it is possible to guess with a reasonable degree of accuracy whether a particular machine word is a pointer (Boehm and Weiser 1988). In typical modern processors, a pointer is a 4-byte quantity, aligned on a word boundary, and its value is a legal address. By scanning memory and noting words with these properties, the GC can identify regions of memory that might be in use. The problem is that there will be occasionally be words that look like pointers but actually are not: this results in about 10% of garbage being retained. The converse, and more serious problem, of identifying live data as garbage cannot occur: hence the term “conservative”.
+
+
+Abstraction
+-----------
+
+Abstraction is one of the most important mental tools in Computer Science. The biggest problems that we face in Computer Science are concerned with complexity; abstraction helps us to manage complexity. Abstraction is particularly important in the study of PLs because a PL is a two-fold abstraction.
+
+A PL must provide an abstract view of the underlying machine. The values that we use in programming — integers, floats, booleans, arrays, and so on — are abstracted from the raw bits of computer memory. The control structures that we use — assignments, conditionals, loops, and so on — are abstracted from the basic machine instructions. The first task of a PL is to hide the low-level details of the machine and present a manageable interface, preferably an interface that does not depend on the particular machine that is being used.
+
+A PL must also provide ways for the programmer to abstract information about the world. Most programs are connected to the world in one way or another, and some programs are little more than simulations of some aspect of the world. For example, an accounting program is, at some level, a simulation of tasks that used to be performed by clerks and accountants. The second task of a PL is to provide as much help as possible to the programmer who is creating a simplified model of the complex world in a computer program.
+
+In the evolution of PLs, the first need came before the second. Early PLs emphasize abstraction from the machine: they provide assignments, loops, and arrays. Programs are seen as lists of instructions for the computer to execute. Later PLs emphasize abstraction from the world: they provide objects and processes. Programs are seen as descriptions of the world that happen to be executable.
+
+An abstraction mechanism provides a way of naming and parameterizing a program entity.
+
+Procedures: The earliest abstraction mechanism was the procedure, which exists in rudimentary form even in assembly language. Procedural abstraction enables us to give a name to a statement, or group of statements, and to use the name elsewhere in the program to trigger the execution of the statements. Parameters enable us to customize the execution according to the particular requirements of the caller.
+
+Functions: The next abstraction mechanism, which also appeared at an early stage was the function. Functional abstraction enables us to give a name to an expression, and to use the name to trigger evaluation of the expression.
+
+    In many PLs, procedures and functions are closely related. Typically, they have similar syntax and similar rules of construction. The reason for this is that an abstraction mechanism that works only for simple expressions is not very useful. In practice, we need to abstract form arbitrarily complex programs whose main purpose is to yield a single value.
+
+    The difference between procedures and functions is most evident at the call site, where a procedure call appears in a statement context and a function call appears in an expression context.
+
+    FORTRAN provides procedures (called “subroutines”) and functions. Interestingly, COBOL does not provide procedure or function abstraction, although the PERFORM verb provides a rather restricted and unsafe way of executing statements remotely. LISP provides function abstraction. The effect of procedures is obtained by writing functions with side-effects. Algol 60, Algol 68, and C take the view that everything is an expression. (The idea seems to be that, since any computation leaves something in the accumulator, the programmer might as well be allowed to use it.) Thus statements have a value in these languages. It is not surprising that this viewpoint minimizes the difference between procedures and functions. In Algol 68 and C, a procedure is simple a function that returns a value of type void. Since this value is unique, it requires log 1 = 0 bits of storage and can be optimized away by the compiler.
+
+Data Types
+
+Classes
+
+
+Computational Model
+-------------------
+
+There is an abstraction that is useful for describing a PL in general terms, without the details of every construct, and that is the computational model (also sometimes called the semantic model ). The computational model (CM) is an abstraction of the operational semantics of the PL and it describes the effects of various operations without describing the actual implementation. Programmers who use a PL acquire intuitive knowledge of its CM. When a program behaves in an unexpected way, the implementation has failed to respect the CM.
+
+A simple CM does not imply easy implementation. Often, the opposite is true.
+
+There are two ways in which an OOPL can treat primitive entities such as booleans, characters, and integers. Primitive values can have a special status that distinguishes them from objects. A language that uses this policy is likely to be efficient, because the compiler can process primitives without the overhead of treating them as full-fledged objects. On the other hand, it may be confusing for the user to deal with two different kinds of variable — primitive values and objects.  Primitive values can be given the same status as objects. This simplifies the programmer’s task, because all variables behave like objects, but a naive implementation will probably be inefficient.
+
+A solution for this dilemma is to define a CM for the language in which all variables are objects. An implementor is then free to implement primitive values efficiently provided that the behaviour predicted by the CM is obtained at all times. In Smalltalk, every variable is an object. Early implementations of Smalltalk were inefficient, because all variables were actually implemented as objects. Java provides primitives with efficient implementations but, to support various OO features, also has classes for the primitive types.
+
+FPLs are based on the theory of partial recursive functions. They attempt to use this theory as a CM. The advantage of this point of view is that program text resembles mathematics and, to a certain extent, programs can be manipulated as mathematical objects. The disadvantage is that mathematics and computation are not the same. Some operations that are intuitively simple, such as maintaining the balance of a bank account subject to deposits and withdrawals, are not easily described in classical mathematics. The underlying difficulty is that many computations depend on a concept of mutable state that does not exist in mathematics.
+
+FPLs have an important property called referential transparency . An expression is referentially transparent if its only attribute is its value. The practical consequence of referential transparency is that we can freely substitute equal expressions.
+
+Early CMs: modelled programs as code acting on data; structured programs by recursive decomposition of code.
+Later CMs: modelled programs as packages of code and data; structured programs by recursive decomposition of packages of code and data.
+The CM should: help programmers to reason about programs; help programmers to read and write programs; constrain but not determine the implementation.
