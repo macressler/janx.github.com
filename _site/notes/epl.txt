@@ -388,3 +388,150 @@ FPLs have an important property called referential transparency . An expression 
 Early CMs: modelled programs as code acting on data; structured programs by recursive decomposition of code.
 Later CMs: modelled programs as packages of code and data; structured programs by recursive decomposition of packages of code and data.
 The CM should: help programmers to reason about programs; help programmers to read and write programs; constrain but not determine the implementation.
+
+
+Names and Binding
+-----------------
+
+free name: n+1
+bound name: for n in (1..5); puts n; end
+
+Expression with bounded name has definite value, change the name doesn't change the value.
+
+In predicate calculus, predicates may contain free names, as in: n mod 2 = 0 => n^2 mod 2 = 0. Names are bound by the quantifiers ∀ (for all) and ∃ (there exists). We say that the formula ∀n . n mod 2 = 0 => n^2 mod 2 = 0 is closed because it contains no free variables. Strictly, we should specify the range of values that n is allowed to assume. We could do this implicitly: for example, it is very likely that n refers to integers. Alternatively, we could define the range of values explicitly, as in ∀n ∈ Z . n mod 2 = 0 => n^2 mod 2 = 0.
+
+Precisely analogous situations occur in programming. In the function
+
+  int f (int n)
+  {
+    return k + n;
+  }
+
+k occurs free and n occurs bound. Note that we cannot tell the value of n from the definition of the function but we know that n will be given a value when the function is called. In most PLs, a program with free variables will not compile. A C compiler, for example, will accept the function f defined above only if it is compiled in a scope that contains a declaration of k. Some early PLs, such as FORTRAN and PL/I, provided implicit declarations for variables that the programmer did not declare; this is now understood to be error-prone and is not a feature of recent PLs.
+
+In mathematics, a variable normally has only one attribute: its value. In (1), n is bound to the values 0, 1, . . . , 5. Sometimes, we specify the domain from which these values are chosen, as in n ∈ Z. In programming, a name may have several attributes, and they may be bound at different times.  For example, in the sequence
+
+  int n;
+  n = 6;
+
+the first line binds the type int to n and the second line binds the value 6 to n. The first binding occurs when the program is compiled. (The compiler records the fact that the type of n is int; neither this fact nor the name n appears explicitly in the compiled code.) The second binding occurs when the program is executed. This example shows that there are two aspects of binding that we must consider in PLs: the attribute that is bound, and the time at which the binding occurs. The attributes that may be bound to a name include: type, address, and value. The times at which the bindings occur include: compile time, link time, load time, block entry time, and statement execution time.
+
+Definition. A binding is static if it occurs during before the program is executed: during compilation or linking. A binding is dynamic if it occurs while the program is running: during loading, block entry, or statement execution.
+
+An anonymous contributor to the Encyclopedia of Computer Science wrote: Broadly speaking, the history of software development is the history of ever-later binding time.
+
+  Early binding => efficiency
+  Late binding => flexibility
+
+Variable Addressing:
+
+  In FORTRAN, addresses are bound to variable names at compile time. The result is that, in the compiled code, variables are addressed directly, without any indexing or other address calculations. (In reality, the process is somewhat more complicated. The compiler assigns an address relative to a compilation unit. When the program is linked, the address of the unit within the program is added to this address. When the program is loaded, the address of the program is added to the address. The important point is that, by the time execution begins, the “absolute” address of the variable is known.) FORTRAN is efficient, because absolute addressing is used. It is inflexible, because all addresses are assigned at load time. This leads to wasted space, because all local variables occupy space whether or not they are being used, and also prevents the use of direct or indirect recursion.
+
+  In languages of the Algol family (Algol 60, Algol 68, C, Pascal, etc.), local variables are allocated on the run-time stack. When a function is called, a stack frame (called, in this context, an activation record or AR) is created for it and space for its parameters and local variables is allocated in the AR. The variable must be addressed by adding an offset (computed by the compiler) to the address of the AR, which is not known until the function is called. Algol-style is slightly less efficient than FORTRAN because addresses must be allocated at block-entry time and indexed addressing is required. It is more flexible than FORTRAN because inactive functions do not use up space and recursion works.
+
+  Languages that provide dynamic allocation, such as Pascal and C and most of their successors, have yet another way of binding an address to a variable. In these languages, a statement such as new(p) allocates space on the “heap” and stores the address of that space in the pointer p. Accessing the variable requires indirect addressing, which is slightly slower then indexed addressing, but greater flexibility is obtained because dynamic variables do not have to obey stack discipline (last in, first out).
+
+Function Addressing:
+
+  When the compiler encounters a function definition, it binds an address to the function name. (As above, several steps must be completed before the absolute address of the function is determined, but this is not relevant to the present discussion.) When the compiler encounters a function invocation, it generates a call to the address that it has assigned to the function. This statement is true of all PLs developed before OOP was introduced. OOPLs provide “virtual” functions. A virtual function name may refer to several functions. The actual function referred to in a particular invocation is not in general known until the call is executed.
+
+  Thus in non-OO PLs, functions are statically bound, with the result that calls are efficiently executed but no decisions can be made at run-time. In OOPLs, functions are dynamically bound. Calls take longer to execute, but there is greater flexibility because the decision as to which function to execute is made at run-time. The overhead of a dynamically-bound function call depends on the language. In Smalltalk, the overhead can be significant, because the CM requires a search. In practice, the search can be avoided in up to 95% of calls by using a cache. In C++, the compiler generates “virtual function tables” and dynamic binding requires only indirect addressing. Note, however, that this provides yet another example of the principle: Smalltalk binds later than C++, runs more slowly, but provides greater flexibility.
+
+Definition. An entity can be named if the PL provides a definitional mechanism that associates a name with an instance of the entity. An entity can be denoted if the PL provides ways of expressing instances of the entity as expressions.
+
+In C, we can name functions but we cannot denote them. The definition
+
+  int f (int x)
+  {
+    B
+  }
+
+introduces a function with name f , parameter x, and body B. Thus functions in C can be named. There is no way that we can write a function without a name in C. Thus functions in C cannot be denoted.
+
+We have seen that most PLs choose between two interpretations of a variable name. In a PL with value semantics, variable names denote memory locations. Assigning to a variable changes the contents of the location named by the variable. In a PL with reference semantics, variable names denote objects in memory. Assigning to a variable, if permitted by the language, changes the denotation of the name to a different object. Reference semantics is sometimes called “pointer semantics”. This is reasonable in the sense that the implementation of reference semantics requires the storage of addresses — that is, pointers. It is misleading in that providing pointers is not the same as providing reference semantics. The distinction is particularly clear in Hoare’s work on PLs. Hoare (1974) has this to say about the introduction of pointers into PLs.
+
+  Many language designers have preferred to extend [minor, localized faults in Algol 60 and other PLs] throughout the whole language by introducing the concept of reference, pointer, or indirect address into the language as an assignable item of data. This immediately gives rise in a high-level language to one of the most notorious confusions of machine code, namely that between an address and its contents. Some languages attempt to solve this by even more confusing automatic coercion rules. Worse still, an indirect assignment through a pointer, just as in machine code, can update any store location whatsoever, and the damage is no longer confined to the variable explicitly names as the target of assignment. For example, in Algol 68, the assignment x := y always changes x, but the assignment p := y + 1 may, if p is a reference variable, change any other variable (of appropriate type) in the whole machine. One variable it can never change is p! . . . . References are like jumps, leading wildly from one part of a data structure to another. Their introduction into high-level languages has been a step backward from which we may never recover.
+
+One year later, Hoare (1975) provided his solution to the problem of references in high-level PLs:
+
+  In this paper, we will consider a class of data structures for which the amount of storage can actually vary during the lifetime of the data, and we will show that it can be satisfactorily accommodated in a high-level language using solely high-level problem-oriented concepts, and without the introduction of references.
+
+The implementation that Hoare proposes in this paper is a reference semantics with types. Explicit types make it possible to achieve
+
+  . . . . a significant improvement on the efficiency of compiled LISP, perhaps even a factor of two in space-time cost for suitable applications. (Hoare 1975)
+
+All FPLs and most OOPLs (the notable exception, of course, being C++) use reference semantics. There are good reasons for this choice, but the reasons are not the same for each paradigm.
+
+In a FPL, all (or at least most) values are immutable. If X and Y are have the same value, the program cannot tell whether X and Y are distinct objects that happen to be equal, or pointers to the same object. It follows that value semantics, which requires copying, would be wasteful because there is no point in making copies of immutable objects. (LISP provides two tests for equality. (eq x y) is true if x and y are pointers to the same object. (equal x y) is true if the objects x and y have the same extensional value. These two functions are provided partly for efficiency and partly to cover up semantic deficiencies of the implementation. Some other languages provide similar choices for comparison.)
+
+One of the important aspects of OOP is object identity . If a program object X corresponds to a unique entity in the world, such as a person, it should be unique in the program too. This is most naturally achieved with a reference semantics.
+
+
+Polymorphism
+------------
+
+The word “polymorphism” is derived from Greek and means, literally, “many shapes”. In PLs, “polymorphism” is used to describe a situation in which one name can refer to several different entities. The most common application is to functions. There are several kinds of polymorphism; the terms “ad hoc polymorphism” and “parametric polymorphism” are due to Christopher Strachey.
+
+Ad Hoc Polymorphism:
+
+  In general, ad hoc polymorphism refers to the use of a single function name to refer to two or more distinct functions. Typically the compiler uses the types of the arguments of the function to decide which function to call. Ad hoc polymorphism is also called “overloading”. Almost all PLs provide ad hoc polymorphism for built-in operators such as “+”, “−”, “*”, etc. Ada, C++, and other recent languages also allow programmers to overload functions. (Strictly, we should say “overload function names” but the usage “overloaded functions” is common.) In general, all that the programmer has to do is write several definitions, using the same function name, but ensuring that the either the number or the type of the arguments are different.
+
+Parameterized Polymorphism:
+
+  Suppose that a language provides the type list as a parameterized type. That is, we can make declarations such as these:
+
+    list(int)
+    list(float)
+
+  Suppose also that we have two functions: sum computes the sum of the components of a given list, and len computes the number of components in a given list. There is an important difference between these two functions. In order to compute the sum of a list, we must be able to choose an appropriate “add” function, and this implies that we must know the type of the components. On the other hand, there seems to be no need to know the type of the components if all we need to do is count them. A function such as len, which counts the components of a list but does not care about their type, has parametric polymorphism.
+
+Object Polymorphism:
+
+  In OOPLs, there may be many different objects that provide a function called, say, f . However, the effect of invoking f may depend on the object. The details of this kind of polymorphism, which are discussed in Section 6, depend on the particular OOPL. This kind of polymorphism is a fundamental, and very important, aspect of OOP.
+
+
+Assignment
+----------
+
+Consider the assignment x := E. Whatever the PL, the semantics of this statement will be something like:
+
+  evaluate the expression E;
+  store the value obtained in x.
+
+The assignment is unproblematic if x and E have the same type. But what happens if they have different types? There are several possibilities:
+
+  * The statement is considered to be an error. This will occur in a PL that provides static type checking but does not provide coercion. For example, Pascal provides only a few coercions (subrange to integer, integer to real, etc.) and rejects other type differences.
+  * The compiler will generate code to convert the value of expression E to the type of x. This approach was taken to extremes in COBOL and PL/I. It exists in C and C++, but C++ is stricter than C.
+  * The value of E will be assigned to x anyway. This is the approach taken by PLs that use dynamic type checking. Types are associated with objects rather than with names.
+
+
+Scope and Extent
+----------------
+
+The scope of a name is the region of the program text in which a name may be used. In C++, for example, the scope of a local variable starts at the declaration of the variable and ends at the end of the block in which the declaration appears. Scope is a static property of a name that is determined by the semantics of the PL and the text of the program.
+
+  * Global Scope. The name is visible throughout the program.
+  * Local Scope. In block-structured languages, names declared in a block are local to the block. There is a question as to whether the scope starts at the point of definition or is the entire block. (In other words, does the PL require “declaration before use”?)
+  * Qualified Scope. The components of a structure, such as a Pascal record or a C struct, have names. These names are usually hidden, but can be made visible by the name of the object.
+  * Import and Export. In modular languages, a name or group of names can be brought into a scope with an import clause. The module that provides the definitions must have a corresponding export clause.
+  * Namespaces. The mechanisms above are inadequate for very large programs developed by large teams. Problems arise when a project uses several libraries that may have conflicting names. Namespaces, provided by PLs such as C++ and Common LISP, provide a higher level of name management than the regular language features.
+
+  * Nested scopes are convenient in small regions, such as functions. The advantage of nested scopes for large structures, such as classes or modules, is doubtful.
+  * Nesting is a form of scope management. For large structures, explicit control by name qualification may be better than nesting.
+  * Qualified names work well at the level of classes and modules, when the source of names is obvious.
+  * The import mechanism has the problem that the source of a name is not obvious where it appears: users must scan possibly remote import declarations.
+  * Qualified names are inadequate for very large programs.
+  * Library designers can reduce the potential for name conflicts by using distinctive prefixes. For example, all names supplied by the commercial graphics library FastGraph are have fg_ as a prefix.
+  * Namespaces provide a better solution than prefixes.
+
+Scope management is important because the programmer has no “work arounds” if the scoping mechanisms provided by the PL are inadequate. This is because PLs typically hide the scoping mechanisms. If a program is compiled, names will normally not be accessible at run-time unless they are included for a specific purpose such as debugging. In fact, one way to view compiling is as a process that converts names to numbers. Interpreters generally have a repository that contains the value of each name currently accessible to the program, but programmers may have limited access to this repository.
+
+The extent, also called lifetime, of a name is the period of time during program execution during which the object corresponding to the name exists. Understanding the relation between scope and extent is an important part of understanding a PL.
+
+Global names usually exist for the entire lifetime of the execution: they have global extent. In FORTRAN, local variables also exist for the lifetime of the execution. Programmers assume that, on entry to a subroutine, its local variables will not have changed since the last invocation of the subroutine.
+
+In Algol 60 and subsequent stack-based languages, local variables are instantiated whenever control enters a block and they are destroyed (at least in principle) when control leaves the block. It is an error to create an object on the stack and to pass a reference to that object to an enclosing scope. Some PLs attempt to detect this error (e.g., Algol 68), some try to prevent it from occurring (e.g., Pascal), and others leave it as a problem for the programmer (e.g., C and C++).
+
+In PLs that use a reference model, objects usually have unlimited extent, whether or not their original names are accessible. Examples include Simula, Smalltalk, Eiffel, CLU, and all FPLs. The advantage of the reference model is that the problems of disappearing objects (dangling pointers) and inaccessible objects (memory leaks) do not occur. The disadvantage is that GC and the accompanying overhead are more or less indispensable.
+
+The separation of extent from scope was a key step in the evolution of post-Algol PLs.
