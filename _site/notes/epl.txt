@@ -535,3 +535,211 @@ In Algol 60 and subsequent stack-based languages, local variables are instantiat
 In PLs that use a reference model, objects usually have unlimited extent, whether or not their original names are accessible. Examples include Simula, Smalltalk, Eiffel, CLU, and all FPLs. The advantage of the reference model is that the problems of disappearing objects (dangling pointers) and inaccessible objects (memory leaks) do not occur. The disadvantage is that GC and the accompanying overhead are more or less indispensable.
 
 The separation of extent from scope was a key step in the evolution of post-Algol PLs.
+
+
+Structure
+---------
+
+The earliest programs had little structure. Although a FORTRAN program has a structure — it consists of a main program and subroutines — the main program and the subroutines themselves are simply lists of statements.
+
+Block Structure:
+
+  Algol 60 was the first major PL to provide recursive, hierarchical structure. It is probably significant that Algol 60 was also the first language to be defined, syntactically at least, with a context-free grammar. It is straightforward to define recursive structures using context-free grammars — specifically, a grammar written in Backus-Naur Form (BNF) for Algol 60. The basis of Algol 60 syntax can be written in extended BNF as follows:
+
+          PROG -> BLOCK
+         BLOCK -> "begin" { DECL } { STMT } "end"
+          STMT -> BLOCK | · · ·
+          DECL -> FUNCDECL | · · ·
+      FUNCDECL -> HEAD BLOCK
+
+With blocks come nested scopes. Earlier languages had local scope (for example, FORTRAN subroutines have local variables) but scopes were continuous (no “holes”) and not nested. It was not possible for one declaration to override another declaration of the same name. In Algol 60, however, an inner declaration overrides an outer declaration.
+
+Modules:
+
+  By the early 70s, people realized that the “monolithic” structure of Algol-like programs was too restricted for large and complex programs. Furthermore, the “separate compilation” model of FORTRAN — and later C — was seen to be unsafe. The new model that was introduced by languages such as Mesa and Modula divided a large program into modules.
+
+    * A module is a meaningful unit (rather than a collection of possibly unrelated declarations) that may introduce constants, types, variables, and functions (called collectively features).
+    * A module may import some or all of its features.
+    * In typical modular languages, modules can export types, functions, and variables.
+
+  Parnas (1972) wrote a paper that made a number of important points:
+
+    * A large program will be implemented as a set of modules.
+    * Each programmer, or programming team, will be the owners of some modules and users of other modules.
+    * It is desirable that a programmer should be able to change the implementation of a module without affecting (or even informing) other programmers.
+    * This implies that a module should have an interface that is relatively stable and an implementation that changes as often as necessary. Only the owner of a module has access to its implementation; users do not have such access.
+
+  Parnas introduced these ideas as the “principle of information hiding”. Today, it is more usual to refer to the goals as encapsulation. In order to use the module correctly without access to its implementation, users require a specification written in an appropriate language. The specification answer the question “What does this module do?” and the implementation answers the question “How does this module work?” Most people today accept Parnas’s principle, even if they do not apply it well. It is therefore important to appreciate how radical it was at the time of its introduction.
+
+    "[Parnas] has proposed a still more radical solution. His thesis is that the programmer is most effective if shielded from, rather than exposed to, the details of construction of system parts other than his own. This presupposes that all interfaces are completely and precisely defined. While that is definitely sound design, dependence upon its perfect accomplishment is a recipe for disaster. A good information system both exposes interface errors and stimulates their correction." (Brooks 1975, page 78)
+
+  Brooks wrote this in the first edition of The Mythical Man Month in 1975. Twenty years later, he had changed his mind.
+
+    "Parnas was right, and I was wrong. I am now convinced that information hiding, today often embodied in object-oriented programming, is the only was of raising the level of software design." (Brooks 1995, page 272)
+
+  Parnas’s paper was published in 1972, only shortly after Wirth’s (1971) paper on program development by stepwise refinement. Yet Parnas’s approach is significantly different from Wirth’s. Whereas Wirth assumes that a program can be constructed by filling in details, perhaps with occasional backtracking to correct an error, Parnas sees programming as an iterative process in which revisions and alterations are part of the normal course of events. This is a more “modern” view and certainly a view that reflects the actual construction of large and complex software systems.
+
+Control Structures:
+
+  Early PLs, such as FORTRAN, depended on three control structures:
+
+    sequence;
+    transfer (goto);
+    call/return.
+
+  These structures are essentially those provided by assembly language. The first contribution of PLs was to provide names for variables and infix operators for building expressions. The “modern” control structures first appeared in Algol 60. The most significant contribution of Algol 60 was the block : a program unit that could contain data, functions, and statements. Algol 60 also contributed the familiar if-then-else statement and a rather complex loop statement. However, Algol 60 also provided goto statements and most programmers working in the sixties assumed that goto was essential.
+
+  The storm of controversy raised by Dijkstra’s (1968) letter condemning the goto statement indicates the extent to which programmers were wedded to the goto statement. Even Knuth (1974) entered the fray with arguments supporting the goto statement in certain circumstances, although his paper is well-balanced overall. The basic ideas that Dijkstra proposed were as follows.
+
+    * There should be one flow into, and one flow out of, each control structure.
+    * All programming needs can be met by three structures satisfying the above property: the sequence; the loop with preceding test (while-do); and the conditional (if-then-else).
+
+  Dijkstra’s proposals had previously been justified in a formal sense by Bohm and Jacopini (1966). This paper establishes that any program written with goto statements can be rewritten as an equivalent program that uses sequence, conditional, and loop structures only; it may be necessary to introduce Boolean variables. Although the result is interesting, Dijkstra’s main point was not to transform old, goto-ridden programs but to write new programs using simple control structures only.
+
+  Despite the controversy, Dijkstra’s arguments had the desired effect. In languages designed after 1968, the role of goto was down-played. Both C and Pascal have goto statements but they are rarely used in well-written programs. C, with break, continue, and return, has even less need for goto than Pascal. Ada has a goto statement because it was part of the US DoD requirements but, again, it is rarely needed. The use of control structures rather than goto statements has several advantages:
+
+    * It is easier to read and maintain programs. Maintenance errors are less common.
+    * Precise reasoning (for example, the use of formal semantics) is simplified when goto statements are absent.
+    * Certain optimizations become feasible because the compiler can obtain more precise information in the absence of goto statements.
+
+  The control structure that has elicited the most discussion is the loop. The basic loop has a single test that precedes the body: while E do S; It is occasionally useful to perform the test after the body: Pascal provides repeat/until and C provides do/while. This is not quite enough, however, because there are situations in which it is useful to exit from a loop from within the body. Consider, for example, the problem of reading and adding numbers, terminating when a negative number is read without including the negative number in the sum. Some recent languages, recognizing this problem, provide only one form of loop statement consisting of an unconditional repeat and a conditional exit that can be used anywhere in the body of the loop.
+
+  Some languages, such as Ada and Pascal, distinguish the terms procedure and function. Both names refer to “subroutines” — program components that perform a specific task when invoked from another component of the program. A procedure is a subroutine that has some effect on the program data but does not return a result. A function is a subroutine that returns a result; a function may have some effect on program data, called a “side effect”, but this is often considered undesirable.
+
+  Languages that make a distinction between procedures and functions usually also make a distinction between “actions” and “data”. For example, at the beginning of the first Pascal text (Jensen and Wirth 1976), we find the following statement: "An algorithm or computer program consists of two essential parts, a description of actions which are to be performed, and a description of the data, which are manipulated by the actions. Actions are described be so-called statements, and data are described by so-called declarations and definitions."
+
+  In other languages, such as Algol and C, the distinction between “actions” and “data” is less emphasized. In these languages, every “statement” has a value as well as an effect. Consistently, the distinction between “procedure” and “function” also receives less emphasis. C, for example, does not have keywords corresponding to procedure and function. There is a single syntax for declaring and defining all functions and a convention that, if a function does not return a result, it is given the return type void. We can view the progression here as a separation of concerns. The “concerns” are: whether a subroutine returns a value; and whether it has side-effects. Ada and Pascal combine the concerns but, for practical reasons, allow “functions with side-effects”. In C, there are two concerns: “having a value” and “having an effect” and they are essentially independent.
+
+  The basic control structures are fine for most applications provided that nothing goes wrong. Although in principle we can do everything with conditions and loops, there are situations in which these constructs are inadequate. PL/I (Section 4.5) was the first major language to provide exception handling. C provided primitives (setjmp/longjmp) that made it possible to implement exceptin handling.
+
+
+Issues in OOP
+-------------
+
+Algorithms + Data Structures = Programs ?
+
+  The distinction between code and data was made at an early stage. It is visible in FORTRAN and reinforced in Algol 60. Algol provided the recursive block structure for code but almost no facilities for data structuring. Algol 68 and Pascal provided recursive data structures but maintained the separation between code and data. LISP brought algorithms (in the form of functions) and data structures together, but: 1. the mutability of data was downplayed; 2. subsequent FPLs reverted to the Algol model, separating code and data. Simula started the move back towards the von Neumann Architecture at a higher level of abstraction than machine code: the computer was recursively divided into smaller computers, each with its own code and stack. This was the feature of Simula that attracted Alan Kay and led to Smalltalk (Kay 1996). Many OOPLs since Smalltalk have withdrawn from its radical ideas. C++ was originally called “C with classes” (Stroustrup 1994) and modern C++ remains an Algol-like systems programming language that supports OOP. Ada has shown even more reluctance to move in the direction of OOP, although Ada 9X has a number of OO features.
+
+Valuses vs Objects
+
+  Some data behave like mathematical objects and other data behave like representations of physical objects (MacLennan 1983).
+
+  Consider the sets { 1, 2, 3 } and { 2, 3, 1 }. Although these sets have different representations (the ordering of the members is different), they have the same value because in set theory the only important property of a set is the members that it contains: “two sets are equal if and only if they contain the same members”. Consider two objects representing people:
+
+    [name="Peter", age=55]
+    [name="Peter", age=55]
+
+  Although these objects have the same value, they might refer to different people who have the same name and age. The consequences of assuming that these two objects denote the same person could be serious: in fact, innocent people have been arrested and jailed because they had the misfortune to have the same name and social security number as a criminal.
+
+  Values:
+  * Integers have values. For example, the integer 6 is a value.
+  * Values are abstract. The value 7 is the common property shared by all sets with cardinality 7.
+  * Values are immutable (i.e., do not change).
+  * It does not make sense to change a value. If we change the value 3, it is no longer 3.
+  * Values need representations. We need representations in order to compute with values. The representations 7, VII, sept, sju, and a particular combination of bits in the memory of a computer are different representations of the same abstract value.
+  * It does not make sense to talk about the identity of a value. Suppose we evaluate 2 + 3, obtaining 5, and then 7 − 2, again obtaining 5. Is it the same 5 that we obtain from the second calculation?
+  * We can copy a representation of a value, but copying a value is meaningless.
+  * We consider different representations of the same value to be equal.
+  * Aliasing is not a problem for values. It is immaterial to the programmer, and should not even be detectable, whether two instances of a value are stored in the same place or in different places.
+  * Functional and logical PLs usually provide values.
+  * Programs that use values only have the property of referential transparency.
+  * Small values can be held in machine words. Large values are best represented by references (pointers to the data structure representing the value.
+  * The assignment operator for values should be a reference assignment. There is no need to copy values, because they do not change.
+
+  Objects:
+  * Objects possess values as attributes. For example, a counter might have 6 as its current value.
+  * Objects are concrete. An object is a particular collection of sub-objects and values. A counter has one attribute: the value of the count.
+  * Objects are usually, but not necessarily, mutable (i.e., may change).
+  * It is meaningful, and often useful, to change the value of an object. For example, we can increment a counter.
+  * Objects need representations. An object has subobjects and values as attributes.
+  * Identity is an important attribute of objects. Even objects with the same attributes may have their own, unique identities: consider identical twins.
+  * Copying an object certainly makes sense. Sometimes, it may even be useful, as when we copy objects from memory to disk, for example. However, multiple copies of an object with a supposedly unique identity can cause problems, known as “integrity violations” in the database community.
+  * An object is equal to itself. Whether two distinct objects with equal attributes are equal depends on the application. A person who is arrested because his name and social insurance number is the same as those of a wanted criminal may not feel “equal to” the criminal.
+  * All references to a particular object should refer to the same object. This is sometimes called “aliasing”, and is viewed as harmful, but it is in fact desirable for objects with identity.
+  * Object oriented PLs should provide objects.
+  * Programs that provide objects do not provide referential transparency, but may have other desirable properties such as encapsulation.
+  * Very small objects may be held in machine words. Most objects should be represented by references (pointers to the data structure holding the object.
+  * The assignment operator for objects should be a reference assignment. Objects should not normally be copied, because copying endangers their integrity.
+
+  Conclusions:
+  * The CM must provide values, may provide objects.
+  * What is “small” and what is “large”? This is an implementation issue: the compiler must decide.
+  * What is “primitive” and what is “user defined”? The PL should minimize the distinction as much as possible.
+  * Strings should behave like values. Since they have unbounded size, many PLs treat them as objects.
+  * Copying and comparing are semantic issues. Compilers can provide default operations and “building bricks”, but they cannot provide fully appropriate implementations.
+
+Classes vs Prototypes
+
+  The most widely-used OOPLs — C++, Smalltalk, and Eiffel — are class-based. Classes provide a visible program structure that seems to be reassuring to designers of complex software systems. Prototype languages are a distinct but active minority. The relation between classes and prototypes is somewhat analogous to the relation between procedural (FORTRAN and Algol) and functional (LISP) languages in the 60s. Prototypes provide more flexibility and are better suited to interactive environments than classes. Although large systems have been built using prototype languages, these languages seem to be more often used for exploratory programming.
+
+Types vs Objects
+
+  In most class-based PLs, functions are associated with objects. This has the effect of making binary operations asymmetric. For example, x = y is interpreted as x.equal(y) or, approximately, “send the message equal with argument y to the object x”. It is not clear whether, with this interpretation, y = x means the same as x = y. The problem is complicated further by inheritance: if class C is a subclass of class P , can we compare an instance of C to an instance of P , and is this comparison commutative? Some of the problems can be avoided by associating functions with types rather than with objects. This is the approach taken by CLU and some of the “functional” OOPLs. An expression such as x = y is interpreted in the usual mathematical sense as equal(x,y). However, even this approach has problems if x and y do not have the same type.
+
+Pure vs Hybrid
+
+  Smalltalk, Eiffel, and Java are pure OOPLs: they can describe only systems of objects and programmers are forced to express everything in terms of objects. C++ is a hybrid PL in that it supports both procedural and object styles. Once the decision was made to extend C rather than starting afresh (Stroustrup 1994, page 43), it was inevitable that C++ could be a hybrid language. In fact, its precursor, “C with classes”, did not even claim to be object oriented. A hybrid language can be dangerous for inexperienced programmers because it encourages a hybrid programming style. OO design is performed perfunctorily and design problems are solved by reverting to the more general, but lower level, procedural style. (This is analogous to the early days of “high level” programming when programmers would revert to assembler language to express constructs that were not easy or possible to express at a high level.) For experienced programmers, and especially those trained in OO techniques, a hybrid language is perhaps better than a pure OOPL. These programmers will use OO techniques most of the time and will only resort to procedural techniques when these are clearly superior to the best OO solution. As OOPLs evolve, these occasions should become rarer. Perhaps “pure or hybrid” is the wrong question. A better question might be: suppose a PL provides OOP capabilities. Does it need to provide anything else? If so, what? One answer is: FP capabilities. The multi-paradigm language LEDA (Budd 1995) demonstrates that it is possible to provide functional, logic, and object programming in a single language. However, LEDA provides these in a rather ad hoc way. It more tightly-integrated design would be preferable, but is harder to accomplish.
+
+Closures vs Classes
+
+  The most powerful programming paradigms developed so far are those that do not separate code and data but instead provide “code and data” units of arbitrary size. This can be accomplished by high order functions and mutable state, as in Scheme (Section 5.2) or by classes. Although each method has advantages for certain applications, the class approach seems to be better in most practical situations.
+
+Inheritance
+
+  Inheritance is one of the key features of OOP and at the same time one of the most troublesome. Conceptually, inheritance can be defined in a number of ways and has a number of different uses. In practice, most (but not all!) OOPLs provide a single mechanism for inheritance and leave it to the programmer to decide how to use the mechanism. Moreover, at the implementation level, the varieties of inheritance all look much the same — a fact that discourages PL designers from providing multiple mechanisms. One of the clearest examples of the division is Meyer’s (1988) “marriage of convenience” in which the class ArrayStack inherits from Array and Stack. The class ArrayStack behaves like a stack — it has functions such as push, pop, and so on — and is represented as an array. There are other ways of obtaining this effect — notably, the class ArrayStack could have an array object as an attribute — but Meyer maintains that inheritance is the most appropriate technique, at least in Eiffel.
+
+  Whether or not we agree with Meyer, it is clear that there two different relations are involved. The relation ArrayStack ~ Stack is not the same as the relation ArrayStack ~ Array. Hence the question: should an OOPL distinguish between these relations or not? Based on the “marriage of convenience” the answer would appear to be “yes” — two distinct ends are achieved and the means by which they are achieved should be separated. A closer examination, however, shows that the answer is by no means so clear-cut. There are many practical programming situations in which code in a parent class can be reused in a child class even when interface consistency is the primary purpose of inheritance.
+
+A Critique of C++
+
+  C++ is both the most widely-used OOPL and the most heavily criticized. Further criticism might appear to be unnecessary. The purpose of this section is to show how C++ fails to fulfill its role as the preferred OOPL. The first part of the following discussion is based on a paper by LaLonde and Pugh (1995) in which they discuss C++ from the point of view of a programmer familiar with the principles of OOP, exemplified by a language such as Smalltalk, but who is not familiar with the details of C++.
+
+  We begin by writing a specification for a simple BankAccount class with an owner name, a balance, and functions for making deposits and withdrawals. Data members are prefixed with “p” to distinguish them from parameters with similar names. The instance variable pTrans is a pointer to an array containing the transactions that have taken place for this account. Functions that operate on this array have been omitted. We can create instances of BankAccount on either the stack or the heap:
+
+    BankAccount account1("John"); // on the stack
+    BankAccount *account2 = new BankAccount("Jane"); // on the heap
+
+  (J: object on stack ... I think it's cool)
+
+  The first account, account1, will be deleted automatically at the end of the scope containing the declaration. The second account, account2, will be deleted only when the program executes a delete operation. In both cases, the destructor will be invoked. The notation for accessing functions depends on whether the variable refers to the object directly or is a pointer to the object.
+
+    account1.balance()
+    account2->balance()
+
+  A member function can access the private parts of another instance of the same class which comes as a surprise to Smalltalk programmers because, in Smalltalk, an object can access only its own components. The next step is to define the member functions of the class BankAccount and write a simple test of the class BankAccount. This test introduces two bugs. The array account1.pTrans is lost because it is over-written by account2.pTrans. At the end of the test, account2.pTrans will be deleted twice, once when the destructor for account1 is called, and again when the destructor for account2 is called. Although most introductions to C++ focus on stack objects, it is more interesting to consider heap objects.
+
+  The code creating three special accounts is rather specialized. We generalizes it so that we can enter the account owner’s names interactively. The problem with this code is that all of the bank accounts have the same owner: that of the last name entered. This is because each account contains a pointer to the unique buffer. We can fix this by allocating a new buffer for each account. This version works, but is poorly designed. Deleting the owner string should be the responsibility of the object, not the client. The destructor for BankAccount should delete the owner string. After making this change, we can remove the destructor for owner. Unfortunately, this change introduces another problem. Suppose we use the loop to create two accounts and then create the third account with this statement:
+
+    accounts[2] = new BankAccount("Tina");
+
+  The account destructor fails because "Tina" was not allocated using new. To correct this problem, we must modify the constructor for BankAccount. The rule we must follow is that data must be allocated with the constructor and deallocated with the destructor, or controlled entirely outside the object. The next problem occurs when we try to use the overloaded function owner() to change the name of an account owner.
+
+    accounts[2]->owner("Fred");
+
+  Once again, we have introduced two bugs: 1. The original owner of accounts[2] will be lost. 2. When the destructor is invoked for accounts[2], it will attempt to delete "Fred", which was not allocated by new. To correct this problem, we must rewrite the member function owner(). We now have bank accounts that work quite well, provided that they are allocated on the heap. If we try to mix heap objects and stack objects, however, we again encounter difficulties. The error occurs because transfer expects the address of an account rather than an actual account.  We correct it by introducing the reference operator, &.
+
+    account1->transfer(&account3, 10.0);
+
+  We could make things easier for the programmer who is using accounts by declaring an overloaded version of transfer() as shown below. Note that, we must use the operator “.” rather than “->”. This is because other behaves like an object, although in fact an address has been passed. The underlying problem here is that references (&) work best with stack objects and pointers (*) work best with heap objects. It is awkward to mix stack and heap allocation in C++ because two sets of functions are needed. If stack objects are used without references, the compiler is forced to make copies. To implement the code (a function pass in and return object on stack), C++ uses the (default) copy constructor for BankAccount twice: first to make a copy of account2 to pass to test() and, second, to make another copy of account2 that will become myAccount. At the end of the scope, these two copies must be deleted. The destructors will fail because the default copy constructor makes a shallow copy — it does not copy the pTrans fields of the accounts. The solution is to write our own copy constructor and assignment overload for class BankAccount. The function pDuplicate() makes a deep copy of an account the function; it must make copies of all of the components of a back account object and destroy all components of the old object. The function pDelete has the same effect as the destructor. It is recommended practice in C++ to write these functions for any class that contains pointers.
+
+  LaLonde and Pugh continue with a discussion of infix operators for user-defined classes. If the objects are small — complex numbers, for example — it is reasonable to store the objects on the stack and to use call by value. C++ is well-suited to this approach: storage management is automatic and the only overhead is the copying of values during function call and return. If the objects are large, however, there are problems. Suppose that we want to provide the standard algebraic operations (+, −, *) for 4 × 4 matrices. (This would be useful for graphics programming, for example.) Since a matrix occupies 4×4×8 = 128 bytes, copying a matrix is relatively expensive and the stack approach will be inefficient. But if we write functions that work with pointers to matrices, it is difficult to manage allocation and deallocation. Even a simple function call such as project(A + B); will create a heap object corresponding to A + B but provides no opportunity to delete this object. (The function cannot delete it, because it cannot tell whether its argument is a temporary.) The same problem arises with expressions such as A = B + C * D; It is possible to implement the extended assignment operators, such as +=, without losing objects. But this approach reduces us to a kind of assembly language style of programming.
+
+  These observations by LaLonde and Pugh seem rather hostile towards C++. They are making a comparison between C++ and Smalltalk based only on ease of programming. The comparison is one-sided because they do not discuss factors that might make C++ a better choice than Smalltalk in some circumstances, such as when efficiency is important. Nevertheless, the discussion makes an important point: the “stack model” (with value semantics) is inferior to the “heap model” (with reference semantics) for many OOP applications. It is significant that most language designers have chosen the heap model for OOP (Simula, Smalltalk, CLU, Eiffel, Sather, Dee, Java, Blue, amongst others) and that C++ is in the minority on this issue.
+
+  Another basis for criticizing C++ is that is has become, perhaps not intentionally, a hacker’s language. A sign of good language design is that the features of the language are used most of the time to solve the problems that they were intended to solve. A sign of a hacker’s language is that language “gurus” introduce “hacks” that solve problems by using features in bizarre ways for which they were not originally intended.
+
+  Input and output in C++ is based on “streams”. A typical output statement looks something like this:
+
+    cout << "The answer is " << answer << ’.’ << endl;
+
+  The operator << requires a stream reference as its left operand and an object as its right operand. Since it returns a stream reference (usually its left operand), it can be used as an infix operator in compound expressions such as the one shown. The notation seems clear and concise and, at first glance, appears to be an elegant way of introducing output and input (with the operator >>) capabilities.
+
+  Obviously, << is heavily overloaded. There must be a separate function for each class for which instances can be used as the right operand. (<< is also overloaded with respect to its left operand, because there are different kinds of output streams.) In the example above, the first three right operands are a string, a double, and a character. The first problem with streams is that, although they are superficially object oriented (a stream is an object), they do not work well with inheritance. Overloading provides static polymorphism which is incompatible with dynamic polymorphism. It is possible to write code that uses dynamic binding but only by providing auxiliary functions.
+
+  The final operand, endl, writes end-of-line to the stream and flushes it. It is a global function with signature ios & endl (ios & s) A programmer who needs additional “manipulators” of this kind has no alternative but to add them to the global name space. Things get more complicated when formatting is added to streams. For example, we could change the example above to:
+
+    cout << "The answer is " << setprecision(8) << answer << ’.’ << endl;
+
+  The first problem with this is that it is verbose. (The verbosity is not really evident in such a small example, but it is very obvious when streams are used, for example, to format a table of heterogeneous data.) The second, and more serious problem, is the implementation of setprecision. The way this is done is (roughly) as follows (Teale 1993, page 171). First, a class for manipulators with integer arguments is declared, and the inserter function is defined. Second, the function that we need can be defined. It is apparent that a programmer must be quite proficient in C++ to understand these definitions, let alone design similar functions. To make matters worse, the actual definitions are not as shown here, because that would require class declarations for many different types, but are implemented using templates. There are many other tricks in the implementation of streams. For example, we can use file handles as if they had boolean values. It seems that there is a boolean value, infile, that we can negate, obtaining !infile. In fact, infile can be used as a conditional because there is a function that converts infile to (void *), with the value NULL indicating that the file is not open, and !infile can be used as a conditional because the operator ! is overloaded for class ifstream to return an int which is 0 if the file is open.
+
+  These are symptoms of an even deeper malaise in C++ than the problems pointed out by authors of otherwise excellent critiques such as (Joyner 1992; Sakkinen 1992). Most experienced programmers can get used to the well-known idiosyncrasies of C++, but few realize that frequently-used and apparently harmless constructs are implemented by subtle and devious tricks. Programs that look simple may actually conceal subtle traps.
