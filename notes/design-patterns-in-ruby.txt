@@ -1,0 +1,64 @@
+=======================
+Design Patterns in Ruby
+=======================
+
+
+GoF defined 23 patterns in their originally work.
+
+4 Meta-patterns:
+* Separate out the things that change from those that stay the same.
+* Program to an interface, not an implementation. (J: program to the most general type you can)
+* Prefer composition over inheritance. (J: class coupled tightly through inheritance. In short, we try to avoid saying that an object is a kind of something and instead say that it has something.)
+* Delegate, delegate, delegate.
+
+YAGNI: You Ain't Gonna Need it. Don't implement what is unneed now, but keep change possibility. The proper use of design patterns is the art of making your system just flexible enough to deal with the problems you have today, but no more.
+
+14 of the 23 patterns talked in this book:
+* Template Method
+* Strategy Object
+* Observer Pattern
+* Composite Pattern
+* Iterator Pattern
+* Command Pattern
+* Adapter
+* Proxy
+* Decorator Pattern
+* Singleton
+* Factory Method
+* Abstract Factory
+* Builder
+* Interpreter
+
+9 untalked:
+* Prototype
+* Bridge
+* Facade
+* Flyweight
+* Chain of Responsibility
+* Mediator
+* Memeto
+* State
+* Visitor
+
+3 Ruby specific patterns:
+* Internal DSL
+* Meta Programming
+* Convention Not Configuration
+
+
+Template Method
+===============
+
+Define an abstract base class with a master method that performs the basic steps listed above, but that leaves the details of each step to a subclass.
+
+The general idea of the Template Method pattern is to build an abstract base class with a skeletal method. This skeletal method (also called a template method) drives the bit of the processing that needs to vary, but it does so by making calls to abstract methods, which are then supplied by the concrete subclasses. We pick the variation that we want by selecting one of those concrete subclasses.
+
+Non-abstract methods that can be overridden in the concrete classes of the Template Method pattern are called hook methods. Hook methods permit the concrete classes to choose (1) to override the base implementation and do something different or (2) to simply accept the default implementation. Frequently, the base class will define hook methods solely to let the concrete subclass know what is going on. When the Report class calls output_start, for example, it is telling its subclasses, “We are ready to start outputting the report, so if you need to do something, do it now.” The default implementations of these informative hook methods are frequently empty. They exist merely to let the subclasses know what is happening but do not require the subclasses to override methods that do not interest them.
+
+This “I am what I am” approach to typing has been called duck typing. The name comes from the old bit of wisdom that goes, “If it looks like a duck and quacks like a duck, then it is a duck.” Another way to look at this issue is to think of static typing as working like an aristocracy: Statically typed languages are constantly asking about your parent or grandparent, or perhaps, in the case of Java-style interfaces, your aunts and uncles. In a statically typed language, an object’s family tree matters deeply. Dynamically typed languages, by contrast, are meritocracies: They are concerned with which methods you have, rather than where those methods came from. Dynamically typed languages rarely ask about an object’s ancestry; instead, they simply say, “I don’t care who you are related to, Mac. All I want to know is what you can do.”
+
+The worst mistake you can make is to overdo things in an effort to cover every conceivable possibility. The Template Method pattern is at its best when it is at its leanest—that is, when every abstract method and hook is there for a reason. Try to avoid creating a template class that requires each subclass to override a huge number of obscure methods just to cover every conceivable possibility. You also do not want to create a template class that is encrusted with a multitude of hook methods that no one will ever override.
+
+
+Strategy Pattern
+================
