@@ -49,6 +49,44 @@ YAGNI: You Ain't Gonna Need it. Don't implement what is unneed now, but keep cha
 Template Method
 ===============
 
+GoF
+------------------------------------------------------------------------------
+
+* Intent: Define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template Method lets subclasses redefine certain steps of an algorithm without changing the algorithm's structure.
+
+A template method defines an algorithm in terms of abstract operations that subclasses override to provide concrete behavior. By defining some of the steps of an algorithm using abstract operations, the template method fixes their ordering.
+
+* Applicability: The Template Method pattern should be used:
+
+  + to implement the invariant parts of an algorithm once and leave it up to subclasses to implement the behavior that can vary.
+
+  + when common behavior among subclasses should be factored and localized in a common class to avoid code duplication. This is a good example of "refactoring to generalize" as described by Opdyke and Johnson [OJ93]. You first identify the differences in the existing code and then separate the differences into new operations. Finally, you replace the differing code with a template method that calls one of these new operations.to control subclasses extensions.
+
+  + You can define a template method that calls "hook" operations (see Consequences) at specific points, thereby permitting extensions only at those points.
+
+Template methods are a fundamental technique for code reuse. They are particularly important in class libraries, because they are the means for factoring out common behavior in library classes. Template methods lead to an inverted control structure that's sometimes referred to as "the Hollywood principle," that is, "Don't call us, we'll call you" [Swe85]. This refers to how a parent class calls the operations of a subclass and not the other way around.
+
+It's important for template methods to specify which operations are hooks (may be overridden) and which are abstract operations (must be overridden). To reuse an abstract class effectively, subclass writers must understand which operations are designed for overriding.
+
+A subclass can extend a parent class operation's behavior by overriding the operation and calling the parent operation explicitly. Unfortunately, it's easy to forget to call the inherited operation. We can transform such an operation into a template method to give the parent control over how subclasses extend it. The idea is to call a hook operation from a template method in the parent class. Then subclasses can then override this hook operation. (J: convert abstract operation to hook can prevent 'forget')
+
+* Implementation: Three implementation issues are worth noting:
+
+  1. Using C++ access control. In C++, the primitive operations that a template method calls can be declared protected members. This ensures that they are only called by the template method. Primitive operations that must be overridden are declared pure virtual. The template method itself should not be overridden; therefore you can make the template method a nonvirtual member function.
+
+  2. Minimizing primitive operations. An important goal in designing template methods is to minimize the number of primitive operations that a subclass must override to flesh out the algorithm. The more operations that need overriding, the more tedious things get for clients.
+
+  3. Naming conventions. You can identify the operations that should be overridden by adding a prefix to their names. For example, the MacApp framework for Macintosh applications [App89] prefixes template method names with "Do-": "DoCreateDocument", "DoRead", and so forth.
+
+* Related Patterns
+
+  1. Factory Methods (107) are often called by template methods. In the Motivation example, the factory method DoCreateDocument is called by the template method OpenDocument.
+  2. Strategy : Template methods use inheritance to vary part of an algorithm. Strategies use delegation to vary the entire algorithm.
+
+
+DPIR
+------------------------------------------------------------------------------
+
 Define an abstract base class with a master method that performs the basic steps listed above, but that leaves the details of each step to a subclass.
 
 The general idea of the Template Method pattern is to build an abstract base class with a skeletal method. This skeletal method (also called a template method) drives the bit of the processing that needs to vary, but it does so by making calls to abstract methods, which are then supplied by the concrete subclasses. We pick the variation that we want by selecting one of those concrete subclasses.
@@ -60,5 +98,78 @@ This “I am what I am” approach to typing has been called duck typing. The na
 The worst mistake you can make is to overdo things in an effort to cover every conceivable possibility. The Template Method pattern is at its best when it is at its leanest—that is, when every abstract method and hook is there for a reason. Try to avoid creating a template class that requires each subclass to override a huge number of obscure methods just to cover every conceivable possibility. You also do not want to create a template class that is encrusted with a multitude of hook methods that no one will ever override.
 
 
-Strategy Pattern
-================
+Strategy Pattern (AKA: Policy Pattern)
+======================================
+
+GoF
+------------------------------------------------------------------------------
+
+* Intent: Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.
+
+* Applicability: Use the Strategy pattern when:
+
+  + many related classes differ only in their behavior. Strategies provide a way to configure a class with one of many behaviors.
+
+  + you need different variants of an algorithm. For example, you might define algorithms reflecting different space/time trade-offs. Strategies can be used when these variants are implemented as a class hierarchy of algorithms [HO87].
+
+  + an algorithm uses data that clients shouldn't know about. Use the Strategy pattern to avoid exposing complex, algorithm-specific data structures.
+
+  + a class defines many behaviors, and these appear as multiple conditional statements in its operations. Instead of many conditionals, move related conditional branches into their own Strategy class.
+
+* Collaborations:
+
+  + Strategy and Context interact to implement the chosen algorithm. A context may pass all data required by the algorithm to the strategy when the algorithm is called. Alternatively, the context can pass itself as an argument to Strategy operations. That lets the strategy call back on the context as required.
+
+  + A context forwards requests from its clients to its strategy. Clients usually create and pass a ConcreteStrategy object to the context; thereafter, clients interact with the context exclusively. There is often a family of ConcreteStrategy classes for a client to choose from.
+
+* Consequences: The Strategy pattern has the following benefits and drawbacks:
+
+  + Families of related algorithms. Hierarchies of Strategy classes define a family of algorithms or behaviors for contexts to reuse. Inheritance can help factor out common functionality of the algorithms.
+
+  + An alternative to subclassing. Inheritance offers another way to support a variety of algorithms or behaviors. You can subclass a Context class directly to give it different behaviors. But this hard-wires the behavior into Context. It mixes the algorithm implementation with Context's, making Context harder to understand, maintain, and extend. And you can't vary the algorithm dynamically. You wind up with many related classes whose only difference is the algorithm or behavior they employ. Encapsulating the algorithm in separate Strategy classes lets you vary the algorithm independently of its context, making it easier to switch, understand, and extend.
+
+  + Strategies eliminate conditional statements. The Strategy pattern offers an alternative to conditional statements for selecting desired behavior. When different behaviors are lumped into one class, it's hard to avoid using conditional statements to select the right behavior. Encapsulating the behavior in separate Strategy classes eliminates these conditional statements. Code containing many conditional statements often indicates the need to apply the Strategy pattern.
+
+  + A choice of implementations. Strategies can provide different implementations of the same behavior. The client can choose among strategies with different time and space trade-offs.
+
+  + Clients must be aware of different Strategies. The pattern has a potential drawback in that a client must understand how Strategies differ before it can select the appropriate one. Clients might be exposed to implementation issues. Therefore you should use the Strategy pattern only when the variation in behavior is relevant to clients.
+
+  + Communication overhead between Strategy and Context. The Strategy interface is shared by all ConcreteStrategy classes whether the algorithms they implement are trivial or complex. Hence it's likely that some ConcreteStrategies won't use all the information passed to them through this interface; simple ConcreteStrategies may use none of it! That means there will be times when the context creates and initializes parameters that never get used. If this is an issue, then you'll need tighter coupling between Strategy and Context.
+
+  + Increased number of objects. Strategies increase the number of objects in an application. Sometimes you can reduce this overhead by implementing strategies as stateless objects that contexts can share. Any residual state is maintained by the context, which passes it in each request to the Strategy object. Shared strategies should not maintain state across invocations. The Flyweight (195) pattern describes this approach in more detail.
+
+* Implementation: Consider the following implementation issues:
+
+  + Defining the Strategy and Context interfaces. The Strategy and Context interfaces must give a ConcreteStrategy efficient access to any data it needs from a context, and vice versa. One approach is to have Context pass data in parameters to Strategy operations, in other words, take the data to the strategy. This keeps Strategy and Context decoupled. On the other hand, Context might pass data the Strategy doesn't need.Another technique has a context pass itself as an argument, and the strategy requests data from the context explicitly. Alternatively, the strategy can store a reference to its context, eliminating the need to pass anything at all. Either way, the strategy can request exactly what it needs. But now Context must define a more elaborate interface to its data, which couples Strategy and Context more closely.The needs of the particular algorithm and its data requirements will determine the best technique.
+
+  + Strategies as template parameters. In C++ templates can be used to configure a class with a strategy. This technique is only applicable if (1) the Strategy can be selected at compile-time, and (2) it does not have to be changed at run-time. With templates, there's no need to define an abstract class that defines the interface to the Strategy. Using Strategy as a template parameter also lets you bind a Strategy to its Context statically, which can increase efficiency.
+
+  + Making Strategy objects optional. The Context class may be simplified if it's meaningful not to have a Strategy object. Context checks to see if it has a Strategy object before accessing it. If there is one, then Context uses it normally. If there isn't a strategy, then Context carries out default behavior. The benefit of this approach is that clients don't have to deal with Strategy objects at all unless they don't like the default behavior.
+
+* Related Patterns: Flyweight : Strategy objects often make good flyweights.
+
+
+DPIR
+------------------------------------------------------------------------------
+
+Inheritance-based techniques such as the Template Method pattern limit our runtime flexibility. 
+
+The key idea underlying the Strategy pattern is to define a family of objects, the strategies, which all do the same thing. Not only does each strategy object perform the same job, but all of the objects support exactly the same interface. Given that all of the strategy objects look alike from the outside, the user of the strategy—called the context class by the GoF—can treat the strategies like interchangeable parts. Thus, it does not matter which strategy you use, because they all look alike and they all perform the same function. (J: delegate the varying part to (strategy) object instead of overridden methods)
+
+The Strategy pattern has some real advantages. As we saw in the report example, we can achieve better separation of concerns by pulling out a set of strategies from a class. By using the Strategy pattern, we relieve the Report class of any responsibility for or knowledge of the report file format. In addition, because the Strategy pattern is based on composition and delegation, rather than on inheritance, it is easy to switch strategies at runtime. 
+
+The Strategy pattern does have one thing in common with the Template Method pattern: Both patterns allow us to concentrate the decision about which variation we are using in one or a few places. With the Template Method pattern, we make our decision when we pick our concrete subclass. In the Strategy pattern, we make our decision by selecting a strategy class at runtime.
+
+A real advantage of the Strategy pattern is that because the context and the strategy code are in different classes, a nice wall of data separation divides the two. The bad news is that we now need to figure a way to get the information that the context has but the strategy needs up and over that wall. We have essentially two choices here:
+
+  1. we can continue with the approach that we have used so far—that is, pass in everything that the strategy needs as arguments when the context calls the methods on the strategy object. Passing in all of the data has the advantage of keeping the context and the strategy objects crisply separated. The strategies have their interface; the context simply uses that interface. The downside of doing things this way is that if there is a lot of complex data to pass between the context and the strategy, then, well, you are going to be passing a lot of complex data around without any guarantee that it will get used.
+
+  2. Second, we can get the data from the context to the strategy by having the context object pass a reference to itself to the strategy object. The strategy object can then call methods on the context to get at the data it needs. Although this technique of passing the context to the strategy does simplify the flow of data, it also increases the coupling between the context and the strategy. This magnifies the danger that the context class and the strategy classes will get tangled up with each other.
+
+(J: we can find ruby implementation of Strategy pattern is very different from those static typing languages. In ruby we don't need a 'Strategy Interface', we just leverage duck typing.)
+
+In ruby we can also use lambda/proc instead of strategy object as a quick and dirty strategy object. But code block-based strategies work only when the strategy interface is a simple, one-method affair. After all, the only method that we can call on a Proc object is call. If you need more than that for your strategy, by all means build some classes. But if your requirement calls for a simple strategy, the code block may just be the way to go.
+
+The Strategy pattern is a delegation-based approach to solving the same problem as the Template Method pattern. Instead of teasing out the variable parts of your algorithm and pushing them down into subclasses, you simply implement each version of your algorithm as a separate object. 
+
+As we shall see in coming chapters, the Strategy pattern resembles, at least superficially, several other patterns. For example, in the Strategy pattern we have an object—the context—that is trying to get something done. But to get that thing done, we need to supply the context with a second object—the strategy object—that helps get the thing done. Superficially, the Observer pattern works in much the same way: An object does something, but along the way it makes calls to a second object, which we need to supply. The difference between these two patterns relates to their intent.
