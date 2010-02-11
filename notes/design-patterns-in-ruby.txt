@@ -173,3 +173,127 @@ In ruby we can also use lambda/proc instead of strategy object as a quick and di
 The Strategy pattern is a delegation-based approach to solving the same problem as the Template Method pattern. Instead of teasing out the variable parts of your algorithm and pushing them down into subclasses, you simply implement each version of your algorithm as a separate object. 
 
 As we shall see in coming chapters, the Strategy pattern resembles, at least superficially, several other patterns. For example, in the Strategy pattern we have an object—the context—that is trying to get something done. But to get that thing done, we need to supply the context with a second object—the strategy object—that helps get the thing done. Superficially, the Observer pattern works in much the same way: An object does something, but along the way it makes calls to a second object, which we need to supply. The difference between these two patterns relates to their intent.
+
+
+Observer Pattern (AKA: Dependents, Publish-Subscribe)
+=====================================================
+
+Gof
+------------------------------------------------------------------------------
+
+* Intent: Define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically. A common side-effect of partitioning a system into a collection of cooperating classes is the need to maintain consistency between related objects. You don't want to achieve consistency by making the classes tightly coupled, because that reduces their reusability.
+
+  The key objects in this pattern are subject and observer. A subject may have any number of dependent observers. All observers are notified whenever the subject undergoes a change in state. In response, each observer will query the subject to synchronize its state with the subject's state. This kind of interaction is also known as publish-subscribe. The subject is the publisher of notifications. It sends out these notifications without having to know who its observers are. Any number of observers can subscribe to receive notifications.
+
+* Applicability: Use the Observer pattern in any of the following situations:
+
+  + When an abstraction has two aspects, one dependent on the other. Encapsulating these aspects in separate objects lets you vary and reuse them independently.
+
+  + When a change to one object requires changing others, and you don't know how many objects need to be changed.
+
+  + When an object should be able to notify other objects without making assumptions about who these objects are. In other words, you don't want these objects tightly coupled.
+
+* Collaborations:
+
+  + ConcreteSubject notifies its observers whenever a change occurs that could make its observers' state inconsistent with its own.
+
+  + After being informed of a change in the concrete subject, a ConcreteObserver object may query the subject for information. ConcreteObserver uses this information to reconcile its state with that of the subject. Notify is not always called by the subject. It can be called by an observer or by another kind of object entirely.
+
+* Consequences: The Observer pattern lets you vary subjects and observers independently. You can reuse subjects without reusing their observers, and vice versa. It lets you add observers without modifying the subject or other observers. Further benefits and liabilities of the Observer pattern include the following: 
+
+  + Abstract coupling between Subject and Observer. All a subject knows is that it has a list of observers, each conforming to the simple interface of the abstract Observer class. The subject doesn't know the concrete class of any observer. Thus the coupling between subjects and observers is abstract and minimal. Because Subject and Observer aren't tightly coupled, they can belong to different layers of abstraction in a system. A lower-level subject can communicate and inform a higher-level observer, thereby keeping the system's layering intact. If Subject and Observer are lumped together, then the resulting object must either span two layers (and violate the layering), or it must be forced to live in one layer or the other (which might compromise the layering abstraction). 
+
+  + Support for broadcast communication. Unlike an ordinary request, the notification that a subject sends needn't specify its receiver. The notification is broadcast automatically to all interested objects that subscribed to it. The subject doesn't care how many interested objects exist; its only responsibility is to notify its observers. This gives you the freedom to add and remove observers at any time. It's up to the observer to handle or ignore a notification.
+
+  + Unexpected updates. Because observers have no knowledge of each other's presence, they can be blind to the ultimate cost of changing the subject. A seemingly innocuous operation on the subject may cause a cascade of updates to observers and their dependent objects. Moreover, dependency criteria that aren't well-defined or maintained usually lead to spurious updates, which can be hard to track down. This problem is aggravated by the fact that the simple update protocol provides no details on what changed in the subject. Without additional protocol to help observers discover what changed, they may be forced to work hard to deduce the changes.
+
+* Implementation: Several issues related to the implementation of the dependency mechanism are discussed in this section.
+
+  + Mapping subjects to their observers. The simplest way for a subject to keep track of the observers it should notify is to store references to them explicitly in the subject. However, such storage may be too expensive when there are many subjects and few observers. One solution is to trade space for time by using an associative look-up (e.g., a hash table) to maintain the subject-to-observer mapping. Thus a subject with no observers does not incur storage overhead. On the other hand, this approach increases the cost of accessing the observers.
+
+  + Observing more than one subject. It might make sense in some situations for an observer to depend on more than one subject. For example, a spreadsheet may depend on more than one data source. It's necessary to extend the Update interface in such cases to let the observer know which subject is sending the notification. The subject can simply pass itself as a parameter in the Update operation, thereby letting the observer know which subject to examine.
+
+  + Who triggers the update? The subject and its observers rely on the notification mechanism to stay consistent. But what object actually calls Notify to trigger the update? Here are two options:
+    1. Have state-setting operations on Subject call Notify after they change the subject's state. The advantage of this approach is that clients don't have to remember to call Notify on the subject. The disadvantage is that several consecutive operations will cause several consecutive updates, which may be inefficient.
+    2. Make clients responsible for calling Notify at the right time. The advantage here is that the client can wait to trigger the update until after a series of state changes has been made, thereby avoiding needless intermediate updates. The disadvantage is that clients have an added responsibility to trigger the update. That makes errors more likely, since clients might forget to call Notify.
+
+  + Dangling references to deleted subjects. Deleting a subject should not produce dangling references in its observers. One way to avoid dangling references is to make the subject notify its observers as it is deleted so that they can reset their reference to it. In general, simply deleting the observers is not an option, because other objects may reference them, or they may be observing other subjects as well.
+
+  + Making sure Subject state is self-consistent before notification. It's important to make sure Subject state is self-consistent before calling Notify, because observers query the subject for its current state in the course of updating their own state. This self-consistency rule is easy to violate unintentionally when Subject subclass operations call inherited operations. For example, the notification in the following code sequence is trigged when the subject is in an inconsistent state: 
+
+      void MySubject::Operation (int newValue) {
+        BaseClassSubject::Operation(newValue);
+        // trigger notification
+        _myInstVar += newValue;
+        // update subclass state (too late!)
+      }
+
+    You can avoid this pitfall by sending notifications from template methods (Template Method ) in abstract Subject classes. Define a primitive operation for subclasses to override, and make Notify the last operation in the template method, which will ensure that the object is self-consistent when subclasses override Subject operations. 
+
+      void Text::Cut (TextRange r) {
+        ReplaceRange(r);       // redefined in subclasses
+        Notify();
+      }
+
+    By the way, it's always a good idea to document which Subject operations trigger notifications. 
+
+  + Avoiding observer-specific update protocols: the push and pull models. Implementations of the Observer pattern often have the subject broadcast additional information about the change. The subject passes this information as an argument to Update. The amount of information may vary widely. At one extreme, which we call the push model, the subject sends observers detailed information about the change, whether they want it or not. At the other extreme is the pull model; the subject sends nothing but the most minimal notification, and observers ask for details explicitly thereafter. The pull model emphasizes the subject's ignorance of its observers, whereas the push model assumes subjects know something about their observers' needs. The push model might make observers less reusable, because Subject classes make assumptions about Observer classes that might not always be true. On the other hand, the pull model may be inefficient, because Observer classes must ascertain what changed without help from the Subject. 
+
+  + Specifying modifications of interest explicitly. You can improve update efficiency by extending the subject's registration interface to allow registering observers only for specific events of interest. When such an event occurs, the subject informs only those observers that have registered interest in that event. One way to support this uses the notion of aspects for Subject objects. To register interest in particular events, observers are attached to their subjects using 
+
+      void Subject::Attach(Observer*, Aspect& interest);
+
+    where interest specifies the event of interest. At notification time, the subject supplies the changed aspect to its observers as a parameter to the Update operation. For example: 
+
+      void Observer::Update(Subject*, Aspect& interest);
+
+  + Encapsulating complex update semantics. When the dependency relationship between subjects and observers is particularly complex, an object that maintains these relationships might be required. We call such an object a ChangeManager. Its purpose is to minimize the work required to make observers reflect a change in their subject. For example, if an operation involves changes to several interdependent subjects, you might have to ensure that their observers are notified only after all the subjects have been modified to avoid notifying observers more than once. ChangeManager has three responsibilities:
+
+      1. It maps a subject to its observers and provides an interface to maintain this mapping. This eliminates the need for subjects to maintain references to their observers and vice versa. 
+      2. It defines a particular update strategy. 
+      3. It updates all dependent observers at the request of a subject.
+
+    The following diagram depicts a simple ChangeManager-based implementation of the Observer pattern. There are two specialized ChangeManagers. SimpleChangeManager is naive in that it always updates all observers of each subject. In contrast, DAGChangeManager handles directed-acyclic graphs of dependencies between subjects and their observers. A DAGChangeManager is preferable to a SimpleChangeManager when an observer observes more than one subject. In that case, a change in two or more subjects might cause redundant updates. The DAGChangeManager ensures the observer receives just one update. SimpleChangeManager is fine when multiple updates aren't an issue. 
+
+    ChangeManager is an instance of the Mediator pattern. In general there is only one ChangeManager, and it is known globally. The Singleton pattern would be useful here. 
+
+  + Combining the Subject and Observer classes. Class libraries written in languages that lack multiple inheritance (like Smalltalk) generally don't define separate Subject and Observer classes but combine their interfaces in one class. That lets you define an object that acts as both a subject and an observer without multiple inheritance. In Smalltalk, for example, the Subject and Observer interfaces are defined in the root class Object, making them available to all classes.
+
+* Related Patterns
+
+  1. Mediator : By encapsulating complex update semantics, the ChangeManager acts as mediator between subjects and observers. 
+  2. Singleton : The ChangeManager may use the Singleton pattern to make it unique and globally accessible. 
+
+
+DPIR
+------------------------------------------------------------------------------
+
+The GoF called this idea of building a clean interface between the source of the news that some object has changed and the consumers of that news the Observer pattern. The GoF called the class with the news the subject class. The observers are the objects that are interested in getting the news. When an object is interested in being informed of the state of the subject, it registers as an observer on that subject.
+
+It has always seemed to me that the Observer pattern is somewhat misnamed. While the observer object gets top billing—in fact, the only billing—it is actually the subject that does most of the work. It is the subject that is responsible for keeping track of the observers. It is also the subject that needs to inform the observers that a change has come down the pike. Put another way, it is much harder to publish and distribute a newspaper than to read one.
+
+Calling super() is one of the few places in Ruby where you need to supply the parentheses for an empty argument list. Calling super the way we do here, with the parentheses, calls the method in the superclass with no arguments. If you omit the parentheses, you will be calling super with the original set of arguments to the current method
+
+In Ruby we simply:
+
+  require 'observer'
+  include Observable
+  changed()
+  notify_observers(self)
+
+To cut down on redundant notifications to the observers, the standard Observable module requires that you call the changed method before you call notify_observers. The changed method sets a Boolean flag that says the object really has changed; the notify_observers method will not actually make any notifications if the changed flag is not set to true. Each call to notify_observers sets the changed flag back to false.
+
+If we use #call as observer interface, then we can pass blocks as observer.
+
+The key decisions that you need to make when implementing the Observer pattern all center on the interface between the subject and the observer. At the simple end of the spectrum, you might do what we did in the example above: Just have a single method in the observer whose only argument is the subject. The GoF term for this strategy is the pull method, because the observers have to pull whatever details about the change that they need out of the subject. The other possibility—logically enough termed the push method—has the subject send the observers a lot of details about the change: observer.update(self, :salary_changed, old_salary, new_salary)
+
+We can even define different update methods for different events. For example, we could have one method for a salary update observer.update_salary(self, old_salary, new_salary) and a different method for title changes observer.update_title(self, old_title, new_title) The advantage in providing more details is that the observers do not have to work quite as hard to keep track of what is going on. The disadvantage of the push model is that if all of the observers are not interested in all of the details, then the work of passing the data around goes for naught.
+
+Most of the problems that come up in using the Observer pattern revolve around the frequency and timing of the updates. Sometimes the sheer volume of updates can be a problem. For example, an observer might register with a subject, unaware that the subject is going to spew out thousands of updates each second. The subject class can help with all of this by avoiding broadcasting redundant updates. Just because someone updates an object, it does not mean that anything really changed. 
+
+Another potential problem lies in the consistency of the subject as it informs its observers of changes. You can deal with this problem by not informing the observers until a consistent set of changes is complete.
+
+One final thing to look out for is badly behaved observers. Although we have used the analogy of the subject delivering news to its observer, we are really talking about one object calling a method on another object. What happens if you update an observer with the news that Fred has gotten a raise, and that observer responds by raising an exception? Do you simply log the exception and soldier on, or do you do something more drastic? There is no standard answer: It really depends on your specific application and the amount of confidence you have in your observers.
+
+Observer pattern and the Strategy pattern look a bit alike: Both feature an object (called the observable in the Observer pattern and the context in the Strategy pattern) that makes calls out to some other object (either the observer or the strategy). The difference is mostly one of intent. In the case of the observer, we are informing the other object of the events occurring back at the observable. In the case of the strategy, we are getting the strategy object to do some computing. The Observer pattern also serves more or less the same function as hook methods in the Template Method pattern; both are there to keep some object informed of current events. The difference is, of course, that the Template Method pattern will only talk to its relatives: If you are not a subclass, you will not get any news from a Template Method pattern hook.
+
