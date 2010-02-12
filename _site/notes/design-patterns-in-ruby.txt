@@ -385,3 +385,102 @@ So far, we have looked at the Composite pattern as a strictly top-down affair. B
 Once you grasp its recursive nature, the Composite pattern is really quite simple. Sometimes we need to model objects that naturally group themselves into larger components. These more complex objects fit into the Composite pattern if they share some characteristics with the individual components: The whole looks a lot like one of the parts. The Composite pattern lets us build arbitrarily deep trees of objects in which we can treat any of the interior nodes—the composites—just like any of the leaf nodes.
 
 The Composite pattern is so fundamental that it is not surprising that it reappears, sometimes in disguise, in other patterns. As we will see, the Interpreter pattern is nothing more than a specialization of the Composite pattern. Finally, it is difficult to imagine the Composite pattern without the Iterator pattern. The reasons behind this hand-in-glove relationship are about to be revealed, because the Iterator pattern is the topic of the very next chapter.
+
+
+Iterator Pattern (AKA: Cursor)
+==============================
+
+GoF
+------------------------------------------------------------------------------
+
+* Intent: Provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation.
+
+  An aggregate object such as a list should give you a way to access its elements without exposing its internal structure. Moreover, you might want to traverse the list in different ways, depending on what you want to accomplish. But you probably don't want to bloat the List interface with operations for different traversals, even if you could anticipate the ones you will need. You might also need to have more than one traversal pending on the same list. 
+
+  The Iterator pattern lets you do all this. The key idea in this pattern is to take the responsibility for access and traversal out of the list object and put it into an iterator object. The Iterator class defines an interface for accessing the list's elements. An iterator object is responsible for keeping track of the current element; that is, it knows which elements have been traversed already. 
+
+  Notice that the iterator and the list are coupled, and the client must know that it is a list that's traversed as opposed to some other aggregate structure. Hence the client commits to a particular aggregate structure. It would be better if we could change the aggregate class without changing client code. We can do this by generalizing the iterator concept to support polymorphic iteration.
+
+  The remaining problem is how to create the iterator. Since we want to write code that's independent of the concrete List subclasses, we cannot simply instantiate a specific class. Instead, we make the list objects responsible for creating their corresponding iterator. This requires an operation like CreateIterator through which clients request an iterator object. CreateIterator is an example of a factory method (see Factory Method ).
+
+* Applicability: Use the Iterator pattern
+
+  + to access an aggregate object's contents without exposing its internal representation.
+
+  + to support multiple traversals of aggregate objects.
+
+  + to provide a uniform interface for traversing different aggregate structures (that is, to support polymorphic iteration).
+
+* Collaborations: A ConcreteIterator keeps track of the current object in the aggregate and can compute the succeeding object in the traversal.
+
+* Consequences: The Iterator pattern has three important consequences:
+
+  1. It supports variations in the traversal of an aggregate. Complex aggregates may be traversed in many ways. For example, code generation and semantic checking involve traversing parse trees. Code generation may traverse the parse tree inorder or preorder. Iterators make it easy to change the traversal algorithm: Just replace the iterator instance with a different one. You can also define Iterator subclasses to support new traversals. 
+
+  2. Iterators simplify the Aggregate interface. Iterator's traversal interface obviates the need for a similar interface in Aggregate, thereby simplifying the aggregate's interface. 
+
+  3. More than one traversal can be pending on an aggregate. An iterator keeps track of its own traversal state. Therefore you can have more than one traversal in progress at once. (J: this is non-sense. More than one raw loops can be pending on an aggregate too.)
+
+* Implementation: Iterator has many implementation variants and alternatives. Some important ones follow. The trade-offs often depend on the control structures your language provides. Some languages (CLU [LG86], for example) even support this pattern directly.
+
+  1. Who controls the iteration? A fundamental issue is deciding which party controls the iteration, the iterator or the client that uses the iterator. When the client controls the iteration, the iterator is called an external iterator, and when the iterator controls it, the iterator is an internal iterator.2 Clients that use an external iterator must advance the traversal and request the next element explicitly from the iterator. In contrast, the client hands an internal iterator an operation to perform, and the iterator applies that operation to every element in the aggregate. 
+
+    External iterators are more flexible than internal iterators. It's easy to compare two collections for equality with an external iterator, for example, but it's practically impossible with internal iterators. Internal iterators are especially weak in a language like C++ that does not provide anonymous functions, closures, or continuations like Smalltalk and CLOS. But on the other hand, internal iterators are easier to use, because they define the iteration logic for you. There are at least two options: (1) Pass in a pointer to a function (global or static), or (2) rely on subclassing. In the first case, the iterator calls the operation passed to it at each point in the iteration. In the second case, the iterator calls an operation that a subclass overrides to enact specific behavior. 
+
+  2. Who defines the traversal algorithm? The iterator is not the only place where the traversal algorithm can be defined. The aggregate might define the traversal algorithm and use the iterator to store just the state of the iteration. We call this kind of iterator a cursor, since it merely points to the current position in the aggregate. A client will invoke the Next operation on the aggregate with the cursor as an argument, and the Next operation will change the state of the cursor. (J: like we define a public function, in aggregate, to convert itself into an array; then we can use array index as a cursor. In this case the convert function define the traversal logic, and ag.to_ary[i++] is the 'Next' operation.)
+
+    If the iterator is responsible for the traversal algorithm, then it's easy to use different iteration algorithms on the same aggregate, and it can also be easier to reuse the same algorithm on different aggregates. On the other hand, the traversal algorithm might need to access the private variables of the aggregate. If so, putting the traversal algorithm in the iterator violates the encapsulation of the aggregate. 
+
+  3. How robust is the iterator? It can be dangerous to modify an aggregate while you're traversing it. If elements are added or deleted from the aggregate, you might end up accessing an element twice or missing it completely. A simple solution is to copy the aggregate and traverse the copy, but that's too expensive to do in general. 
+
+    A robust iterator ensures that insertions and removals won't interfere with traversal, and it does it without copying the aggregate. There are many ways to implement robust iterators. Most rely on registering the iterator with the aggregate. On insertion or removal, the aggregate either adjusts the internal state of iterators it has produced, or it maintains information internally to ensure proper traversal. 
+
+  4. Additional Iterator operations. The minimal interface to Iterator consists of the operations First, Next, IsDone, and CurrentItem.4 Some additional operations might prove useful. For example, ordered aggregates can have a Previous operation that positions the iterator to the previous element. A SkipTo operation is useful for sorted or indexed collections. SkipTo positions the iterator to an object matching specific criteria. 
+
+  5. Using polymorphic iterators in C++. Polymorphic iterators have their cost. They require the iterator object to be allocated dynamically by a factory method. Hence they should be used only when there's a need for polymorphism. Otherwise use concrete iterators, which can be allocated on the stack. Polymorphic iterators have another drawback: the client is responsible for deleting them. This is error-prone, because it's easy to forget to free a heap-allocated iterator object when you're finished with it. That's especially likely when there are multiple exit points in an operation. And if an exception is triggered, the iterator object will never be freed. 
+
+    (J: The reason is you can only get polymorphic iterator by doing things like abstract_list->get_iterator(), the iterator is created in get_iterator and returned, so it must live on heap.)
+
+    The Proxy pattern provides a remedy. We can use a stack-allocated proxy as a stand-in for the real iterator. The proxy deletes the iterator in its destructor. Thus when the proxy goes out of scope, the real iterator will get deallocated along with it. The proxy ensures proper cleanup, even in the face of exceptions. This is an application of the well-known C++ technique "resource allocation is initialization" [ES90]. 
+
+  6. Iterators may have privileged access. An iterator can be viewed as an extension of the aggregate that created it. The iterator and the aggregate are tightly coupled. We can express this close relationship in C++ by making the iterator a friend of its aggregate. Then you don't need to define aggregate operations whose sole purpose is to let iterators implement traversal efficiently. 
+
+    However, such privileged access can make defining new traversals difficult, since it'll require changing the aggregate interface to add another friend. To avoid this problem, the Iterator class can include protected operations for accessing important but publicly unavailable members of the aggregate. Iterator subclasses (and only Iterator subclasses) may use these protected operations to gain privileged access to the aggregate. 
+
+  7. Iterators for composites. External iterators can be difficult to implement over recursive aggregate structures like those in the Composite pattern, because a position in the structure may span many levels of nested aggregates. Therefore an external iterator has to store a path through the Composite to keep track of the current object. Sometimes it's easier just to use an internal iterator. It can record the current position simply by calling itself recursively, thereby storing the path implicitly in the call stack. 
+
+    If the nodes in a Composite have an interface for moving from a node to its siblings, parents, and children, then a cursor-based iterator may offer a better alternative. The cursor only needs to keep track of the current node; it can rely on the node interface to traverse the Composite. Composites often need to be traversed in more than one way. Preorder, postorder, inorder, and breadth-first traversals are common. You can support each kind of traversal with a different class of iterator. 
+
+  8. Null iterators. A NullIterator is a degenerate iterator that's helpful for handling boundary conditions. By definition, a NullIterator is always done with traversal; that is, its IsDone operation always evaluates to true. NullIterator can make traversing tree-structured aggregates (like Composites) easier. At each point in the traversal, we ask the current element for an iterator for its children. Aggregate elements return a concrete iterator as usual. But leaf elements return an instance of NullIterator. That lets us implement traversal over the entire structure in a uniform way.
+
+* Iterators don't have to be defined as explicitly in Smalltalk. The standard collection classes (Bag, Set, Dictionary, OrderedCollection, String, etc.) define an internal iterator method do:, which takes a block (i.e., closure) as an argument. Each element in the collection is bound to the local variable in the block; then the block is executed. Smalltalk also includes a set of Stream classes that support an iterator-like interface. ReadStream is essentially an Iterator, and it can act as an external iterator for all the sequential collections. There are no standard external iterators for nonsequential collections such as Set and Dictionary.
+
+* Related Patterns:
+
+  1. Composite: Iterators are often applied to recursive structures such as Composites. 
+  2. Factory Method: Polymorphic iterators rely on factory methods to instantiate the appropriate Iterator subclass. 
+  3. Memento is often used in conjunction with the Iterator pattern. An iterator can use a memento to capture the state of an iteration. The iterator stores the memento internally. 
+
+
+DPIR
+------------------------------------------------------------------------------
+
+External Iterators: Provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation. "external" because the iterator is a separate object from the aggregate. (J: external iterator use aggregate object's public interface to access its elements. It's a package of common pattern, providing a unified interface)
+
+Given how easy it was to build ArrayIterator, it is surprising that external iterators are so rare in Ruby. It turns out that Ruby has something better—and that this something better is based on our old friends the code block and the Proc object.
+
+If you think about it, the purpose of an iterator is to introduce your code to each sub-object of an aggregate object. Traditional external iterators do so by providing a long grappling hook, the iterator object, that you can use to pull the sub-objects out of the aggregate without getting messily involved in the aggregate details. But by using a code block, you can pass your logic down into the aggregate. The aggregate can then call your code block for each of its sub-objects. Because all of the iterating action occurs inside the aggregate object, the code block-based iterators are called internal iterators.
+
+While either an internal iterator or an external iterator will do the basic job of stepping through an aggregate, there are some practical differences to consider. External iterators certainly have some advantages. For example, when you use an external iterator, the client drives the iteration. With an external iterator, you won’t call next until you are good and ready for the next element. With an internal iterator, by contrast, the aggregate relentlessly pushes the code block to accept item after item.
+
+A second advantage of external iterators is that, because they are external, you can share them—you can pass them around to other methods and objects. Of course, this is a bit of a double-edged sword: You get the flexibility but you also have to know what you are doing. In particular, beware of multiple threads getting hold of a non-thread-safe external iterator.
+
+The main thing that internal iterators have going for them is simplicity and code clarity. External iterators have that extra moving part, the iterator object.
+
+You should always try to include Enumerable when you implemented an internal iterator in ruby. To mix in Enumerable in aggregate object, you need only make sure that your internal iterator method is named each and that the individual elements that you are going to iterate over have a reasonable implementation of the <=> comparison operator.
+
+The main problem should consider when implementing an iterator: What happens if the aggregate object changes while you are iterating through it? Suppose you are sequencing through a list and just before you get to the third element, someone deletes that element from the list. What happens? Does the iterator show you the now-defunct third element anyway? Does the iterator quietly go on to the fourth element as though nothing has happened? Does it throw an exception?
+
+Finally, a multithreaded program is a particularly dangerous home for iterators. You need to take all of the usual care to ensure that one thread does not rip the aggregate rug out from under your iterator.
+
+Iterators in Ruby are a great example of what is right with the language. Instead of providing special-purpose external iterator objects for each aggregate class, Ruby relies on the very flexible idea of Proc objects and code blocks to build internal iterators. Because internal iterators are very easy to write—you build only one new method instead of a whole new class—Ruby encourages programmers to build whatever iterators make sense. 
