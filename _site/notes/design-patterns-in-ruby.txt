@@ -403,6 +403,8 @@ GoF
 
   The remaining problem is how to create the iterator. Since we want to write code that's independent of the concrete List subclasses, we cannot simply instantiate a specific class. Instead, we make the list objects responsible for creating their corresponding iterator. This requires an operation like CreateIterator through which clients request an iterator object. CreateIterator is an example of a factory method (see Factory Method ).
 
+  First, next, currentItem, isDone will be enough for iterator interface. We can make this interface even smaller by merging Next, IsDone, and CurrentItem into a single operation that advances to the next object and returns it. If the traversal is finished, then this operation returns a special value (0, for instance) that marks the end of the iteration.
+
 * Applicability: Use the Iterator pattern
 
   + to access an aggregate object's contents without exposing its internal representation.
