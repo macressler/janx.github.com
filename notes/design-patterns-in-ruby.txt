@@ -486,3 +486,93 @@ The main problem should consider when implementing an iterator: What happens if 
 Finally, a multithreaded program is a particularly dangerous home for iterators. You need to take all of the usual care to ensure that one thread does not rip the aggregate rug out from under your iterator.
 
 Iterators in Ruby are a great example of what is right with the language. Instead of providing special-purpose external iterator objects for each aggregate class, Ruby relies on the very flexible idea of Proc objects and code blocks to build internal iterators. Because internal iterators are very easy to write—you build only one new method instead of a whole new class—Ruby encourages programmers to build whatever iterators make sense. 
+
+
+Commands Pattern (AKA: Action, Transaction)
+===========================================
+
+GoF
+------------------------------------------------------------------------------
+
+* Intent: Encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations. 
+
+* Sometimes it's necessary to issue requests to objects without knowing anything about the operation being requested or the receiver of the request. For example, user interface toolkits include objects like buttons and menus that carry out a request in response to user input. But the toolkit can't implement the request explicitly in the button or menu, because only applications that use the toolkit know what should be done on which object. As toolkit designers we have no way of knowing the receiver of the request or the operations that will carry it out. 
+
+  The Command pattern lets toolkit objects make requests of unspecified application objects by turning the request itself into an object. This object can be stored and passed around like other objects. The key to this pattern is an abstract Command class, which declares an interface for executing operations. In the simplest form this interface includes an abstract Execute operation. Concrete Command subclasses specify a receiver-action pair by storing the receiver as an instance variable and by implementing Execute to invoke the request. The receiver has the knowledge required to carry out the request. 
+
+  Command subclasses store the receiver of the request and invoke one or more operations on the receiver. MacroCommand is a concrete Command subclass that simply executes a sequence of Commands. MacroCommand has no explicit receiver, because the commands it sequences define their own receiver. 
+
+  In each of these examples, notice how the Command pattern decouples the object that invokes the operation from the one having the knowledge to perform it. This gives us a lot of flexibility in designing our user interface. An application can provide both a menu and a push button interface to a feature just by making the menu and the push button share an instance of the same concrete Command subclass. We can replace commands dynamically, which would be useful for implementing context-sensitive menus. We can also support command scripting by composing commands into larger ones. All of this is possible because the object that issues a request only needs to know how to issue it; it doesn't need to know how the request will be carried out.
+
+* Applicability: Use the Command pattern when you want to:
+
+  + parameterize objects by an action to perform, as MenuItem objects did above. You can express such parameterization in a procedural language with a callback function, that is, a function that's registered somewhere to be called at a later point. Commands are an object-oriented replacement for callbacks. 
+
+  + specify, queue, and execute requests at different times. A Command object can have a lifetime independent of the original request. If the receiver of a request can be represented in an address space-independent way, then you can transfer a command object for the request to a different process and fulfill the request there. 
+
+  + support undo. The Command's Execute operation can store state for reversing its effects in the command itself. The Command interface must have an added Unexecute operation that reverses the effects of a previous call to Execute. Executed commands are stored in a history list. Unlimited-level undo and redo is achieved by traversing this list backwards and forwards calling Unexecute and Execute, respectively. 
+
+  + support logging changes so that they can be reapplied in case of a system crash. By augmenting the Command interface with load and store operations, you can keep a persistent log of changes. Recovering from a crash involves reloading logged commands from disk and reexecuting them with the Execute operation. 
+
+  + structure a system around high-level operations built on primitives operations. Such a structure is common in information systems that support transactions. A transaction encapsulates a set of changes to data. The Command pattern offers a way to model transactions. Commands have a common interface, letting you invoke all transactions the same way. The pattern also makes it easy to extend the system with new transactions.
+
+* Collaborations:
+  1. The client creates a ConcreteCommand object and specifies its receiver. 
+  2. An Invoker object stores the ConcreteCommand object. 
+  3. The invoker issues a request by calling Execute on the command. When commands are undoable, ConcreteCommand stores state for undoing the command prior to invoking Execute. 
+  4. The ConcreteCommand object invokes operations on its receiver to carry out the request.
+
+* Consequences: The Command pattern has the following consequences:
+  1. Command decouples the object that invokes the operation from the one that knows how to perform it. 
+  2. Commands are first-class objects. They can be manipulated and extended like any other object. 
+  3. You can assemble commands into a composite command. An example is the MacroCommand class described earlier. In general, composite commands are an instance of the Composite pattern. 
+  4. It's easy to add new Commands, because you don't have to change existing classes.
+
+* Implementation: Consider the following issues when implementing the Command pattern:
+
+  + How intelligent should a command be? A command can have a wide range of abilities. At one extreme it merely defines a binding between a receiver and the actions that carry out the request. At the other extreme it implements everything itself without delegating to a receiver at all. The latter extreme is useful when you want to define commands that are independent of existing classes, when no suitable receiver exists, or when a command knows its receiver implicitly. For example, a command that creates another application window may be just as capable of creating the window as any other object. Somewhere in between these extremes are commands that have enough knowledge to find their receiver dynamically. 
+
+  + Supporting undo and redo. Commands can support undo and redo capabilities if they provide a way to reverse their execution (e.g., an Unexecute or Undo operation). A ConcreteCommand class might need to store additional state to do so. This state can include the Receiver object, which actually carries out operations in response to the request, the arguments to the operation performed on the receiver, and any original values in the receiver that can change as a result of handling the request. The receiver must provide operations that let the command return the receiver to its prior state.
+
+    To support one level of undo, an application needs to store only the command that was executed last. For multiple-level undo and redo, the application needs a history list of commands that have been executed, where the maximum length of the list determines the number of undo/redo levels. The history list stores sequences of commands that have been executed. Traversing backward through the list and reverse-executing commands cancels their effect; traversing forward and executing commands reexecutes them.
+
+    An undoable command might have to be copied before it can be placed on the history list. That's because the command object that carried out the original request, say, from a MenuItem, will perform other requests at later times. Copying is required to distinguish different invocations of the same command if its state can vary across invocations. For example, a DeleteCommand that deletes selected objects must store different sets of objects each time it's executed. Therefore the DeleteCommand object must be copied following execution, and the copy is placed on the history list. If the command's state never changes on execution, then copying is not requiredonly a reference to the command need be placed on the history list. Commands that must be copied before being placed on the history list act as prototypes (see Prototype ).
+
+  + Avoiding error accumulation in the undo process. Hysteresis can be a problem in ensuring a reliable, semantics-preserving undo/redo mechanism. Errors can accumulate as commands are executed, unexecuted, and reexecuted repeatedly so that an application's state eventually diverges from original values. It may be necessary therefore to store more information in the command to ensure that objects are restored to their original state. The Memento pattern can be applied to give the command access to this information without exposing the internals of other objects. 
+
+  + Using C++ templates. For commands that (1) aren't undoable and (2) don't require arguments, we can use C++ templates to avoid creating a Command subclass for every kind of action and receiver. 
+
+Coplien describes how to implement functors, objects that are functions, in C++ [Cop92]. He achieves a degree of transparency in their use by overloading the function call operator (operator()). The Command pattern is different; its focus is on maintaining a binding between a receiver and a function (i.e., action), not just maintaining a function. 
+
+* Related Patterns:
+  + A Composite can be used to implement MacroCommands. 
+  + A Memento can keep state the command requires to undo its effect. 
+  + A command that must be copied before being placed on the history list acts as a Prototype. 
+
+
+DPIR
+------------------------------------------------------------------------------
+
+(J: delegate; simple command pattern is like strategy pattern, 'command recorder' pattern resemble strategy pattern + composite pattern. The differnet between commands pattern and strategy pattern is, commands are always used togeter, e.g. construct a list of commands and execute, while strategy is used individually, e.g. I choose strategy A and execute it. When command is used individually, e.g. in a GUI app, it's different from strategy in that it usually has a receiver in it which is the real guy who carries out the actions. And different commands do different things while different strategies do the same thing in different ways.)
+
+We have seen that a command is simply a wrapper around some code that knows how to do one specific thing, whose only reason for existence is to run some code at the right time. This should sound familiar: It is a fairly accurate description of a Ruby code block object or a Proc.
+
+(J: command is a closure, a delayed action)
+
+A command—being the encapsulation of how do some specific thing—can, with some enhancing surgery, also undo things. The idea is really quite simple: Every undo-able command that we create has two methods. Along with the usual execute method, which does the thing, we add an unexecute method, which undoes the same thing. As the user makes changes, we create command after command, executing each command immediately to effect the change. But we also store the commands, in order, in a list somewhere. If the user suddenly changes his or her mind and wants to undo a change, we find the last command on the list and unexecute it. And more than the last command can be undone—we can let the user march back in history as far as he or she likes by un-executing the previous command, and the one before that, and the one before that. Redo works in this design too.
+
+The Command pattern can also be useful in situations where you need to accumulate a number of operations over time, but want to execute them all at once. Installers do this all the time. In a typical installation program, you go through the wizard saying that yes, you want the basic program, and yes, you want the documentation, but no, you do not want the example files. As you progress through the installer, it memorizes a sort of to-do list: copy in the program, copy in the documentation, and so on. At the end of the wizard, you get one final chance to change your mind. Only when you actually click the Install button do things really start to happen. Clearly, the installer’s to-do list can be a list of commands.
+
+A similar situation arises when you need to perform a series of operations for which each operation has a substantial start-up cost when done alone. For example, it frequently takes a minor computer-time eternity to connect to a database. If you need to perform a number of database operations over time, you sometimes face the unpleasant choice of (1) leaving the connection open for the whole time, thereby wasting a scarce resource, or (2) wasting the time it takes to open and close the connection for each operation. The Command pattern offers one way out of this kind of bind. Instead of performing each operation as a stand-alone task, you accumulate all of these commands in a list. Periodically, you can open a connection to the database, execute all of your commands, and flush out this list (in the composite command).
+
+The key thing about the Command pattern is that it separates the thought from the deed. When you use this pattern, you are no longer simply saying, “Do this”; instead, you are saying, “Remember how to do this,” and, sometime later, “Do that thing that I told you to remember.” Even in the lightweight code block-based renditions of the Command pattern available in Ruby, the two-part aspect of this pattern adds some serious complexity to your code. Make sure that you really need that complexity before you pull the Command pattern out of your bag of tricks.
+
+(J: so don't create a command and run it right after the creation)
+
+Assuming you really do need the Command pattern, to make it work you have to be sure that the initial thought is complete. You have to carefully think through the circumstances in which the command object will find itself when it is executed versus when it was created. Yes, this key file was open, and that vital object was initialized when I created the command. Will it all still be there for me when the command is executed?
+
+Getting this “creation time versus execution time” stuff correct is usually not too difficult with a command that is simply do-able. Mostly you just need to save all of the arguments to the operation in the command object. It is the undo-able commands that require vigilance. Many operations are destructive—they wipe away existing data. If you plan to build an undo-able command, you have to somehow save the perishable data in the command object when you execute the command, so that you can put the data back if you need to unexecute the command.
+
+With the Command pattern, we construct objects that know how to perform some very specific actions. The key word here is “specific.” A command instance in the Command pattern doesn’t know how to change any employee’s address; instead, it knows how to move one specific employee to his new house. Commands are useful for keeping a running list of things that your program needs to do, or for remembering what it has already done. You can also run your commands backward and undo the things that your program has done. Depending on the complexity of your commands, you can implement them either as a full-scale class or as a simple code block.
+
+The Command pattern and the Observer pattern have a lot in common. Both patterns identify an object—the command in the former pattern and the observer in the latter pattern—that is called from the other participant in the pattern. Is that object that I pass to a GUI button a command, the thing that the button will do when it is pushed, or is it an observer, waiting to be notified when the button changes state? The answer is—well, it depends. A command object simply knows how to do something, but is not particularly interested in the state of the thing that executed it. Conversely, an observer is intensely interested in the state of the subject, the thing that called it.
