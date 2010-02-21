@@ -576,3 +576,118 @@ Getting this “creation time versus execution time” stuff correct is usually 
 With the Command pattern, we construct objects that know how to perform some very specific actions. The key word here is “specific.” A command instance in the Command pattern doesn’t know how to change any employee’s address; instead, it knows how to move one specific employee to his new house. Commands are useful for keeping a running list of things that your program needs to do, or for remembering what it has already done. You can also run your commands backward and undo the things that your program has done. Depending on the complexity of your commands, you can implement them either as a full-scale class or as a simple code block.
 
 The Command pattern and the Observer pattern have a lot in common. Both patterns identify an object—the command in the former pattern and the observer in the latter pattern—that is called from the other participant in the pattern. Is that object that I pass to a GUI button a command, the thing that the button will do when it is pushed, or is it an observer, waiting to be notified when the button changes state? The answer is—well, it depends. A command object simply knows how to do something, but is not particularly interested in the state of the thing that executed it. Conversely, an observer is intensely interested in the state of the subject, the thing that called it.
+
+
+Adapter Pattern (AKA: Wrapper)
+==============================
+
+GoF
+------------------------------------------------------------------------------
+
+* Intent: Convert the interface of a class into another interface clients expect. Adapter lets classes work together that couldn't otherwise because of incompatible interfaces.
+
+* Applicability: Use the Adapter pattern when
+
+  + you want to use an existing class, and its interface does not match the one you need. 
+
+  + you want to create a reusable class that cooperates with unrelated or unforeseen classes, that is, classes that don't necessarily have compatible interfaces. 
+
+  + (object adapter only) you need to use several existing subclasses, but it's impractical to adapt their interface by subclassing every one. An object adapter can adapt the interface of its parent class. (J: database driver adapter in AR)
+
+* We can do this (implementing TextShape) in one of two ways: (1) by inheriting Shape's interface and TextView's implementation or (2) by composing a TextView instance within a TextShape and implementing TextShape in terms of TextView's interface. These two approaches correspond to the class and object versions of the Adapter pattern. We call TextShape an adapter. 
+
+  + A class adapter uses multiple inheritance to adapt one interface to another (J: freeze adaptee in class. impossible in Ruby)
+
+  + An object adapter relies on object composition (J: adaptee changable at runtime)
+
+* Collaborations: Clients call operations on an Adapter instance. In turn, the adapter calls Adaptee operations that carry out the request.
+
+* Consequences: Class and object adapters have different trade-offs.
+
+  A class adapter
+  + adapts Adaptee to Target by committing to a concrete Adapter class. As a consequence, a class adapter won't work when we want to adapt a class and all its subclasses. 
+  + lets Adapter override some of Adaptee's behavior, since Adapter is a subclass of Adaptee. 
+  + introduces only one object, and no additional pointer indirection is needed to get to the adaptee.
+
+  An object adapter
+  + lets a single Adapter work with many Adapteesthat is, the Adaptee itself and all of its subclasses (if any). The Adapter can also add functionality to all Adaptees at once. 
+  + makes it harder to override Adaptee behavior. It will require subclassing Adaptee and making Adapter refer to the subclass rather than the Adaptee itself.
+
+  Here are other issues to consider when using the Adapter pattern:
+
+  1. How much adapting does Adapter do? Adapters vary in the amount of work they do to adapt Adaptee to the Target interface. There is a spectrum of possible work, from simple interface conversion. for example, changing the names of operations to supporting an entirely different set of operations. The amount of work Adapter does depends on how similar the Target interface is to Adaptee's. 
+
+  2. Pluggable adapters. A class is more reusable when you minimize the assumptions other classes must make to use it. By building interface adaptation into a class, you eliminate the assumption that other classes see the same interface. Put another way, interface adaptation lets us incorporate our class into existing systems that might expect different interfaces to the class. ObjectWorks\Smalltalk [Par90] uses the term pluggable adapter to describe classes with built-in interface adaptation. 
+
+     (J: this means depending on interface instead of concrete class. e.g. ActiveRecord depends on AbstractAdapter instead of concret database drivers. To use the class with concrete adaptee, we only need create an adapter for then concrete adaptee using the pluggable adapter's interface.)
+
+     Consider a TreeDisplay widget that can display tree structures graphically. If this were a special-purpose widget for use in just one application, then we might require the objects that it displays to have a specific interface; that is, all must descend from a Tree abstract class. But if we wanted to make TreeDisplay more reusable (say we wanted to make it part of a toolkit of useful widgets), then that requirement would be unreasonable. Applications will define their own classes for tree structures. They shouldn't be forced to use our Tree abstract class. Different tree structures will have different interfaces. 
+
+     In a directory hierarchy, for example, children might be accessed with a GetSubdirectories operation, whereas in an inheritance hierarchy, the corresponding operation might be called GetSubclasses. A reusable TreeDisplay widget must be able to display both kinds of hierarchies even if they use different interfaces. In other words, the TreeDisplay should have interface adaptation built into it. We'll look at different ways to build interface adaptation into classes in the Implementation section. 
+
+  3. Using two-way adapters to provide transparency. A potential problem with adapters is that they aren't transparent to all clients. An adapted object no longer conforms to the Adaptee interface, so it can't be used as is wherever an Adaptee object can. Two-way adapters can provide such transparency. Specifically, they're useful when two different clients need to view an object differently. 
+
+     Consider the two-way adapter that integrates Unidraw, a graphical editor framework [VL90], and QOCA, a constraint-solving toolkit [HHMV92]. Both systems have classes that represent variables explicitly: Unidraw has StateVariable, and QOCA has ConstraintVariable. To make Unidraw work with QOCA, ConstraintVariable must be adapted to StateVariable; to let QOCA propagate solutions to Unidraw, StateVariable must be adapted to ConstraintVariable. 
+
+* Implementation: Although the implementation of Adapter is usually straightforward, here are some issues to keep in mind:
+
+  + Implementing class adapters in C++. In a C++ implementation of a class adapter, Adapter would inherit publicly from Target and privately from Adaptee. Thus Adapter would be a subtype of Target but not of Adaptee. 
+
+  + Pluggable adapters. Let's look at three ways to implement pluggable adapters for the TreeDisplay widget described earlier, which can lay out and display a hierarchical structure automatically. 
+
+    The first step, which is common to all three of the implementations discussed here, is to find a "narrow" interface for Adaptee, that is, the smallest subset of operations that lets us do the adaptation. A narrow interface consisting of only a couple of operations is easier to adapt than an interface with dozens of operations. For TreeDisplay, the adaptee is any hierarchical structure. A minimalist interface might include two operations, one that defines how to present a node in the hierarchical structure graphically, and another that retrieves the node's children. The narrow interface leads to three implementation approaches:
+
+    1. Using abstract operations. Define corresponding abstract operations for the narrow Adaptee interface in the TreeDisplay class. Subclasses must implement the abstract operations and adapt the hierarchically structured object. For example, a DirectoryTreeDisplay subclass will implement these operations by accessing the directory structure. DirectoryTreeDisplay specializes the narrow interface so that it can display directory structures made up of FileSystemEntity objects.
+
+    (J: adapter inherits client, implements targeted interface defined in client.)
+
+    2. Using delegate objects. In this approach, TreeDisplay forwards requests for accessing the hierarchical structure to a delegate object. TreeDisplay can use a different adaptation strategy by substituting a different delegate. 
+
+       For example, suppose there exists a DirectoryBrowser that uses a TreeDisplay. DirectoryBrowser might make a good delegate for adapting TreeDisplay to the hierarchical directory structure. In dynamically typed languages like Smalltalk or Objective C, this approach only requires an interface for registering the delegate with the adapter. Then TreeDisplay simply forwards the requests to the delegate. NEXTSTEP [Add94] uses this approach heavily to reduce subclassing. 
+
+       Statically typed languages like C++ require an explicit interface definition for the delegate. We can specify such an interface by putting the narrow interface that TreeDisplay requires into an abstract TreeAccessorDelegate class. Then we can mix this interface into the delegate of our choice - DirectoryBrowser in this case - using inheritance. We use single inheritance if the DirectoryBrowser has no existing parent class, multiple inheritance if it does. Mixing classes together like this is easier than introducing a new TreeDisplay subclass and implementing its operations individually. 
+
+    (J: define target interface explictly in an abstract class; adapter implements the class by delegating to adaptee)
+
+    3. Parameterized adapters. The usual way to support pluggable adapters in Smalltalk is to parameterize an adapter with one or more blocks. The block construct supports adaptation without subclassing. A block can adapt a request, and the adapter can store a block for each individual request. In our example, this means TreeDisplay stores one block for converting a node into a GraphicNode and another block for accessing a node's children. 
+
+       For example, to create TreeDisplay on a directory hierarchy, we write 
+
+       directoryDisplay :=
+         (TreeDisplay on: treeRoot)
+           getChildrenBlock:
+             [:node | node getSubdirectories]
+           createGraphicNodeBlock:
+             [:node | node createGraphicNode].
+
+       If you're building interface adaptation into a class, this approach offers a convenient alternative to subclassing.
+
+* Related Patterns:
+  + Bridge has a structure similar to an object adapter, but Bridge has a different intent: It is meant to separate an interface from its implementation so that they can be varied easily and independently. An adapter is meant to change the interface of an existing object. 
+  + Decorator enhances another object without changing its interface. A decorator is thus more transparent to the application than an adapter is. As a consequence, Decorator supports recursive composition, which isn't possible with pure adapters. 
+  + Proxy defines a representative or surrogate for another object and does not change its interface. 
+
+
+DPIR
+------------------------------------------------------------------------------
+
+The Class Diagram for adapters is usually drawn as shown in Figure 9-1. What this diagram is saying is that the client knows about some target class—as a client, I have a reference to my target object. The client expects the target to have a certain interface. But unknown to the client, the target object is really an adapter, and buried inside of the adapter is a reference to a second object, the adaptee, which actually performs the work. Perhaps in a perfect world all interfaces would line up perfectly and the client would talk directly to the adaptee. In the real world, however, we need to build adapters because the interface that the client is expecting is not the interface that the adaptee is offering.
+
+In ruby we can change an (class) interface at any time, so an adapter class may not be need. We just reopen a class and modify it.
+
+Undeniably, modifying a class or a single instance to support the interface that you need makes for simpler code than creating an adapter. If you modify the original class or object, you do not need the additional adapter class, nor do you need to worry about wrapping the adapter around the adaptee. Things just work. And yet the modification technique involves serious encapsulation violations: You just dive in and start changing things. So when should you use an adapter, and when is it okay to rearrange the guts of a wayward class?
+
+As usual, a pinch of pragmatism seems best. Lean toward modifying the class in the following circumstances:
+  + The modifications are simple and clear. The method aliasing we did earlier is a prime example of a simple, crystal-clear modification
+  + You understand the class you are modifying and the way in which it is used. Performing serious surgery on a class without taking a hard look at the class beforehand is probably going to lead to grief.
+  
+Lean toward an adapter solution in the following situations:
+  + The interface mismatch is extensive and complex. For example, you probably would not want to modify a string to look like a Fixnum object.
+  + You have no idea how this class works. Ignorance is always cause to tread lightly.
+
+Engineering is all about trade-offs.
+
+One of the advantages that Ruby’s duck typing gives to adapter writers is that it allows us to create adapters that support only that part of the target interface that the client will actually use. For example, IO objects sport a large number of methods—with a real IO object, you can read lines, search your file, and do lots of other file-related things. But the StringIOAdapter we created earlier implemented exactly two methods: getc and eof?. We got away with this because those were the only IO methods that the Encrypter class actually used. Partially implemented adapters are something of a double-edged sword: On the one hand, it is very convenient to implement only what you absolutely need; on the other hand, your program can come to grief if the client decides to call a method that you didn’t think you needed.
+
+The Adapter pattern is the first member of a family of patterns we will encounter—a family of patterns in which one object stands in for another object. This family of object-oriented impostors also includes proxies and decorators. In each case, an object acts more or less as the front man for another object. As you will see in subsequent chapters, in each of these patterns the code will look vaguely familiar. At the risk of repeating myself, keep in mind that a pattern is not just about code: Intent is critical. An adapter is an adapter only if you are stuck with objects that have the wrong interface and you are trying to keep the pain of dealing with these ill-fitting interfaces from spreading throughout your system.
+
