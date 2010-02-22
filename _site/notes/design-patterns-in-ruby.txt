@@ -46,6 +46,12 @@ YAGNI: You Ain't Gonna Need it. Don't implement what is unneed now, but keep cha
 * Convention Not Configuration
 
 
+
+------------------------------
+Part I. Patterns in Both Books
+------------------------------
+
+
 Template Method
 ===============
 
@@ -691,3 +697,84 @@ One of the advantages that Ruby’s duck typing gives to adapter writers is that
 
 The Adapter pattern is the first member of a family of patterns we will encounter—a family of patterns in which one object stands in for another object. This family of object-oriented impostors also includes proxies and decorators. In each case, an object acts more or less as the front man for another object. As you will see in subsequent chapters, in each of these patterns the code will look vaguely familiar. At the risk of repeating myself, keep in mind that a pattern is not just about code: Intent is critical. An adapter is an adapter only if you are stuck with objects that have the wrong interface and you are trying to keep the pain of dealing with these ill-fitting interfaces from spreading throughout your system.
 
+
+Proxy Pattern (AKA: Surrogate)
+==============================
+
+GoF
+------------------------------------------------------------------------------
+
+* Intent: Provide a surrogate or placeholder for another object to control access to it.
+
+* Applicability: Proxy is applicable whenever there is a need for a more versatile or sophisticated reference to an object than a simple pointer. Here are several common situations in which the Proxy pattern is applicable:
+  + A remote proxy provides a local representative for an object in a different address space.
+  + A virtual proxy creates expensive objects on demand.
+  + A protection proxy controls access to the original object. Protection proxies are useful when objects should have different access rights.
+  + A smart reference is a replacement for a bare pointer that performs additional actions when an object is accessed. Typical uses include 
+    - counting the number of references to the real object so that it can be freed automatically when there are no more references (also called smart pointers [Ede92]). 
+    - loading a persistent object into memory when it's first referenced. 
+    - checking that the real object is locked before it's accessed to ensure that no other object can change it.
+
+* Participants: In statically type language, a Subject is needed to define the common interface for Proxy and RealSubject.
+
+* Collaborations: Proxy forwards requests to RealSubject when appropriate, depending on the kind of proxy.
+
+* Consequences: The Proxy pattern introduces a level of indirection when accessing an object. The additional indirection has many uses, depending on the kind of proxy:
+  + A remote proxy can hide the fact that an object resides in a different address space. 
+  + A virtual proxy can perform optimizations such as creating an object on demand. 
+  + Both protection proxies and smart references allow additional housekeeping tasks when an object is accessed.
+
+  There's another optimization that the Proxy pattern can hide from the client. It's called copy-on-write, and it's related to creation on demand. Copying a large and complicated object can be an expensive operation. If the copy is never modified, then there's no need to incur this cost. By using a proxy to postpone the copying process, we ensure that we pay the price of copying the object only if it's modified. To make copy-on-write work, the subject must be reference counted. Copying the proxy will do nothing more than increment this reference count. Only when the client requests an operation that modifies the subject does the proxy actually copy it. In that case the proxy must also decrement the subject's reference count. When the reference count goes to zero, the subject gets deleted. Copy-on-write can reduce the cost of copying heavyweight subjects significantly. 
+
+* Implementation: The Proxy pattern can exploit the following language features:
+
+  + Overloading the member access operator in C++. C++ supports overloading operator->, the member access operator. Overloading this operator lets you perform additional work whenever an object is dereferenced. This can be helpful for implementing some kinds of proxy; the proxy behaves just like a pointer. 
+
+    Overloading the member access operator isn't a good solution for every kind of proxy. Some proxies need to know precisely which operation is called, and overloading the member access operator doesn't work in those cases. Consider the virtual proxy example in the Motivation. The image should be loaded at a specific time - namely when the Draw operation is called - and not whenever the image is referenced. Overloading the access operator doesn't allow this distinction. In that case we must manually implement each proxy operation that forwards the request to the subject. These operations are usually very similar to each other. Typically all operations verify that the request is legal, that the original object exists, etc., before forwarding the request to the subject. It's tedious to write this code again and again. So it's common to use a preprocessor to generate it automatically. 
+
+    (J: overloading member access operator is like implementing method_missing in ruby.)
+
+  + Using doesNotUnderstand in Smalltalk. Smalltalk provides a hook that you can use to support automatic forwarding of requests. Smalltalk calls doesNotUnderstand: aMessage when a client sends a message to a receiver that has no corresponding method. The Proxy class can redefine doesNotUnderstand so that the message is forwarded to its subject. 
+
+    To ensure that a request is forwarded to the subject and not just absorbed by the proxy silently, you can define a Proxy class that doesn't understand any messages. Smalltalk lets you do this by defining Proxy as a class with no superclass.6 
+
+    The main disadvantage of doesNotUnderstand: is that most Smalltalk systems have a few special messages that are handled directly by the virtual machine, and these do not cause the usual method look-up. The only one that's usually implemented in Object (and so can affect proxies) is the identity operation ==. 
+
+    If you're going to use doesNotUnderstand: to implement Proxy, then you must design around this problem. You can't expect identity on proxies to mean identity on their real subjects. An added disadvantage is that doesNotUnderstand: was developed for error handling, not for building proxies, and so it's generally not very fast. 
+
+  + Proxy doesn't always have to know the type of real subject. If a Proxy class can deal with its subject solely through an abstract interface, then there's no need to make a Proxy class for each RealSubject class; the proxy can deal with all RealSubject classes uniformly. But if Proxies are going to instantiate RealSubjects (such as in a virtual proxy), then they have to know the concrete class.
+
+  + Another implementation issue involves how to refer to the subject before it's instantiated. Some proxies have to refer to their subject whether it's on disk or in memory. That means they must use some form of address space-independent object identifiers. We used a file name for this purpose in the Motivation. 
+
+* Related Patterns:
+  + Adapter: An adapter provides a different interface to the object it adapts. In contrast, a proxy provides the same interface as its subject. However, a proxy used for access protection might refuse to perform an operation that the subject will perform, so its interface may be effectively a subset of the subject's.
+  + Decorator: Although decorators can have similar implementations as proxies, decorators have a different purpose. A decorator adds one or more responsibilities to an object, whereas a proxy controls access to an object. Proxies vary in the degree to which they are implemented like a decorator. A protection proxy might be implemented exactly like a decorator. On the other hand, a remote proxy will not contain a direct reference to its real subject but only an indirect reference, such as "host ID and local address on host." A virtual proxy will start off with an indirect reference such as a file name but will eventually obtain and use a direct reference. 
+
+
+DPIR
+------------------------------------------------------------------------------
+
+As disparate as these problems seem—controlling access to an object or providing a location-independent way of getting at the object or delaying its creation—all three actually have a common solution: the Proxy pattern.
+
+* Protection proxy, a proxy that controls access to the subject.
+
+  Clearly, we could have included the checking code in the BankAccount object itself. The advantage of using a proxy for protection is that it gives us a nice separation of concerns: The proxy worries about who is or is not allowed to do what. The only thing that the real bank account object need be concerned with is, well, the bank account. By implementing the security in a proxy, we make it easy to swap in a different security scheme (just wrap the subject in a different proxy) or eliminate the security all together (just drop the proxy). For that matter, we can also change the implementation of the BankAccount object without messing with our security scheme.
+
+  Protection proxies have another advantage over the naive “implement all of the security and functionality in one class” approach. By splitting the protection cleanly off from the workings of the real object, we can minimize the chance that any important information will inadvertently leak out through our protective shield. (J: maybe)
+
+* Remote proxy, an object that lives on the client machine and looks, to the client code, just like the real object. When a request comes in, the remote proxy goes through all the horror of packaging up the request, sending it over the network, waiting for a response, unpacking the response, and returning the answer to the unsuspecting client.
+
+  From the client’s point of view, it called a method on what it thought was the real object and sometime later—perhaps an unusually long time later - the answer came back. This is how virtually all remote procedure call (RPC) systems work.
+
+  Remote proxies offer many of the same advantages as protection proxies. In particular, the remote proxy enables a nice separation of concerns: One object, the subject, can focus on forecasting the weather or whatever domain-specific thing that it is doing while the other object, the proxy, can concentrate on shipping the bytes across the network. Changing protocols (perhaps from SOAP to XMLRPC) is as easy as swapping out the proxy.
+
+* Virtual proxy, we can use a proxy to delay creating expensive objects until we really need them, thus be lazy. In ruby we can pass in a 'creation block' which contains the code to create/get the real object to proxy, and call that block when neccessary in proxy. Like the other two flavors of proxies, the virtual proxy provides us with a good separation of concerns: The real object deals with real things while the virtual proxy deals with the issue of when to create the real instance.
+
+In ruby we can ask method_missing&send brothers to do the heavy job, instead of implmenting hundreds of proxy methods manually. An easy trap to fall into when building a proxy, especially when you are using the method_missing technique, is to forget that every object starts out with a minimal set of methods—those that it inherits from Object. For example, every object inherits a method called to_s from Object. Call to_s on most any object, and you will get back a string containing some kind of description of the object. A proxy is sup- posed to pretend to be its subject, but if you call to_s on any of the proxies that we have built so far, the illusion quickly breaks down. This may or may not be the behavior we are looking for; the point is that you need to think about those often-forgotten Object methods as you build your proxies. method_missing is slow and hard to track when read code, use it carefully.
+
+The Proxy pattern is the second pattern we have encountered in which one object stands in for another. In Chapter 9, we considered the adapter, which wraps one object with another to transform the interface of the first object. Superficially, the proxy is very similar to the adapter: One object stands in for another. But the proxy does not change the interface; the interface of the proxy is exactly the same as the interface of its subject. Instead of trying to transform the interface of that inner object in the same way that an adapter does, the proxy tries to control access to it.
+
+
+------------------------
+Part II. Patterns in GoF
+------------------------
