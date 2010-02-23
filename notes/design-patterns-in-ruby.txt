@@ -158,11 +158,11 @@ GoF
 DPIR
 ------------------------------------------------------------------------------
 
-Inheritance-based techniques such as the Template Method pattern limit our runtime flexibility. 
+Inheritance-based techniques such as the Template Method pattern limit our runtime flexibility.
 
 The key idea underlying the Strategy pattern is to define a family of objects, the strategies, which all do the same thing. Not only does each strategy object perform the same job, but all of the objects support exactly the same interface. Given that all of the strategy objects look alike from the outside, the user of the strategy—called the context class by the GoF—can treat the strategies like interchangeable parts. Thus, it does not matter which strategy you use, because they all look alike and they all perform the same function. (J: delegate the varying part to (strategy) object instead of overridden methods)
 
-The Strategy pattern has some real advantages. As we saw in the report example, we can achieve better separation of concerns by pulling out a set of strategies from a class. By using the Strategy pattern, we relieve the Report class of any responsibility for or knowledge of the report file format. In addition, because the Strategy pattern is based on composition and delegation, rather than on inheritance, it is easy to switch strategies at runtime. 
+The Strategy pattern has some real advantages. As we saw in the report example, we can achieve better separation of concerns by pulling out a set of strategies from a class. By using the Strategy pattern, we relieve the Report class of any responsibility for or knowledge of the report file format. In addition, because the Strategy pattern is based on composition and delegation, rather than on inheritance, it is easy to switch strategies at runtime.
 
 The Strategy pattern does have one thing in common with the Template Method pattern: Both patterns allow us to concentrate the decision about which variation we are using in one or a few places. With the Template Method pattern, we make our decision when we pick our concrete subclass. In the Strategy pattern, we make our decision by selecting a strategy class at runtime.
 
@@ -176,7 +176,7 @@ A real advantage of the Strategy pattern is that because the context and the str
 
 In ruby we can also use lambda/proc instead of strategy object as a quick and dirty strategy object. But code block-based strategies work only when the strategy interface is a simple, one-method affair. After all, the only method that we can call on a Proc object is call. If you need more than that for your strategy, by all means build some classes. But if your requirement calls for a simple strategy, the code block may just be the way to go.
 
-The Strategy pattern is a delegation-based approach to solving the same problem as the Template Method pattern. Instead of teasing out the variable parts of your algorithm and pushing them down into subclasses, you simply implement each version of your algorithm as a separate object. 
+The Strategy pattern is a delegation-based approach to solving the same problem as the Template Method pattern. Instead of teasing out the variable parts of your algorithm and pushing them down into subclasses, you simply implement each version of your algorithm as a separate object.
 
 As we shall see in coming chapters, the Strategy pattern resembles, at least superficially, several other patterns. For example, in the Strategy pattern we have an object—the context—that is trying to get something done. But to get that thing done, we need to supply the context with a second object—the strategy object—that helps get the thing done. Superficially, the Observer pattern works in much the same way: An object does something, but along the way it makes calls to a second object, which we need to supply. The difference between these two patterns relates to their intent.
 
@@ -205,9 +205,9 @@ Gof
 
   + After being informed of a change in the concrete subject, a ConcreteObserver object may query the subject for information. ConcreteObserver uses this information to reconcile its state with that of the subject. Notify is not always called by the subject. It can be called by an observer or by another kind of object entirely.
 
-* Consequences: The Observer pattern lets you vary subjects and observers independently. You can reuse subjects without reusing their observers, and vice versa. It lets you add observers without modifying the subject or other observers. Further benefits and liabilities of the Observer pattern include the following: 
+* Consequences: The Observer pattern lets you vary subjects and observers independently. You can reuse subjects without reusing their observers, and vice versa. It lets you add observers without modifying the subject or other observers. Further benefits and liabilities of the Observer pattern include the following:
 
-  + Abstract coupling between Subject and Observer. All a subject knows is that it has a list of observers, each conforming to the simple interface of the abstract Observer class. The subject doesn't know the concrete class of any observer. Thus the coupling between subjects and observers is abstract and minimal. Because Subject and Observer aren't tightly coupled, they can belong to different layers of abstraction in a system. A lower-level subject can communicate and inform a higher-level observer, thereby keeping the system's layering intact. If Subject and Observer are lumped together, then the resulting object must either span two layers (and violate the layering), or it must be forced to live in one layer or the other (which might compromise the layering abstraction). 
+  + Abstract coupling between Subject and Observer. All a subject knows is that it has a list of observers, each conforming to the simple interface of the abstract Observer class. The subject doesn't know the concrete class of any observer. Thus the coupling between subjects and observers is abstract and minimal. Because Subject and Observer aren't tightly coupled, they can belong to different layers of abstraction in a system. A lower-level subject can communicate and inform a higher-level observer, thereby keeping the system's layering intact. If Subject and Observer are lumped together, then the resulting object must either span two layers (and violate the layering), or it must be forced to live in one layer or the other (which might compromise the layering abstraction).
 
   + Support for broadcast communication. Unlike an ordinary request, the notification that a subject sends needn't specify its receiver. The notification is broadcast automatically to all interested objects that subscribed to it. The subject doesn't care how many interested objects exist; its only responsibility is to notify its observers. This gives you the freedom to add and remove observers at any time. It's up to the observer to handle or ignore a notification.
 
@@ -225,7 +225,7 @@ Gof
 
   + Dangling references to deleted subjects. Deleting a subject should not produce dangling references in its observers. One way to avoid dangling references is to make the subject notify its observers as it is deleted so that they can reset their reference to it. In general, simply deleting the observers is not an option, because other objects may reference them, or they may be observing other subjects as well.
 
-  + Making sure Subject state is self-consistent before notification. It's important to make sure Subject state is self-consistent before calling Notify, because observers query the subject for its current state in the course of updating their own state. This self-consistency rule is easy to violate unintentionally when Subject subclass operations call inherited operations. For example, the notification in the following code sequence is trigged when the subject is in an inconsistent state: 
+  + Making sure Subject state is self-consistent before notification. It's important to make sure Subject state is self-consistent before calling Notify, because observers query the subject for its current state in the course of updating their own state. This self-consistency rule is easy to violate unintentionally when Subject subclass operations call inherited operations. For example, the notification in the following code sequence is trigged when the subject is in an inconsistent state:
 
       void MySubject::Operation (int newValue) {
         BaseClassSubject::Operation(newValue);
@@ -234,41 +234,41 @@ Gof
         // update subclass state (too late!)
       }
 
-    You can avoid this pitfall by sending notifications from template methods (Template Method ) in abstract Subject classes. Define a primitive operation for subclasses to override, and make Notify the last operation in the template method, which will ensure that the object is self-consistent when subclasses override Subject operations. 
+    You can avoid this pitfall by sending notifications from template methods (Template Method ) in abstract Subject classes. Define a primitive operation for subclasses to override, and make Notify the last operation in the template method, which will ensure that the object is self-consistent when subclasses override Subject operations.
 
       void Text::Cut (TextRange r) {
         ReplaceRange(r);       // redefined in subclasses
         Notify();
       }
 
-    By the way, it's always a good idea to document which Subject operations trigger notifications. 
+    By the way, it's always a good idea to document which Subject operations trigger notifications.
 
-  + Avoiding observer-specific update protocols: the push and pull models. Implementations of the Observer pattern often have the subject broadcast additional information about the change. The subject passes this information as an argument to Update. The amount of information may vary widely. At one extreme, which we call the push model, the subject sends observers detailed information about the change, whether they want it or not. At the other extreme is the pull model; the subject sends nothing but the most minimal notification, and observers ask for details explicitly thereafter. The pull model emphasizes the subject's ignorance of its observers, whereas the push model assumes subjects know something about their observers' needs. The push model might make observers less reusable, because Subject classes make assumptions about Observer classes that might not always be true. On the other hand, the pull model may be inefficient, because Observer classes must ascertain what changed without help from the Subject. 
+  + Avoiding observer-specific update protocols: the push and pull models. Implementations of the Observer pattern often have the subject broadcast additional information about the change. The subject passes this information as an argument to Update. The amount of information may vary widely. At one extreme, which we call the push model, the subject sends observers detailed information about the change, whether they want it or not. At the other extreme is the pull model; the subject sends nothing but the most minimal notification, and observers ask for details explicitly thereafter. The pull model emphasizes the subject's ignorance of its observers, whereas the push model assumes subjects know something about their observers' needs. The push model might make observers less reusable, because Subject classes make assumptions about Observer classes that might not always be true. On the other hand, the pull model may be inefficient, because Observer classes must ascertain what changed without help from the Subject.
 
-  + Specifying modifications of interest explicitly. You can improve update efficiency by extending the subject's registration interface to allow registering observers only for specific events of interest. When such an event occurs, the subject informs only those observers that have registered interest in that event. One way to support this uses the notion of aspects for Subject objects. To register interest in particular events, observers are attached to their subjects using 
+  + Specifying modifications of interest explicitly. You can improve update efficiency by extending the subject's registration interface to allow registering observers only for specific events of interest. When such an event occurs, the subject informs only those observers that have registered interest in that event. One way to support this uses the notion of aspects for Subject objects. To register interest in particular events, observers are attached to their subjects using
 
       void Subject::Attach(Observer*, Aspect& interest);
 
-    where interest specifies the event of interest. At notification time, the subject supplies the changed aspect to its observers as a parameter to the Update operation. For example: 
+    where interest specifies the event of interest. At notification time, the subject supplies the changed aspect to its observers as a parameter to the Update operation. For example:
 
       void Observer::Update(Subject*, Aspect& interest);
 
   + Encapsulating complex update semantics. When the dependency relationship between subjects and observers is particularly complex, an object that maintains these relationships might be required. We call such an object a ChangeManager. Its purpose is to minimize the work required to make observers reflect a change in their subject. For example, if an operation involves changes to several interdependent subjects, you might have to ensure that their observers are notified only after all the subjects have been modified to avoid notifying observers more than once. ChangeManager has three responsibilities:
 
-      1. It maps a subject to its observers and provides an interface to maintain this mapping. This eliminates the need for subjects to maintain references to their observers and vice versa. 
-      2. It defines a particular update strategy. 
+      1. It maps a subject to its observers and provides an interface to maintain this mapping. This eliminates the need for subjects to maintain references to their observers and vice versa.
+      2. It defines a particular update strategy.
       3. It updates all dependent observers at the request of a subject.
 
-    The following diagram depicts a simple ChangeManager-based implementation of the Observer pattern. There are two specialized ChangeManagers. SimpleChangeManager is naive in that it always updates all observers of each subject. In contrast, DAGChangeManager handles directed-acyclic graphs of dependencies between subjects and their observers. A DAGChangeManager is preferable to a SimpleChangeManager when an observer observes more than one subject. In that case, a change in two or more subjects might cause redundant updates. The DAGChangeManager ensures the observer receives just one update. SimpleChangeManager is fine when multiple updates aren't an issue. 
+    The following diagram depicts a simple ChangeManager-based implementation of the Observer pattern. There are two specialized ChangeManagers. SimpleChangeManager is naive in that it always updates all observers of each subject. In contrast, DAGChangeManager handles directed-acyclic graphs of dependencies between subjects and their observers. A DAGChangeManager is preferable to a SimpleChangeManager when an observer observes more than one subject. In that case, a change in two or more subjects might cause redundant updates. The DAGChangeManager ensures the observer receives just one update. SimpleChangeManager is fine when multiple updates aren't an issue.
 
-    ChangeManager is an instance of the Mediator pattern. In general there is only one ChangeManager, and it is known globally. The Singleton pattern would be useful here. 
+    ChangeManager is an instance of the Mediator pattern. In general there is only one ChangeManager, and it is known globally. The Singleton pattern would be useful here.
 
   + Combining the Subject and Observer classes. Class libraries written in languages that lack multiple inheritance (like Smalltalk) generally don't define separate Subject and Observer classes but combine their interfaces in one class. That lets you define an object that acts as both a subject and an observer without multiple inheritance. In Smalltalk, for example, the Subject and Observer interfaces are defined in the root class Object, making them available to all classes.
 
 * Related Patterns
 
-  1. Mediator : By encapsulating complex update semantics, the ChangeManager acts as mediator between subjects and observers. 
-  2. Singleton : The ChangeManager may use the Singleton pattern to make it unique and globally accessible. 
+  1. Mediator : By encapsulating complex update semantics, the ChangeManager acts as mediator between subjects and observers.
+  2. Singleton : The ChangeManager may use the Singleton pattern to make it unique and globally accessible.
 
 
 DPIR
@@ -295,7 +295,7 @@ The key decisions that you need to make when implementing the Observer pattern a
 
 We can even define different update methods for different events. For example, we could have one method for a salary update observer.update_salary(self, old_salary, new_salary) and a different method for title changes observer.update_title(self, old_title, new_title) The advantage in providing more details is that the observers do not have to work quite as hard to keep track of what is going on. The disadvantage of the push model is that if all of the observers are not interested in all of the details, then the work of passing the data around goes for naught.
 
-Most of the problems that come up in using the Observer pattern revolve around the frequency and timing of the updates. Sometimes the sheer volume of updates can be a problem. For example, an observer might register with a subject, unaware that the subject is going to spew out thousands of updates each second. The subject class can help with all of this by avoiding broadcasting redundant updates. Just because someone updates an object, it does not mean that anything really changed. 
+Most of the problems that come up in using the Observer pattern revolve around the frequency and timing of the updates. Sometimes the sheer volume of updates can be a problem. For example, an observer might register with a subject, unaware that the subject is going to spew out thousands of updates each second. The subject class can help with all of this by avoiding broadcasting redundant updates. Just because someone updates an object, it does not mean that anything really changed.
 
 Another potential problem lies in the consistency of the subject as it informs its observers of changes. You can deal with this problem by not informing the observers until a consistent set of changes is complete.
 
@@ -312,11 +312,11 @@ GoF
 
 * Intent: Compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.
 
-  The key to the Composite pattern is an abstract class that represents both primitives and their containers. For the graphics system, this class is Graphic. Graphic declares operations like Draw that are specific to graphical objects. It also declares operations that all composite objects share, such as operations for accessing and managing its children. 
+  The key to the Composite pattern is an abstract class that represents both primitives and their containers. For the graphics system, this class is Graphic. Graphic declares operations like Draw that are specific to graphical objects. It also declares operations that all composite objects share, such as operations for accessing and managing its children.
 
 * Applicability: Use the Composite pattern when:
 
-  + you want to represent part-whole hierarchies of objects. 
+  + you want to represent part-whole hierarchies of objects.
 
   + you want clients to be able to ignore the difference between compositions of objects and individual objects. Clients will treat all objects in the composite structure uniformly.
 
@@ -324,47 +324,47 @@ GoF
 
 * Consequences: The Composite pattern:
 
-  + defines class hierarchies consisting of primitive objects and composite objects. Primitive objects can be composed into more complex objects, which in turn can be composed, and so on recursively. Wherever client code expects a primitive object, it can also take a composite object. 
+  + defines class hierarchies consisting of primitive objects and composite objects. Primitive objects can be composed into more complex objects, which in turn can be composed, and so on recursively. Wherever client code expects a primitive object, it can also take a composite object.
 
-  + makes the client simple. Clients can treat composite structures and individual objects uniformly. Clients normally don't know (and shouldn't care) whether they're dealing with a leaf or a composite component. This simplifies client code, because it avoids having to write tag-and-case-statement-style functions over the classes that define the composition. 
+  + makes the client simple. Clients can treat composite structures and individual objects uniformly. Clients normally don't know (and shouldn't care) whether they're dealing with a leaf or a composite component. This simplifies client code, because it avoids having to write tag-and-case-statement-style functions over the classes that define the composition.
 
-  + makes it easier to add new kinds of components. Newly defined Composite or Leaf subclasses work automatically with existing structures and client code. Clients don't have to be changed for new Component classes. 
+  + makes it easier to add new kinds of components. Newly defined Composite or Leaf subclasses work automatically with existing structures and client code. Clients don't have to be changed for new Component classes.
 
   + can make your design overly general. The disadvantage of making it easy to add new components is that it makes it harder to restrict the components of a composite. Sometimes you want a composite to have only certain components. With Composite, you can't rely on the type system to enforce those constraints for you. You'll have to use run-time checks instead.
 
 * Implementation: There are many issues to consider when implementing the Composite pattern:
 
-  + Explicit parent references. Maintaining references from child components to their parent can simplify the traversal and management of a composite structure. The parent reference simplifies moving up the structure and deleting a component. Parent references also help support the Chain of Responsibility pattern. The usual place to define the parent reference is in the Component class. Leaf and Composite classes can inherit the reference and the operations that manage it. With parent references, it's essential to maintain the invariant that all children of a composite have as their parent the composite that in turn has them as children. The easiest way to ensure this is to change a component's parent only when it's being added or removed from a composite. If this can be implemented once in the Add and Remove operations of the Composite class, then it can be inherited by all the subclasses, and the invariant will be maintained automatically. 
+  + Explicit parent references. Maintaining references from child components to their parent can simplify the traversal and management of a composite structure. The parent reference simplifies moving up the structure and deleting a component. Parent references also help support the Chain of Responsibility pattern. The usual place to define the parent reference is in the Component class. Leaf and Composite classes can inherit the reference and the operations that manage it. With parent references, it's essential to maintain the invariant that all children of a composite have as their parent the composite that in turn has them as children. The easiest way to ensure this is to change a component's parent only when it's being added or removed from a composite. If this can be implemented once in the Add and Remove operations of the Composite class, then it can be inherited by all the subclasses, and the invariant will be maintained automatically.
 
   + Sharing components. It's often useful to share components, for example, to reduce storage requirements. But when a component can have no more than one parent, sharing components becomes difficult. A possible solution is for children to store multiple parents. But that can lead to ambiguities as a request propagates up the structure. The Flyweight pattern shows how to rework a design to avoid storing parents altogether. It works in cases where children can avoid sending parent requests by externalizing some or all of their state.
 
-  + Maximizing the Component interface. One of the goals of the Composite pattern is to make clients unaware of the specific Leaf or Composite classes they're using. To attain this goal, the Component class should define as many common operations for Composite and Leaf classes as possible. The Component class usually provides default implementations for these operations, and Leaf and Composite subclasses will override them. However, this goal will sometimes conflict with the principle of class hierarchy design that says a class should only define operations that are meaningful to its subclasses. There are many operations that Component supports that don't seem to make sense for Leaf classes. How can Component provide a default implementation for them? Sometimes a little creativity shows how an operation that would appear to make sense only for Composites can be implemented for all Components by moving it to the Component class. For example, the interface for accessing children is a fundamental part of a Composite class but not necessarily Leaf classes. But if we view a Leaf as a Component that never has children, then we can define a default operation for child access in the Component class that never returns any children. Leaf classes can use the default implementation, but Composite classes will reimplement it to return their children. The child management operations are more troublesome and are discussed in the next item. 
+  + Maximizing the Component interface. One of the goals of the Composite pattern is to make clients unaware of the specific Leaf or Composite classes they're using. To attain this goal, the Component class should define as many common operations for Composite and Leaf classes as possible. The Component class usually provides default implementations for these operations, and Leaf and Composite subclasses will override them. However, this goal will sometimes conflict with the principle of class hierarchy design that says a class should only define operations that are meaningful to its subclasses. There are many operations that Component supports that don't seem to make sense for Leaf classes. How can Component provide a default implementation for them? Sometimes a little creativity shows how an operation that would appear to make sense only for Composites can be implemented for all Components by moving it to the Component class. For example, the interface for accessing children is a fundamental part of a Composite class but not necessarily Leaf classes. But if we view a Leaf as a Component that never has children, then we can define a default operation for child access in the Component class that never returns any children. Leaf classes can use the default implementation, but Composite classes will reimplement it to return their children. The child management operations are more troublesome and are discussed in the next item.
 
   + Declaring the child management operations. Although the Composite class implements the Add and Remove operations for managing children, an important issue in the Composite pattern is which classes declare these operations in the Composite class hierarchy. Should we declare these operations in the Component and make them meaningful for Leaf classes, or should we declare and define them only in Composite and its subclasses? The decision involves a trade-off between safety and transparency:
 
-      1. Defining the child management interface at the root of the class hierarchy gives you transparency, because you can treat all components uniformly. It costs you safety, however, because clients may try to do meaningless things like add and remove objects from leaves. 
+      1. Defining the child management interface at the root of the class hierarchy gives you transparency, because you can treat all components uniformly. It costs you safety, however, because clients may try to do meaningless things like add and remove objects from leaves.
       2. Defining child management in the Composite class gives you safety, because any attempt to add or remove objects from leaves will be caught at compile-time in a statically typed language like C++. But you lose transparency, because leaves and composites have different interfaces.
 
     We have emphasized transparency over safety in this pattern. If you opt for safety, then at times you may lose type information and have to convert a component into a composite. How can you do this without resorting to a type-unsafe cast? One approach is to declare an operation Composite* GetComposite() in the Component class. Component provides a default operation that returns a null pointer. The Composite class redefines this operation to return itself through the this pointer.
 
-    Of course, the problem here is that we don't treat all components uniformly. We have to revert to testing for different types before taking the appropriate action. The only way to provide transparency is to define default Add and Remove operations in Component. That creates a new problem: There's no way to implement Component::Add without introducing the possibility of it failing. You could make it do nothing, but that ignores an important consideration; that is, an attempt to add something to a leaf probably indicates a bug. In that case, the Add operation produces garbage. You could make it delete its argument, but that might not be what clients expect. Usually it's better to make Add and Remove fail by default (perhaps by raising an exception) if the component isn't allowed to have children or if the argument of Remove isn't a child of the component, respectively. Another alternative is to change the meaning of "remove" slightly. If the component maintains a parent reference, then we could redefine Component::Remove to remove itself from its parent. However, there still isn't a meaningful interpretation for a corresponding Add. 
+    Of course, the problem here is that we don't treat all components uniformly. We have to revert to testing for different types before taking the appropriate action. The only way to provide transparency is to define default Add and Remove operations in Component. That creates a new problem: There's no way to implement Component::Add without introducing the possibility of it failing. You could make it do nothing, but that ignores an important consideration; that is, an attempt to add something to a leaf probably indicates a bug. In that case, the Add operation produces garbage. You could make it delete its argument, but that might not be what clients expect. Usually it's better to make Add and Remove fail by default (perhaps by raising an exception) if the component isn't allowed to have children or if the argument of Remove isn't a child of the component, respectively. Another alternative is to change the meaning of "remove" slightly. If the component maintains a parent reference, then we could redefine Component::Remove to remove itself from its parent. However, there still isn't a meaningful interpretation for a corresponding Add.
 
-  + Should Component implement a list of Components? You might be tempted to define the set of children as an instance variable in the Component class where the child access and management operations are declared. But putting the child pointer in the base class incurs a space penalty for every leaf, even though a leaf never has children. This is worthwhile only if there are relatively few children in the structure. 
+  + Should Component implement a list of Components? You might be tempted to define the set of children as an instance variable in the Component class where the child access and management operations are declared. But putting the child pointer in the base class incurs a space penalty for every leaf, even though a leaf never has children. This is worthwhile only if there are relatively few children in the structure.
 
-  + Child ordering. Many designs specify an ordering on the children of Composite. In the earlier Graphics example, ordering may reflect front-to-back ordering. If Composites represent parse trees, then compound statements can be instances of a Composite whose children must be ordered to reflect the program. When child ordering is an issue, you must design child access and management interfaces carefully to manage the sequence of children. The Iterator pattern can guide you in this. 
+  + Child ordering. Many designs specify an ordering on the children of Composite. In the earlier Graphics example, ordering may reflect front-to-back ordering. If Composites represent parse trees, then compound statements can be instances of a Composite whose children must be ordered to reflect the program. When child ordering is an issue, you must design child access and management interfaces carefully to manage the sequence of children. The Iterator pattern can guide you in this.
 
-  + Caching to improve performance. If you need to traverse or search compositions frequently, the Composite class can cache traversal or search information about its children. The Composite can cache actual results or just information that lets it short-circuit the traversal or search. For example, the Picture class from the Motivation example could cache the bounding box of its children. During drawing or selection, this cached bounding box lets the Picture avoid drawing or searching when its children aren't visible in the current window. Changes to a component will require invalidating the caches of its parents. This works best when components know their parents. So if you're using caching, you need to define an interface for telling composites that their caches are invalid. 
+  + Caching to improve performance. If you need to traverse or search compositions frequently, the Composite class can cache traversal or search information about its children. The Composite can cache actual results or just information that lets it short-circuit the traversal or search. For example, the Picture class from the Motivation example could cache the bounding box of its children. During drawing or selection, this cached bounding box lets the Picture avoid drawing or searching when its children aren't visible in the current window. Changes to a component will require invalidating the caches of its parents. This works best when components know their parents. So if you're using caching, you need to define an interface for telling composites that their caches are invalid.
 
   + Who should delete components? In languages without garbage collection, it's usually best to make a Composite responsible for deleting its children when it's destroyed. An exception to this rule is when Leaf objects are immutable and thus can be shared.
 
   + What's the best data structure for storing components? Composites may use a variety of data structures to store their children, including linked lists, trees, arrays, and hash tables. The choice of data structure depends (as always) on efficiency. In fact, it isn't even necessary to use a general-purpose data structure at all. Sometimes composites have a variable for each child, although this requires each subclass of Composite to implement its own management interface. See Interpreter for an example.
 
 * Related Patterns
-  1. Often the component-parent link is used for a Chain of Responsibility. 
-  2. Decorator is often used with Composite. When decorators and composites are used together, they will usually have a common parent class. So decorators will have to support the Component interface with operations like Add, Remove, and GetChild. 
-  3. Flyweight lets you share components, but they can no longer refer to their parents. 
-  4. Iterator can be used to traverse composites. 
-  5. Visitor localizes operations and behavior that would otherwise be distributed across Composite and Leaf classes. 
+  1. Often the component-parent link is used for a Chain of Responsibility.
+  2. Decorator is often used with Composite. When decorators and composites are used together, they will usually have a common parent class. So decorators will have to support the Component interface with operations like Add, Remove, and GetChild.
+  3. Flyweight lets you share components, but they can no longer refer to their parents.
+  4. Iterator can be used to traverse composites.
+  5. Visitor localizes operations and behavior that would otherwise be distributed across Composite and Leaf classes.
 
 
 DPIR
@@ -401,9 +401,9 @@ GoF
 
 * Intent: Provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation.
 
-  An aggregate object such as a list should give you a way to access its elements without exposing its internal structure. Moreover, you might want to traverse the list in different ways, depending on what you want to accomplish. But you probably don't want to bloat the List interface with operations for different traversals, even if you could anticipate the ones you will need. You might also need to have more than one traversal pending on the same list. 
+  An aggregate object such as a list should give you a way to access its elements without exposing its internal structure. Moreover, you might want to traverse the list in different ways, depending on what you want to accomplish. But you probably don't want to bloat the List interface with operations for different traversals, even if you could anticipate the ones you will need. You might also need to have more than one traversal pending on the same list.
 
-  The Iterator pattern lets you do all this. The key idea in this pattern is to take the responsibility for access and traversal out of the list object and put it into an iterator object. The Iterator class defines an interface for accessing the list's elements. An iterator object is responsible for keeping track of the current element; that is, it knows which elements have been traversed already. 
+  The Iterator pattern lets you do all this. The key idea in this pattern is to take the responsibility for access and traversal out of the list object and put it into an iterator object. The Iterator class defines an interface for accessing the list's elements. An iterator object is responsible for keeping track of the current element; that is, it knows which elements have been traversed already.
 
   Notice that the iterator and the list are coupled, and the client must know that it is a list that's traversed as opposed to some other aggregate structure. Hence the client commits to a particular aggregate structure. It would be better if we could change the aggregate class without changing client code. We can do this by generalizing the iterator concept to support polymorphic iteration.
 
@@ -423,41 +423,41 @@ GoF
 
 * Consequences: The Iterator pattern has three important consequences:
 
-  1. It supports variations in the traversal of an aggregate. Complex aggregates may be traversed in many ways. For example, code generation and semantic checking involve traversing parse trees. Code generation may traverse the parse tree inorder or preorder. Iterators make it easy to change the traversal algorithm: Just replace the iterator instance with a different one. You can also define Iterator subclasses to support new traversals. 
+  1. It supports variations in the traversal of an aggregate. Complex aggregates may be traversed in many ways. For example, code generation and semantic checking involve traversing parse trees. Code generation may traverse the parse tree inorder or preorder. Iterators make it easy to change the traversal algorithm: Just replace the iterator instance with a different one. You can also define Iterator subclasses to support new traversals.
 
-  2. Iterators simplify the Aggregate interface. Iterator's traversal interface obviates the need for a similar interface in Aggregate, thereby simplifying the aggregate's interface. 
+  2. Iterators simplify the Aggregate interface. Iterator's traversal interface obviates the need for a similar interface in Aggregate, thereby simplifying the aggregate's interface.
 
   3. More than one traversal can be pending on an aggregate. An iterator keeps track of its own traversal state. Therefore you can have more than one traversal in progress at once. (J: this is non-sense. More than one raw loops can be pending on an aggregate too.)
 
 * Implementation: Iterator has many implementation variants and alternatives. Some important ones follow. The trade-offs often depend on the control structures your language provides. Some languages (CLU [LG86], for example) even support this pattern directly.
 
-  1. Who controls the iteration? A fundamental issue is deciding which party controls the iteration, the iterator or the client that uses the iterator. When the client controls the iteration, the iterator is called an external iterator, and when the iterator controls it, the iterator is an internal iterator.2 Clients that use an external iterator must advance the traversal and request the next element explicitly from the iterator. In contrast, the client hands an internal iterator an operation to perform, and the iterator applies that operation to every element in the aggregate. 
+  1. Who controls the iteration? A fundamental issue is deciding which party controls the iteration, the iterator or the client that uses the iterator. When the client controls the iteration, the iterator is called an external iterator, and when the iterator controls it, the iterator is an internal iterator.2 Clients that use an external iterator must advance the traversal and request the next element explicitly from the iterator. In contrast, the client hands an internal iterator an operation to perform, and the iterator applies that operation to every element in the aggregate.
 
-    External iterators are more flexible than internal iterators. It's easy to compare two collections for equality with an external iterator, for example, but it's practically impossible with internal iterators. Internal iterators are especially weak in a language like C++ that does not provide anonymous functions, closures, or continuations like Smalltalk and CLOS. But on the other hand, internal iterators are easier to use, because they define the iteration logic for you. There are at least two options: (1) Pass in a pointer to a function (global or static), or (2) rely on subclassing. In the first case, the iterator calls the operation passed to it at each point in the iteration. In the second case, the iterator calls an operation that a subclass overrides to enact specific behavior. 
+    External iterators are more flexible than internal iterators. It's easy to compare two collections for equality with an external iterator, for example, but it's practically impossible with internal iterators. Internal iterators are especially weak in a language like C++ that does not provide anonymous functions, closures, or continuations like Smalltalk and CLOS. But on the other hand, internal iterators are easier to use, because they define the iteration logic for you. There are at least two options: (1) Pass in a pointer to a function (global or static), or (2) rely on subclassing. In the first case, the iterator calls the operation passed to it at each point in the iteration. In the second case, the iterator calls an operation that a subclass overrides to enact specific behavior.
 
   2. Who defines the traversal algorithm? The iterator is not the only place where the traversal algorithm can be defined. The aggregate might define the traversal algorithm and use the iterator to store just the state of the iteration. We call this kind of iterator a cursor, since it merely points to the current position in the aggregate. A client will invoke the Next operation on the aggregate with the cursor as an argument, and the Next operation will change the state of the cursor. (J: like we define a public function, in aggregate, to convert itself into an array; then we can use array index as a cursor. In this case the convert function define the traversal logic, and ag.to_ary[i++] is the 'Next' operation.)
 
-    If the iterator is responsible for the traversal algorithm, then it's easy to use different iteration algorithms on the same aggregate, and it can also be easier to reuse the same algorithm on different aggregates. On the other hand, the traversal algorithm might need to access the private variables of the aggregate. If so, putting the traversal algorithm in the iterator violates the encapsulation of the aggregate. 
+    If the iterator is responsible for the traversal algorithm, then it's easy to use different iteration algorithms on the same aggregate, and it can also be easier to reuse the same algorithm on different aggregates. On the other hand, the traversal algorithm might need to access the private variables of the aggregate. If so, putting the traversal algorithm in the iterator violates the encapsulation of the aggregate.
 
-  3. How robust is the iterator? It can be dangerous to modify an aggregate while you're traversing it. If elements are added or deleted from the aggregate, you might end up accessing an element twice or missing it completely. A simple solution is to copy the aggregate and traverse the copy, but that's too expensive to do in general. 
+  3. How robust is the iterator? It can be dangerous to modify an aggregate while you're traversing it. If elements are added or deleted from the aggregate, you might end up accessing an element twice or missing it completely. A simple solution is to copy the aggregate and traverse the copy, but that's too expensive to do in general.
 
-    A robust iterator ensures that insertions and removals won't interfere with traversal, and it does it without copying the aggregate. There are many ways to implement robust iterators. Most rely on registering the iterator with the aggregate. On insertion or removal, the aggregate either adjusts the internal state of iterators it has produced, or it maintains information internally to ensure proper traversal. 
+    A robust iterator ensures that insertions and removals won't interfere with traversal, and it does it without copying the aggregate. There are many ways to implement robust iterators. Most rely on registering the iterator with the aggregate. On insertion or removal, the aggregate either adjusts the internal state of iterators it has produced, or it maintains information internally to ensure proper traversal.
 
-  4. Additional Iterator operations. The minimal interface to Iterator consists of the operations First, Next, IsDone, and CurrentItem.4 Some additional operations might prove useful. For example, ordered aggregates can have a Previous operation that positions the iterator to the previous element. A SkipTo operation is useful for sorted or indexed collections. SkipTo positions the iterator to an object matching specific criteria. 
+  4. Additional Iterator operations. The minimal interface to Iterator consists of the operations First, Next, IsDone, and CurrentItem.4 Some additional operations might prove useful. For example, ordered aggregates can have a Previous operation that positions the iterator to the previous element. A SkipTo operation is useful for sorted or indexed collections. SkipTo positions the iterator to an object matching specific criteria.
 
-  5. Using polymorphic iterators in C++. Polymorphic iterators have their cost. They require the iterator object to be allocated dynamically by a factory method. Hence they should be used only when there's a need for polymorphism. Otherwise use concrete iterators, which can be allocated on the stack. Polymorphic iterators have another drawback: the client is responsible for deleting them. This is error-prone, because it's easy to forget to free a heap-allocated iterator object when you're finished with it. That's especially likely when there are multiple exit points in an operation. And if an exception is triggered, the iterator object will never be freed. 
+  5. Using polymorphic iterators in C++. Polymorphic iterators have their cost. They require the iterator object to be allocated dynamically by a factory method. Hence they should be used only when there's a need for polymorphism. Otherwise use concrete iterators, which can be allocated on the stack. Polymorphic iterators have another drawback: the client is responsible for deleting them. This is error-prone, because it's easy to forget to free a heap-allocated iterator object when you're finished with it. That's especially likely when there are multiple exit points in an operation. And if an exception is triggered, the iterator object will never be freed.
 
     (J: The reason is you can only get polymorphic iterator by doing things like abstract_list->get_iterator(), the iterator is created in get_iterator and returned, so it must live on heap.)
 
-    The Proxy pattern provides a remedy. We can use a stack-allocated proxy as a stand-in for the real iterator. The proxy deletes the iterator in its destructor. Thus when the proxy goes out of scope, the real iterator will get deallocated along with it. The proxy ensures proper cleanup, even in the face of exceptions. This is an application of the well-known C++ technique "resource allocation is initialization" [ES90]. 
+    The Proxy pattern provides a remedy. We can use a stack-allocated proxy as a stand-in for the real iterator. The proxy deletes the iterator in its destructor. Thus when the proxy goes out of scope, the real iterator will get deallocated along with it. The proxy ensures proper cleanup, even in the face of exceptions. This is an application of the well-known C++ technique "resource allocation is initialization" [ES90].
 
-  6. Iterators may have privileged access. An iterator can be viewed as an extension of the aggregate that created it. The iterator and the aggregate are tightly coupled. We can express this close relationship in C++ by making the iterator a friend of its aggregate. Then you don't need to define aggregate operations whose sole purpose is to let iterators implement traversal efficiently. 
+  6. Iterators may have privileged access. An iterator can be viewed as an extension of the aggregate that created it. The iterator and the aggregate are tightly coupled. We can express this close relationship in C++ by making the iterator a friend of its aggregate. Then you don't need to define aggregate operations whose sole purpose is to let iterators implement traversal efficiently.
 
-    However, such privileged access can make defining new traversals difficult, since it'll require changing the aggregate interface to add another friend. To avoid this problem, the Iterator class can include protected operations for accessing important but publicly unavailable members of the aggregate. Iterator subclasses (and only Iterator subclasses) may use these protected operations to gain privileged access to the aggregate. 
+    However, such privileged access can make defining new traversals difficult, since it'll require changing the aggregate interface to add another friend. To avoid this problem, the Iterator class can include protected operations for accessing important but publicly unavailable members of the aggregate. Iterator subclasses (and only Iterator subclasses) may use these protected operations to gain privileged access to the aggregate.
 
-  7. Iterators for composites. External iterators can be difficult to implement over recursive aggregate structures like those in the Composite pattern, because a position in the structure may span many levels of nested aggregates. Therefore an external iterator has to store a path through the Composite to keep track of the current object. Sometimes it's easier just to use an internal iterator. It can record the current position simply by calling itself recursively, thereby storing the path implicitly in the call stack. 
+  7. Iterators for composites. External iterators can be difficult to implement over recursive aggregate structures like those in the Composite pattern, because a position in the structure may span many levels of nested aggregates. Therefore an external iterator has to store a path through the Composite to keep track of the current object. Sometimes it's easier just to use an internal iterator. It can record the current position simply by calling itself recursively, thereby storing the path implicitly in the call stack.
 
-    If the nodes in a Composite have an interface for moving from a node to its siblings, parents, and children, then a cursor-based iterator may offer a better alternative. The cursor only needs to keep track of the current node; it can rely on the node interface to traverse the Composite. Composites often need to be traversed in more than one way. Preorder, postorder, inorder, and breadth-first traversals are common. You can support each kind of traversal with a different class of iterator. 
+    If the nodes in a Composite have an interface for moving from a node to its siblings, parents, and children, then a cursor-based iterator may offer a better alternative. The cursor only needs to keep track of the current node; it can rely on the node interface to traverse the Composite. Composites often need to be traversed in more than one way. Preorder, postorder, inorder, and breadth-first traversals are common. You can support each kind of traversal with a different class of iterator.
 
   8. Null iterators. A NullIterator is a degenerate iterator that's helpful for handling boundary conditions. By definition, a NullIterator is always done with traversal; that is, its IsDone operation always evaluates to true. NullIterator can make traversing tree-structured aggregates (like Composites) easier. At each point in the traversal, we ask the current element for an iterator for its children. Aggregate elements return a concrete iterator as usual. But leaf elements return an instance of NullIterator. That lets us implement traversal over the entire structure in a uniform way.
 
@@ -465,9 +465,9 @@ GoF
 
 * Related Patterns:
 
-  1. Composite: Iterators are often applied to recursive structures such as Composites. 
-  2. Factory Method: Polymorphic iterators rely on factory methods to instantiate the appropriate Iterator subclass. 
-  3. Memento is often used in conjunction with the Iterator pattern. An iterator can use a memento to capture the state of an iteration. The iterator stores the memento internally. 
+  1. Composite: Iterators are often applied to recursive structures such as Composites.
+  2. Factory Method: Polymorphic iterators rely on factory methods to instantiate the appropriate Iterator subclass.
+  3. Memento is often used in conjunction with the Iterator pattern. An iterator can use a memento to capture the state of an iteration. The iterator stores the memento internally.
 
 
 DPIR
@@ -491,7 +491,7 @@ The main problem should consider when implementing an iterator: What happens if 
 
 Finally, a multithreaded program is a particularly dangerous home for iterators. You need to take all of the usual care to ensure that one thread does not rip the aggregate rug out from under your iterator.
 
-Iterators in Ruby are a great example of what is right with the language. Instead of providing special-purpose external iterator objects for each aggregate class, Ruby relies on the very flexible idea of Proc objects and code blocks to build internal iterators. Because internal iterators are very easy to write—you build only one new method instead of a whole new class—Ruby encourages programmers to build whatever iterators make sense. 
+Iterators in Ruby are a great example of what is right with the language. Instead of providing special-purpose external iterator objects for each aggregate class, Ruby relies on the very flexible idea of Proc objects and code blocks to build internal iterators. Because internal iterators are very easy to write—you build only one new method instead of a whole new class—Ruby encourages programmers to build whatever iterators make sense.
 
 
 Commands Pattern (AKA: Action, Transaction)
@@ -500,43 +500,43 @@ Commands Pattern (AKA: Action, Transaction)
 GoF
 ------------------------------------------------------------------------------
 
-* Intent: Encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations. 
+* Intent: Encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations.
 
-* Sometimes it's necessary to issue requests to objects without knowing anything about the operation being requested or the receiver of the request. For example, user interface toolkits include objects like buttons and menus that carry out a request in response to user input. But the toolkit can't implement the request explicitly in the button or menu, because only applications that use the toolkit know what should be done on which object. As toolkit designers we have no way of knowing the receiver of the request or the operations that will carry it out. 
+* Sometimes it's necessary to issue requests to objects without knowing anything about the operation being requested or the receiver of the request. For example, user interface toolkits include objects like buttons and menus that carry out a request in response to user input. But the toolkit can't implement the request explicitly in the button or menu, because only applications that use the toolkit know what should be done on which object. As toolkit designers we have no way of knowing the receiver of the request or the operations that will carry it out.
 
-  The Command pattern lets toolkit objects make requests of unspecified application objects by turning the request itself into an object. This object can be stored and passed around like other objects. The key to this pattern is an abstract Command class, which declares an interface for executing operations. In the simplest form this interface includes an abstract Execute operation. Concrete Command subclasses specify a receiver-action pair by storing the receiver as an instance variable and by implementing Execute to invoke the request. The receiver has the knowledge required to carry out the request. 
+  The Command pattern lets toolkit objects make requests of unspecified application objects by turning the request itself into an object. This object can be stored and passed around like other objects. The key to this pattern is an abstract Command class, which declares an interface for executing operations. In the simplest form this interface includes an abstract Execute operation. Concrete Command subclasses specify a receiver-action pair by storing the receiver as an instance variable and by implementing Execute to invoke the request. The receiver has the knowledge required to carry out the request.
 
-  Command subclasses store the receiver of the request and invoke one or more operations on the receiver. MacroCommand is a concrete Command subclass that simply executes a sequence of Commands. MacroCommand has no explicit receiver, because the commands it sequences define their own receiver. 
+  Command subclasses store the receiver of the request and invoke one or more operations on the receiver. MacroCommand is a concrete Command subclass that simply executes a sequence of Commands. MacroCommand has no explicit receiver, because the commands it sequences define their own receiver.
 
   In each of these examples, notice how the Command pattern decouples the object that invokes the operation from the one having the knowledge to perform it. This gives us a lot of flexibility in designing our user interface. An application can provide both a menu and a push button interface to a feature just by making the menu and the push button share an instance of the same concrete Command subclass. We can replace commands dynamically, which would be useful for implementing context-sensitive menus. We can also support command scripting by composing commands into larger ones. All of this is possible because the object that issues a request only needs to know how to issue it; it doesn't need to know how the request will be carried out.
 
 * Applicability: Use the Command pattern when you want to:
 
-  + parameterize objects by an action to perform, as MenuItem objects did above. You can express such parameterization in a procedural language with a callback function, that is, a function that's registered somewhere to be called at a later point. Commands are an object-oriented replacement for callbacks. 
+  + parameterize objects by an action to perform, as MenuItem objects did above. You can express such parameterization in a procedural language with a callback function, that is, a function that's registered somewhere to be called at a later point. Commands are an object-oriented replacement for callbacks.
 
-  + specify, queue, and execute requests at different times. A Command object can have a lifetime independent of the original request. If the receiver of a request can be represented in an address space-independent way, then you can transfer a command object for the request to a different process and fulfill the request there. 
+  + specify, queue, and execute requests at different times. A Command object can have a lifetime independent of the original request. If the receiver of a request can be represented in an address space-independent way, then you can transfer a command object for the request to a different process and fulfill the request there.
 
-  + support undo. The Command's Execute operation can store state for reversing its effects in the command itself. The Command interface must have an added Unexecute operation that reverses the effects of a previous call to Execute. Executed commands are stored in a history list. Unlimited-level undo and redo is achieved by traversing this list backwards and forwards calling Unexecute and Execute, respectively. 
+  + support undo. The Command's Execute operation can store state for reversing its effects in the command itself. The Command interface must have an added Unexecute operation that reverses the effects of a previous call to Execute. Executed commands are stored in a history list. Unlimited-level undo and redo is achieved by traversing this list backwards and forwards calling Unexecute and Execute, respectively.
 
-  + support logging changes so that they can be reapplied in case of a system crash. By augmenting the Command interface with load and store operations, you can keep a persistent log of changes. Recovering from a crash involves reloading logged commands from disk and reexecuting them with the Execute operation. 
+  + support logging changes so that they can be reapplied in case of a system crash. By augmenting the Command interface with load and store operations, you can keep a persistent log of changes. Recovering from a crash involves reloading logged commands from disk and reexecuting them with the Execute operation.
 
   + structure a system around high-level operations built on primitives operations. Such a structure is common in information systems that support transactions. A transaction encapsulates a set of changes to data. The Command pattern offers a way to model transactions. Commands have a common interface, letting you invoke all transactions the same way. The pattern also makes it easy to extend the system with new transactions.
 
 * Collaborations:
-  1. The client creates a ConcreteCommand object and specifies its receiver. 
-  2. An Invoker object stores the ConcreteCommand object. 
-  3. The invoker issues a request by calling Execute on the command. When commands are undoable, ConcreteCommand stores state for undoing the command prior to invoking Execute. 
+  1. The client creates a ConcreteCommand object and specifies its receiver.
+  2. An Invoker object stores the ConcreteCommand object.
+  3. The invoker issues a request by calling Execute on the command. When commands are undoable, ConcreteCommand stores state for undoing the command prior to invoking Execute.
   4. The ConcreteCommand object invokes operations on its receiver to carry out the request.
 
 * Consequences: The Command pattern has the following consequences:
-  1. Command decouples the object that invokes the operation from the one that knows how to perform it. 
-  2. Commands are first-class objects. They can be manipulated and extended like any other object. 
-  3. You can assemble commands into a composite command. An example is the MacroCommand class described earlier. In general, composite commands are an instance of the Composite pattern. 
+  1. Command decouples the object that invokes the operation from the one that knows how to perform it.
+  2. Commands are first-class objects. They can be manipulated and extended like any other object.
+  3. You can assemble commands into a composite command. An example is the MacroCommand class described earlier. In general, composite commands are an instance of the Composite pattern.
   4. It's easy to add new Commands, because you don't have to change existing classes.
 
 * Implementation: Consider the following issues when implementing the Command pattern:
 
-  + How intelligent should a command be? A command can have a wide range of abilities. At one extreme it merely defines a binding between a receiver and the actions that carry out the request. At the other extreme it implements everything itself without delegating to a receiver at all. The latter extreme is useful when you want to define commands that are independent of existing classes, when no suitable receiver exists, or when a command knows its receiver implicitly. For example, a command that creates another application window may be just as capable of creating the window as any other object. Somewhere in between these extremes are commands that have enough knowledge to find their receiver dynamically. 
+  + How intelligent should a command be? A command can have a wide range of abilities. At one extreme it merely defines a binding between a receiver and the actions that carry out the request. At the other extreme it implements everything itself without delegating to a receiver at all. The latter extreme is useful when you want to define commands that are independent of existing classes, when no suitable receiver exists, or when a command knows its receiver implicitly. For example, a command that creates another application window may be just as capable of creating the window as any other object. Somewhere in between these extremes are commands that have enough knowledge to find their receiver dynamically.
 
   + Supporting undo and redo. Commands can support undo and redo capabilities if they provide a way to reverse their execution (e.g., an Unexecute or Undo operation). A ConcreteCommand class might need to store additional state to do so. This state can include the Receiver object, which actually carries out operations in response to the request, the arguments to the operation performed on the receiver, and any original values in the receiver that can change as a result of handling the request. The receiver must provide operations that let the command return the receiver to its prior state.
 
@@ -544,16 +544,16 @@ GoF
 
     An undoable command might have to be copied before it can be placed on the history list. That's because the command object that carried out the original request, say, from a MenuItem, will perform other requests at later times. Copying is required to distinguish different invocations of the same command if its state can vary across invocations. For example, a DeleteCommand that deletes selected objects must store different sets of objects each time it's executed. Therefore the DeleteCommand object must be copied following execution, and the copy is placed on the history list. If the command's state never changes on execution, then copying is not requiredonly a reference to the command need be placed on the history list. Commands that must be copied before being placed on the history list act as prototypes (see Prototype ).
 
-  + Avoiding error accumulation in the undo process. Hysteresis can be a problem in ensuring a reliable, semantics-preserving undo/redo mechanism. Errors can accumulate as commands are executed, unexecuted, and reexecuted repeatedly so that an application's state eventually diverges from original values. It may be necessary therefore to store more information in the command to ensure that objects are restored to their original state. The Memento pattern can be applied to give the command access to this information without exposing the internals of other objects. 
+  + Avoiding error accumulation in the undo process. Hysteresis can be a problem in ensuring a reliable, semantics-preserving undo/redo mechanism. Errors can accumulate as commands are executed, unexecuted, and reexecuted repeatedly so that an application's state eventually diverges from original values. It may be necessary therefore to store more information in the command to ensure that objects are restored to their original state. The Memento pattern can be applied to give the command access to this information without exposing the internals of other objects.
 
-  + Using C++ templates. For commands that (1) aren't undoable and (2) don't require arguments, we can use C++ templates to avoid creating a Command subclass for every kind of action and receiver. 
+  + Using C++ templates. For commands that (1) aren't undoable and (2) don't require arguments, we can use C++ templates to avoid creating a Command subclass for every kind of action and receiver.
 
-Coplien describes how to implement functors, objects that are functions, in C++ [Cop92]. He achieves a degree of transparency in their use by overloading the function call operator (operator()). The Command pattern is different; its focus is on maintaining a binding between a receiver and a function (i.e., action), not just maintaining a function. 
+Coplien describes how to implement functors, objects that are functions, in C++ [Cop92]. He achieves a degree of transparency in their use by overloading the function call operator (operator()). The Command pattern is different; its focus is on maintaining a binding between a receiver and a function (i.e., action), not just maintaining a function.
 
 * Related Patterns:
-  + A Composite can be used to implement MacroCommands. 
-  + A Memento can keep state the command requires to undo its effect. 
-  + A command that must be copied before being placed on the history list acts as a Prototype. 
+  + A Composite can be used to implement MacroCommands.
+  + A Memento can keep state the command requires to undo its effect.
+  + A command that must be copied before being placed on the history list acts as a Prototype.
 
 
 DPIR
@@ -594,13 +594,13 @@ GoF
 
 * Applicability: Use the Adapter pattern when
 
-  + you want to use an existing class, and its interface does not match the one you need. 
+  + you want to use an existing class, and its interface does not match the one you need.
 
-  + you want to create a reusable class that cooperates with unrelated or unforeseen classes, that is, classes that don't necessarily have compatible interfaces. 
+  + you want to create a reusable class that cooperates with unrelated or unforeseen classes, that is, classes that don't necessarily have compatible interfaces.
 
   + (object adapter only) you need to use several existing subclasses, but it's impractical to adapt their interface by subclassing every one. An object adapter can adapt the interface of its parent class. (J: database driver adapter in AR)
 
-* We can do this (implementing TextShape) in one of two ways: (1) by inheriting Shape's interface and TextView's implementation or (2) by composing a TextView instance within a TextShape and implementing TextShape in terms of TextView's interface. These two approaches correspond to the class and object versions of the Adapter pattern. We call TextShape an adapter. 
+* We can do this (implementing TextShape) in one of two ways: (1) by inheriting Shape's interface and TextView's implementation or (2) by composing a TextView instance within a TextShape and implementing TextShape in terms of TextView's interface. These two approaches correspond to the class and object versions of the Adapter pattern. We call TextShape an adapter.
 
   + A class adapter uses multiple inheritance to adapt one interface to another (J: freeze adaptee in class. impossible in Ruby)
 
@@ -611,35 +611,35 @@ GoF
 * Consequences: Class and object adapters have different trade-offs.
 
   A class adapter
-  + adapts Adaptee to Target by committing to a concrete Adapter class. As a consequence, a class adapter won't work when we want to adapt a class and all its subclasses. 
-  + lets Adapter override some of Adaptee's behavior, since Adapter is a subclass of Adaptee. 
+  + adapts Adaptee to Target by committing to a concrete Adapter class. As a consequence, a class adapter won't work when we want to adapt a class and all its subclasses.
+  + lets Adapter override some of Adaptee's behavior, since Adapter is a subclass of Adaptee.
   + introduces only one object, and no additional pointer indirection is needed to get to the adaptee.
 
   An object adapter
-  + lets a single Adapter work with many Adapteesthat is, the Adaptee itself and all of its subclasses (if any). The Adapter can also add functionality to all Adaptees at once. 
+  + lets a single Adapter work with many Adapteesthat is, the Adaptee itself and all of its subclasses (if any). The Adapter can also add functionality to all Adaptees at once.
   + makes it harder to override Adaptee behavior. It will require subclassing Adaptee and making Adapter refer to the subclass rather than the Adaptee itself.
 
   Here are other issues to consider when using the Adapter pattern:
 
-  1. How much adapting does Adapter do? Adapters vary in the amount of work they do to adapt Adaptee to the Target interface. There is a spectrum of possible work, from simple interface conversion. for example, changing the names of operations to supporting an entirely different set of operations. The amount of work Adapter does depends on how similar the Target interface is to Adaptee's. 
+  1. How much adapting does Adapter do? Adapters vary in the amount of work they do to adapt Adaptee to the Target interface. There is a spectrum of possible work, from simple interface conversion. for example, changing the names of operations to supporting an entirely different set of operations. The amount of work Adapter does depends on how similar the Target interface is to Adaptee's.
 
-  2. Pluggable adapters. A class is more reusable when you minimize the assumptions other classes must make to use it. By building interface adaptation into a class, you eliminate the assumption that other classes see the same interface. Put another way, interface adaptation lets us incorporate our class into existing systems that might expect different interfaces to the class. ObjectWorks\Smalltalk [Par90] uses the term pluggable adapter to describe classes with built-in interface adaptation. 
+  2. Pluggable adapters. A class is more reusable when you minimize the assumptions other classes must make to use it. By building interface adaptation into a class, you eliminate the assumption that other classes see the same interface. Put another way, interface adaptation lets us incorporate our class into existing systems that might expect different interfaces to the class. ObjectWorks\Smalltalk [Par90] uses the term pluggable adapter to describe classes with built-in interface adaptation.
 
      (J: this means depending on interface instead of concrete class. e.g. ActiveRecord depends on AbstractAdapter instead of concret database drivers. To use the class with concrete adaptee, we only need create an adapter for then concrete adaptee using the pluggable adapter's interface.)
 
-     Consider a TreeDisplay widget that can display tree structures graphically. If this were a special-purpose widget for use in just one application, then we might require the objects that it displays to have a specific interface; that is, all must descend from a Tree abstract class. But if we wanted to make TreeDisplay more reusable (say we wanted to make it part of a toolkit of useful widgets), then that requirement would be unreasonable. Applications will define their own classes for tree structures. They shouldn't be forced to use our Tree abstract class. Different tree structures will have different interfaces. 
+     Consider a TreeDisplay widget that can display tree structures graphically. If this were a special-purpose widget for use in just one application, then we might require the objects that it displays to have a specific interface; that is, all must descend from a Tree abstract class. But if we wanted to make TreeDisplay more reusable (say we wanted to make it part of a toolkit of useful widgets), then that requirement would be unreasonable. Applications will define their own classes for tree structures. They shouldn't be forced to use our Tree abstract class. Different tree structures will have different interfaces.
 
-     In a directory hierarchy, for example, children might be accessed with a GetSubdirectories operation, whereas in an inheritance hierarchy, the corresponding operation might be called GetSubclasses. A reusable TreeDisplay widget must be able to display both kinds of hierarchies even if they use different interfaces. In other words, the TreeDisplay should have interface adaptation built into it. We'll look at different ways to build interface adaptation into classes in the Implementation section. 
+     In a directory hierarchy, for example, children might be accessed with a GetSubdirectories operation, whereas in an inheritance hierarchy, the corresponding operation might be called GetSubclasses. A reusable TreeDisplay widget must be able to display both kinds of hierarchies even if they use different interfaces. In other words, the TreeDisplay should have interface adaptation built into it. We'll look at different ways to build interface adaptation into classes in the Implementation section.
 
-  3. Using two-way adapters to provide transparency. A potential problem with adapters is that they aren't transparent to all clients. An adapted object no longer conforms to the Adaptee interface, so it can't be used as is wherever an Adaptee object can. Two-way adapters can provide such transparency. Specifically, they're useful when two different clients need to view an object differently. 
+  3. Using two-way adapters to provide transparency. A potential problem with adapters is that they aren't transparent to all clients. An adapted object no longer conforms to the Adaptee interface, so it can't be used as is wherever an Adaptee object can. Two-way adapters can provide such transparency. Specifically, they're useful when two different clients need to view an object differently.
 
-     Consider the two-way adapter that integrates Unidraw, a graphical editor framework [VL90], and QOCA, a constraint-solving toolkit [HHMV92]. Both systems have classes that represent variables explicitly: Unidraw has StateVariable, and QOCA has ConstraintVariable. To make Unidraw work with QOCA, ConstraintVariable must be adapted to StateVariable; to let QOCA propagate solutions to Unidraw, StateVariable must be adapted to ConstraintVariable. 
+     Consider the two-way adapter that integrates Unidraw, a graphical editor framework [VL90], and QOCA, a constraint-solving toolkit [HHMV92]. Both systems have classes that represent variables explicitly: Unidraw has StateVariable, and QOCA has ConstraintVariable. To make Unidraw work with QOCA, ConstraintVariable must be adapted to StateVariable; to let QOCA propagate solutions to Unidraw, StateVariable must be adapted to ConstraintVariable.
 
 * Implementation: Although the implementation of Adapter is usually straightforward, here are some issues to keep in mind:
 
-  + Implementing class adapters in C++. In a C++ implementation of a class adapter, Adapter would inherit publicly from Target and privately from Adaptee. Thus Adapter would be a subtype of Target but not of Adaptee. 
+  + Implementing class adapters in C++. In a C++ implementation of a class adapter, Adapter would inherit publicly from Target and privately from Adaptee. Thus Adapter would be a subtype of Target but not of Adaptee.
 
-  + Pluggable adapters. Let's look at three ways to implement pluggable adapters for the TreeDisplay widget described earlier, which can lay out and display a hierarchical structure automatically. 
+  + Pluggable adapters. Let's look at three ways to implement pluggable adapters for the TreeDisplay widget described earlier, which can lay out and display a hierarchical structure automatically.
 
     The first step, which is common to all three of the implementations discussed here, is to find a "narrow" interface for Adaptee, that is, the smallest subset of operations that lets us do the adaptation. A narrow interface consisting of only a couple of operations is easier to adapt than an interface with dozens of operations. For TreeDisplay, the adaptee is any hierarchical structure. A minimalist interface might include two operations, one that defines how to present a node in the hierarchical structure graphically, and another that retrieves the node's children. The narrow interface leads to three implementation approaches:
 
@@ -647,17 +647,17 @@ GoF
 
     (J: adapter inherits client, implements targeted interface defined in client.)
 
-    2. Using delegate objects. In this approach, TreeDisplay forwards requests for accessing the hierarchical structure to a delegate object. TreeDisplay can use a different adaptation strategy by substituting a different delegate. 
+    2. Using delegate objects. In this approach, TreeDisplay forwards requests for accessing the hierarchical structure to a delegate object. TreeDisplay can use a different adaptation strategy by substituting a different delegate.
 
-       For example, suppose there exists a DirectoryBrowser that uses a TreeDisplay. DirectoryBrowser might make a good delegate for adapting TreeDisplay to the hierarchical directory structure. In dynamically typed languages like Smalltalk or Objective C, this approach only requires an interface for registering the delegate with the adapter. Then TreeDisplay simply forwards the requests to the delegate. NEXTSTEP [Add94] uses this approach heavily to reduce subclassing. 
+       For example, suppose there exists a DirectoryBrowser that uses a TreeDisplay. DirectoryBrowser might make a good delegate for adapting TreeDisplay to the hierarchical directory structure. In dynamically typed languages like Smalltalk or Objective C, this approach only requires an interface for registering the delegate with the adapter. Then TreeDisplay simply forwards the requests to the delegate. NEXTSTEP [Add94] uses this approach heavily to reduce subclassing.
 
-       Statically typed languages like C++ require an explicit interface definition for the delegate. We can specify such an interface by putting the narrow interface that TreeDisplay requires into an abstract TreeAccessorDelegate class. Then we can mix this interface into the delegate of our choice - DirectoryBrowser in this case - using inheritance. We use single inheritance if the DirectoryBrowser has no existing parent class, multiple inheritance if it does. Mixing classes together like this is easier than introducing a new TreeDisplay subclass and implementing its operations individually. 
+       Statically typed languages like C++ require an explicit interface definition for the delegate. We can specify such an interface by putting the narrow interface that TreeDisplay requires into an abstract TreeAccessorDelegate class. Then we can mix this interface into the delegate of our choice - DirectoryBrowser in this case - using inheritance. We use single inheritance if the DirectoryBrowser has no existing parent class, multiple inheritance if it does. Mixing classes together like this is easier than introducing a new TreeDisplay subclass and implementing its operations individually.
 
     (J: define target interface explictly in an abstract class; adapter implements the class by delegating to adaptee)
 
-    3. Parameterized adapters. The usual way to support pluggable adapters in Smalltalk is to parameterize an adapter with one or more blocks. The block construct supports adaptation without subclassing. A block can adapt a request, and the adapter can store a block for each individual request. In our example, this means TreeDisplay stores one block for converting a node into a GraphicNode and another block for accessing a node's children. 
+    3. Parameterized adapters. The usual way to support pluggable adapters in Smalltalk is to parameterize an adapter with one or more blocks. The block construct supports adaptation without subclassing. A block can adapt a request, and the adapter can store a block for each individual request. In our example, this means TreeDisplay stores one block for converting a node into a GraphicNode and another block for accessing a node's children.
 
-       For example, to create TreeDisplay on a directory hierarchy, we write 
+       For example, to create TreeDisplay on a directory hierarchy, we write
 
        directoryDisplay :=
          (TreeDisplay on: treeRoot)
@@ -669,9 +669,9 @@ GoF
        If you're building interface adaptation into a class, this approach offers a convenient alternative to subclassing.
 
 * Related Patterns:
-  + Bridge has a structure similar to an object adapter, but Bridge has a different intent: It is meant to separate an interface from its implementation so that they can be varied easily and independently. An adapter is meant to change the interface of an existing object. 
-  + Decorator enhances another object without changing its interface. A decorator is thus more transparent to the application than an adapter is. As a consequence, Decorator supports recursive composition, which isn't possible with pure adapters. 
-  + Proxy defines a representative or surrogate for another object and does not change its interface. 
+  + Bridge has a structure similar to an object adapter, but Bridge has a different intent: It is meant to separate an interface from its implementation so that they can be varied easily and independently. An adapter is meant to change the interface of an existing object.
+  + Decorator enhances another object without changing its interface. A decorator is thus more transparent to the application than an adapter is. As a consequence, Decorator supports recursive composition, which isn't possible with pure adapters.
+  + Proxy defines a representative or surrogate for another object and does not change its interface.
 
 
 DPIR
@@ -686,7 +686,7 @@ Undeniably, modifying a class or a single instance to support the interface that
 As usual, a pinch of pragmatism seems best. Lean toward modifying the class in the following circumstances:
   + The modifications are simple and clear. The method aliasing we did earlier is a prime example of a simple, crystal-clear modification
   + You understand the class you are modifying and the way in which it is used. Performing serious surgery on a class without taking a hard look at the class beforehand is probably going to lead to grief.
-  
+
 Lean toward an adapter solution in the following situations:
   + The interface mismatch is extensive and complex. For example, you probably would not want to modify a string to look like a Fixnum object.
   + You have no idea how this class works. Ignorance is always cause to tread lightly.
@@ -710,9 +710,9 @@ GoF
   + A remote proxy provides a local representative for an object in a different address space.
   + A virtual proxy creates expensive objects on demand.
   + A protection proxy controls access to the original object. Protection proxies are useful when objects should have different access rights.
-  + A smart reference is a replacement for a bare pointer that performs additional actions when an object is accessed. Typical uses include 
-    - counting the number of references to the real object so that it can be freed automatically when there are no more references (also called smart pointers [Ede92]). 
-    - loading a persistent object into memory when it's first referenced. 
+  + A smart reference is a replacement for a bare pointer that performs additional actions when an object is accessed. Typical uses include
+    - counting the number of references to the real object so that it can be freed automatically when there are no more references (also called smart pointers [Ede92]).
+    - loading a persistent object into memory when it's first referenced.
     - checking that the real object is locked before it's accessed to ensure that no other object can change it.
 
 * Participants: In statically type language, a Subject is needed to define the common interface for Proxy and RealSubject.
@@ -720,35 +720,35 @@ GoF
 * Collaborations: Proxy forwards requests to RealSubject when appropriate, depending on the kind of proxy.
 
 * Consequences: The Proxy pattern introduces a level of indirection when accessing an object. The additional indirection has many uses, depending on the kind of proxy:
-  + A remote proxy can hide the fact that an object resides in a different address space. 
-  + A virtual proxy can perform optimizations such as creating an object on demand. 
+  + A remote proxy can hide the fact that an object resides in a different address space.
+  + A virtual proxy can perform optimizations such as creating an object on demand.
   + Both protection proxies and smart references allow additional housekeeping tasks when an object is accessed.
 
-  There's another optimization that the Proxy pattern can hide from the client. It's called copy-on-write, and it's related to creation on demand. Copying a large and complicated object can be an expensive operation. If the copy is never modified, then there's no need to incur this cost. By using a proxy to postpone the copying process, we ensure that we pay the price of copying the object only if it's modified. To make copy-on-write work, the subject must be reference counted. Copying the proxy will do nothing more than increment this reference count. Only when the client requests an operation that modifies the subject does the proxy actually copy it. In that case the proxy must also decrement the subject's reference count. When the reference count goes to zero, the subject gets deleted. Copy-on-write can reduce the cost of copying heavyweight subjects significantly. 
+  There's another optimization that the Proxy pattern can hide from the client. It's called copy-on-write, and it's related to creation on demand. Copying a large and complicated object can be an expensive operation. If the copy is never modified, then there's no need to incur this cost. By using a proxy to postpone the copying process, we ensure that we pay the price of copying the object only if it's modified. To make copy-on-write work, the subject must be reference counted. Copying the proxy will do nothing more than increment this reference count. Only when the client requests an operation that modifies the subject does the proxy actually copy it. In that case the proxy must also decrement the subject's reference count. When the reference count goes to zero, the subject gets deleted. Copy-on-write can reduce the cost of copying heavyweight subjects significantly.
 
 * Implementation: The Proxy pattern can exploit the following language features:
 
-  + Overloading the member access operator in C++. C++ supports overloading operator->, the member access operator. Overloading this operator lets you perform additional work whenever an object is dereferenced. This can be helpful for implementing some kinds of proxy; the proxy behaves just like a pointer. 
+  + Overloading the member access operator in C++. C++ supports overloading operator->, the member access operator. Overloading this operator lets you perform additional work whenever an object is dereferenced. This can be helpful for implementing some kinds of proxy; the proxy behaves just like a pointer.
 
-    Overloading the member access operator isn't a good solution for every kind of proxy. Some proxies need to know precisely which operation is called, and overloading the member access operator doesn't work in those cases. Consider the virtual proxy example in the Motivation. The image should be loaded at a specific time - namely when the Draw operation is called - and not whenever the image is referenced. Overloading the access operator doesn't allow this distinction. In that case we must manually implement each proxy operation that forwards the request to the subject. These operations are usually very similar to each other. Typically all operations verify that the request is legal, that the original object exists, etc., before forwarding the request to the subject. It's tedious to write this code again and again. So it's common to use a preprocessor to generate it automatically. 
+    Overloading the member access operator isn't a good solution for every kind of proxy. Some proxies need to know precisely which operation is called, and overloading the member access operator doesn't work in those cases. Consider the virtual proxy example in the Motivation. The image should be loaded at a specific time - namely when the Draw operation is called - and not whenever the image is referenced. Overloading the access operator doesn't allow this distinction. In that case we must manually implement each proxy operation that forwards the request to the subject. These operations are usually very similar to each other. Typically all operations verify that the request is legal, that the original object exists, etc., before forwarding the request to the subject. It's tedious to write this code again and again. So it's common to use a preprocessor to generate it automatically.
 
     (J: overloading member access operator is like implementing method_missing in ruby.)
 
-  + Using doesNotUnderstand in Smalltalk. Smalltalk provides a hook that you can use to support automatic forwarding of requests. Smalltalk calls doesNotUnderstand: aMessage when a client sends a message to a receiver that has no corresponding method. The Proxy class can redefine doesNotUnderstand so that the message is forwarded to its subject. 
+  + Using doesNotUnderstand in Smalltalk. Smalltalk provides a hook that you can use to support automatic forwarding of requests. Smalltalk calls doesNotUnderstand: aMessage when a client sends a message to a receiver that has no corresponding method. The Proxy class can redefine doesNotUnderstand so that the message is forwarded to its subject.
 
-    To ensure that a request is forwarded to the subject and not just absorbed by the proxy silently, you can define a Proxy class that doesn't understand any messages. Smalltalk lets you do this by defining Proxy as a class with no superclass.6 
+    To ensure that a request is forwarded to the subject and not just absorbed by the proxy silently, you can define a Proxy class that doesn't understand any messages. Smalltalk lets you do this by defining Proxy as a class with no superclass.6
 
-    The main disadvantage of doesNotUnderstand: is that most Smalltalk systems have a few special messages that are handled directly by the virtual machine, and these do not cause the usual method look-up. The only one that's usually implemented in Object (and so can affect proxies) is the identity operation ==. 
+    The main disadvantage of doesNotUnderstand: is that most Smalltalk systems have a few special messages that are handled directly by the virtual machine, and these do not cause the usual method look-up. The only one that's usually implemented in Object (and so can affect proxies) is the identity operation ==.
 
-    If you're going to use doesNotUnderstand: to implement Proxy, then you must design around this problem. You can't expect identity on proxies to mean identity on their real subjects. An added disadvantage is that doesNotUnderstand: was developed for error handling, not for building proxies, and so it's generally not very fast. 
+    If you're going to use doesNotUnderstand: to implement Proxy, then you must design around this problem. You can't expect identity on proxies to mean identity on their real subjects. An added disadvantage is that doesNotUnderstand: was developed for error handling, not for building proxies, and so it's generally not very fast.
 
   + Proxy doesn't always have to know the type of real subject. If a Proxy class can deal with its subject solely through an abstract interface, then there's no need to make a Proxy class for each RealSubject class; the proxy can deal with all RealSubject classes uniformly. But if Proxies are going to instantiate RealSubjects (such as in a virtual proxy), then they have to know the concrete class.
 
-  + Another implementation issue involves how to refer to the subject before it's instantiated. Some proxies have to refer to their subject whether it's on disk or in memory. That means they must use some form of address space-independent object identifiers. We used a file name for this purpose in the Motivation. 
+  + Another implementation issue involves how to refer to the subject before it's instantiated. Some proxies have to refer to their subject whether it's on disk or in memory. That means they must use some form of address space-independent object identifiers. We used a file name for this purpose in the Motivation.
 
 * Related Patterns:
   + Adapter: An adapter provides a different interface to the object it adapts. In contrast, a proxy provides the same interface as its subject. However, a proxy used for access protection might refuse to perform an operation that the subject will perform, so its interface may be effectively a subset of the subject's.
-  + Decorator: Although decorators can have similar implementations as proxies, decorators have a different purpose. A decorator adds one or more responsibilities to an object, whereas a proxy controls access to an object. Proxies vary in the degree to which they are implemented like a decorator. A protection proxy might be implemented exactly like a decorator. On the other hand, a remote proxy will not contain a direct reference to its real subject but only an indirect reference, such as "host ID and local address on host." A virtual proxy will start off with an indirect reference such as a file name but will eventually obtain and use a direct reference. 
+  + Decorator: Although decorators can have similar implementations as proxies, decorators have a different purpose. A decorator adds one or more responsibilities to an object, whereas a proxy controls access to an object. Proxies vary in the degree to which they are implemented like a decorator. A protection proxy might be implemented exactly like a decorator. On the other hand, a remote proxy will not contain a direct reference to its real subject but only an indirect reference, such as "host ID and local address on host." A virtual proxy will start off with an indirect reference such as a file name but will eventually obtain and use a direct reference.
 
 
 DPIR
@@ -786,48 +786,48 @@ GoF
 * Motivation: Sometimes we want to add responsibilities to individual objects, not to an entire class. A graphical user interface toolkit, for example, should let you add properties like borders or behaviors like scrolling to any user interface component. One way to add responsibilities is with inheritance. Inheriting a border from another class puts a border around every subclass instance. This is inflexible, however, because the choice of border is made statically. A client can't control how and when to decorate the component with a border. A more flexible approach is to enclose the component in another object that adds the border. The enclosing object is called a decorator. The decorator conforms to the interface of the component it decorates so that its presence is transparent to the component's clients. The decorator forwards requests to the component and may perform additional actions (such as drawing a border) before or after forwarding. Transparency lets you nest decorators recursively, thereby allowing an unlimited number of added responsibilities.
 
 * Applicability: Use Decorator
-  + to add responsibilities to individual objects dynamically and transparently, that is, without affecting other objects. 
-  + for responsibilities that can be withdrawn. 
+  + to add responsibilities to individual objects dynamically and transparently, that is, without affecting other objects.
+  + for responsibilities that can be withdrawn.
   + when extension by subclassing is impractical. Sometimes a large number of independent extensions are possible and would produce an explosion of subclasses to support every combination. Or a class definition may be hidden or otherwise unavailable for subclassing.
 
 * Collaborations: Decorator forwards requests to its Component object. It may optionally perform additional operations before and after forwarding the request.
 
 * Consequences: The Decorator pattern has at least two key benefits and two liabilities:
 
-  1. More flexibility than static inheritance. The Decorator pattern provides a more flexible way to add responsibilities to objects than can be had with static (multiple) inheritance. With decorators, responsibilities can be added and removed at run-time simply by attaching and detaching them. In contrast, inheritance requires creating a new class for each additional responsibility (e.g., BorderedScrollableTextView, BorderedTextView). This gives rise to many classes and increases the complexity of a system. Furthermore, providing different Decorator classes for a specific Component class lets you mix and match responsibilities. Decorators also make it easy to add a property twice. For example, to give a TextView a double border, simply attach two BorderDecorators. Inheriting from a Border class twice is error-prone at best. 
+  1. More flexibility than static inheritance. The Decorator pattern provides a more flexible way to add responsibilities to objects than can be had with static (multiple) inheritance. With decorators, responsibilities can be added and removed at run-time simply by attaching and detaching them. In contrast, inheritance requires creating a new class for each additional responsibility (e.g., BorderedScrollableTextView, BorderedTextView). This gives rise to many classes and increases the complexity of a system. Furthermore, providing different Decorator classes for a specific Component class lets you mix and match responsibilities. Decorators also make it easy to add a property twice. For example, to give a TextView a double border, simply attach two BorderDecorators. Inheriting from a Border class twice is error-prone at best.
 
-  2. Avoids feature-laden classes high up in the hierarchy. Decorator offers a pay-as-you-go approach to adding responsibilities. Instead of trying to support all foreseeable features in a complex, customizable class, you can define a simple class and add functionality incrementally with Decorator objects. Functionality can be composed from simple pieces. As a result, an application needn't pay for features it doesn't use. It's also easy to define new kinds of Decorators independently from the classes of objects they extend, even for unforeseen extensions. Extending a complex class tends to expose details unrelated to the responsibilities you're adding. 
+  2. Avoids feature-laden classes high up in the hierarchy. Decorator offers a pay-as-you-go approach to adding responsibilities. Instead of trying to support all foreseeable features in a complex, customizable class, you can define a simple class and add functionality incrementally with Decorator objects. Functionality can be composed from simple pieces. As a result, an application needn't pay for features it doesn't use. It's also easy to define new kinds of Decorators independently from the classes of objects they extend, even for unforeseen extensions. Extending a complex class tends to expose details unrelated to the responsibilities you're adding.
 
-  3. A decorator and its component aren't identical. A decorator acts as a transparent enclosure. But from an object identity point of view, a decorated component is not identical to the component itself. Hence you shouldn't rely on object identity when you use decorators. 
+  3. A decorator and its component aren't identical. A decorator acts as a transparent enclosure. But from an object identity point of view, a decorated component is not identical to the component itself. Hence you shouldn't rely on object identity when you use decorators.
 
   4. Lots of little objects. A design that uses Decorator often results in systems composed of lots of little objects that all look alike. The objects differ only in the way they are interconnected, not in their class or in the value of their variables. Although these systems are easy to customize by those who understand them, they can be hard to learn and debug.
 
 * Implementation: Several issues should be considered when applying the Decorator pattern:
 
-  1. Interface conformance. A decorator object's interface must conform to the interface of the component it decorates. ConcreteDecorator classes must therefore inherit from a common class (at least in C++). 
+  1. Interface conformance. A decorator object's interface must conform to the interface of the component it decorates. ConcreteDecorator classes must therefore inherit from a common class (at least in C++).
 
-  2. Omitting the abstract Decorator class. There's no need to define an abstract Decorator class when you only need to add one responsibility. That's often the case when you're dealing with an existing class hierarchy rather than designing a new one. In that case, you can merge Decorator's responsibility for forwarding requests to the component into the ConcreteDecorator. 
+  2. Omitting the abstract Decorator class. There's no need to define an abstract Decorator class when you only need to add one responsibility. That's often the case when you're dealing with an existing class hierarchy rather than designing a new one. In that case, you can merge Decorator's responsibility for forwarding requests to the component into the ConcreteDecorator.
 
-  3. Keeping Component classes lightweight. To ensure a conforming interface, components and decorators must descend from a common Component class. It's important to keep this common class lightweight; that is, it should focus on defining an interface, not on storing data. The definition of the data representation should be deferred to subclasses; otherwise the complexity of the Component class might make the decorators too heavyweight to use in quantity. Putting a lot of functionality into Component also increases the probability that concrete subclasses will pay for features they don't need. 
+  3. Keeping Component classes lightweight. To ensure a conforming interface, components and decorators must descend from a common Component class. It's important to keep this common class lightweight; that is, it should focus on defining an interface, not on storing data. The definition of the data representation should be deferred to subclasses; otherwise the complexity of the Component class might make the decorators too heavyweight to use in quantity. Putting a lot of functionality into Component also increases the probability that concrete subclasses will pay for features they don't need.
 
-  4. Changing the skin of an object versus changing its guts. We can think of a decorator as a skin over an object that changes its behavior. An alternative is to change the object's guts. The Strategy pattern is a good example of a pattern for changing the guts. 
+  4. Changing the skin of an object versus changing its guts. We can think of a decorator as a skin over an object that changes its behavior. An alternative is to change the object's guts. The Strategy pattern is a good example of a pattern for changing the guts.
 
-     Strategies are a better choice in situations where the Component class is intrinsically heavyweight, thereby making the Decorator pattern too costly to apply. In the Strategy pattern, the component forwards some of its behavior to a separate strategy object. The Strategy pattern lets us alter or extend the component's functionality by replacing the strategy object. For example, we can support different border styles by having the component defer border-drawing to a separate Border object. The Border object is a Strategy object that encapsulates a border-drawing strategy. By extending the number of strategies from just one to an open-ended list, we achieve the same effect as nesting decorators recursively. 
+     Strategies are a better choice in situations where the Component class is intrinsically heavyweight, thereby making the Decorator pattern too costly to apply. In the Strategy pattern, the component forwards some of its behavior to a separate strategy object. The Strategy pattern lets us alter or extend the component's functionality by replacing the strategy object. For example, we can support different border styles by having the component defer border-drawing to a separate Border object. The Border object is a Strategy object that encapsulates a border-drawing strategy. By extending the number of strategies from just one to an open-ended list, we achieve the same effect as nesting decorators recursively.
 
-     In MacApp 3.0 [App89] and Bedrock [Sym93a], for example, graphical components (called "views") maintain a list of "adorner" objects that can attach additional adornments like borders to a view component. If a view has any adorners attached, then it gives them a chance to draw additional embellishments. MacApp and Bedrock must use this approach because the View class is heavyweight. It would be too expensive to use a full-fledged View just to add a border. 
+     In MacApp 3.0 [App89] and Bedrock [Sym93a], for example, graphical components (called "views") maintain a list of "adorner" objects that can attach additional adornments like borders to a view component. If a view has any adorners attached, then it gives them a chance to draw additional embellishments. MacApp and Bedrock must use this approach because the View class is heavyweight. It would be too expensive to use a full-fledged View just to add a border.
 
      Since the Decorator pattern only changes a component from the outside, the component doesn't have to know anything about its decorators; that is, the decorators are transparent to the component. With strategies, the component itself knows about possible extensions. So it has to reference and maintain the corresponding strategies.
 
-     The Strategy-based approach might require modifying the component to accommodate new extensions. On the other hand, a strategy can have its own specialized interface, whereas a decorator's interface must conform to the component's. A strategy for rendering a border, for example, need only define the interface for rendering a border (DrawBorder, GetWidth, etc.), which means that the strategy can be lightweight even if the Component class is heavyweight. 
+     The Strategy-based approach might require modifying the component to accommodate new extensions. On the other hand, a strategy can have its own specialized interface, whereas a decorator's interface must conform to the component's. A strategy for rendering a border, for example, need only define the interface for rendering a border (DrawBorder, GetWidth, etc.), which means that the strategy can be lightweight even if the Component class is heavyweight.
 
      (J: it's like extract a small part from a heavyweight interface, so we can apply decorator pattern on the small lightweight part. We define a basic strategy, and some strategy decorators.)
 
      MacApp and Bedrock use this approach for more than just adorning views. They also use it to augment the event-handling behavior of objects. In both systems, a view maintains a list of "behavior" objects that can modify and intercept events. The view gives each of the registered behavior objects a chance to handle the event before nonregistered behaviors, effectively overriding them. You can decorate a view with special keyboard-handling support, for example, by registering a behavior object that intercepts and handles key events.
 
 * Related Patterns:
-  + Adapter: A decorator is different from an adapter in that a decorator only changes an object's responsibilities, not its interface; an adapter will give an object a completely new interface. 
-  + Composite: A decorator can be viewed as a degenerate composite with only one component. However, a decorator adds additional responsibilities. it isn't intended for object aggregation. 
-  + Strategy: A decorator lets you change the skin of an object; a strategy lets you change the guts. These are two alternative ways of changing an object. 
+  + Adapter: A decorator is different from an adapter in that a decorator only changes an object's responsibilities, not its interface; an adapter will give an object a completely new interface.
+  + Composite: A decorator can be viewed as a degenerate composite with only one component. However, a decorator adds additional responsibilities. it isn't intended for object aggregation.
+  + Strategy: A decorator lets you change the skin of an object; a strategy lets you change the guts. These are two alternative ways of changing an object.
 
 
 DPIR
@@ -873,6 +873,91 @@ The classic Decorator pattern is loved more by the folks who build the thing tha
 Another potential drawback of the Decorator pattern is the performance overhead associated with a long chain of decorators. When you trade in that single, monolithic ChecksummingNumberingTimestampingWriter class for a chain of decorators, you are gaining a lot of programming compartmentalization and code clarity. Of course, the price you pay is that you are multiplying the number of objects floating around in your program. This may not be much of a concern if, as in our writer example, you are dealing with a handful of open files. It becomes much more problematic if we are talking about every employee in a very large company. Remember, too, that besides the number of objects involved, any data that you send through a chain of N decorators will change hands N times as the first decorator hands it off to the second decorator, which hands it off to the third decorator, and so on.
 
 Finally, one drawback of the method-aliasing technique for decorating objects is that it tends to make your code harder to debug. Think about it: Your methods will show up in the stack trace with different names than they have in the code stored in your source files. This is not a fatal difficulty, just one more thing to keep in mind.
+
+
+Singleton Pattern
+=================
+
+GoF
+------------------------------------------------------------------------------
+
+
+
+DPIR
+------------------------------------------------------------------------------
+
+The motivation behind the Singleton pattern is very simple: There are some things that are unique. Programs frequently have a single configuration file. It is not unusual for a program to let you know how it is doing via a single log file. GUI applications frequently have a one main window, and they typically take input from exactly one keyboard. Many applications need to talk to exactly one database. If you only ever have one instance of a class and a lot of code that needs access to that instance, it seems silly to pass the object from one method to another. In this kind of situation, the GoF suggest that you build a singleton—a class that can have only one instance and that provides global access to that one instance.
+
+(J: I think Singleton = a global variable + a Proxy)
+
+One requirement of the singleton is to ensure that the one and only singleton is the sole instance of the singleton class. Use 'private_class_method :new' to do that.
+
+In ruby, things are much simpler:
+
+  require 'singleton'
+  class SimpleLogger
+    include Singleton
+    # Lots of code deleted...
+  end
+
+The Singleton module does all of the heavy lifting of creating the class variable and initializing it with the singleton instance, creating the class-level instance method, and making new private. All we need to do is include the module. From the outside, this new Singleton module-based logger looks exactly like our previous hand-built implementations: Just call SimpleLogger.instance to retrieve the instance and off you go.
+
+Creating the singleton instance before you actually need it is called eager instantiation—we just can’t wait to make the thing. The Singleton module, by contrast, waits until someone calls instance before it actually creates its singleton. This technique is known as lazy instantiation.
+
+We might, for example, use a global variable as a singleton. Global variables certainly have the global access part of the singleton routine down pat: You can access $logger in any context, in any class, module, or method, and it will always be the same $logger. Because there is only one instance of any given global variable and because that variable is available everywhere (it being global and all), global variables seem like they might be a good platform for implementing singletons. Sadly, no. Global variables lack some of the fundamental moving parts of a singleton. While $logger always refers to exactly one object at any given time, there is no way to control the value of a global variable. Anyone can modify the global variable at any time.
+
+If change is the problem, then maybe we should turn to a flavor of Ruby variable that not only has global scope but also resists change: the constant. So is this the simple solution to the singleton? Not really. Both global variables and constants share a number of deficiencies as singletons. First, if you use a global variable or a constant for this purpose, there is no way to delay the creation of the singleton object until you need it. The global variable or constant is there from the moment we first set it. Second, neither of these techniques does anything to prevent someone from creating a second or third instance of your supposedly singleton class. You could, of course, deal with that issue separately. For example, you might create the singleton instance and then change the class so that it will refuse to create any more instances—but all of this is beginning to feel rather ad hoc and messy.
+
+As we have seen, we can define methods and variables directly on a class object. In fact, our original singleton implementation used class methods and variables to manage the singleton instance. But given that we can have methods and variables on a class, why not just use the class itself as a container for the singleton functionality? Each class is unique—there can be only one SimpleLogger class loaded at any one time—so we might just define our singleton functionality as class methods and variables on a class object.
+
+The “class as singleton” technique has a key advantage over the global variable and constant methods: You are sure that no one will create a second instance of your singleton. Lazy initialization remains a problem with this technique, however. Specifically, your class is initialized when it gets loaded (typically when someone requires the file that the class lives in), and you do not have a lot of control over the timing of this initialization. Another disadvantage of using a class as a singleton is that programming class methods and variables is just not as easy as coding garden-variety instance methods and variables; all of those self.methods and @@variables have a strange feel to them.
+
+Another possibility is to use a module as the container for your singleton behavior. As noted earlier in this chapter, modules have a lot in common with classes. In fact, modules are so much like classes that you can define module-level methods and variables in exactly the same way that you define class methods and variables. Except for changing class to module, the module-based implementation is exactly the same as the class-based one.
+
+The “module as singleton” technique does have one notable advantage over the “class as singleton” technique. Because you cannot instantiate a module (that is the key difference between a module and a class), the intent of a module-based singleton is probably a bit clearer from the code: Here is a bucket of methods meant to be called and not something you can instantiate.
+
+The discussion of the alternative ways of implementing the Singleton pattern raises the question of language-based safety features, and what such features can mean in a language as flexible as Ruby. To reach for a handy example, we have seen that one of the effects of including the Singleton module is to make the new method private. This, of course, prevents anyone from making a second or third instance of the singleton class. If our singleton class is defined as
+
+  require 'singleton'
+  class Manager
+    include Singleton
+    def manage_resources
+      puts("I am managing my resources")
+    end
+  end
+
+I cannot make another instance of Manager. Actually, the Singleton module cannot really prevent anything. All I need is a little insight into how Singleton works and a bit of knowledge about public_class_method (the evil twin of private_class_method), and it becomes very easy to circumvent all of that prevention:
+
+  class Manager
+    public_class_method :new
+  end
+  m = Manager.new
+
+In the same spirit, we noted earlier that one advantage of the class- or module-based singleton is that no one can make a second instance of your singleton. Well, not by accident, they can’t. But no matter whether you are using ClassBasedLogger or its cousin ModuleBasedLogger, your logger is in the end an object, and all objects in Ruby inherit the clone method. The clone method is wonderful utility for short-circuiting that singleton-ness that we have been working so hard to establish:
+
+  a_second_logger = ClassBasedLogger.clone
+  a_second_logger.error('using a second logger')
+
+We might, of course, override the clone method in ClassBasedLogger to prevent unauthorized cloning. Of course, the determined cloner could just reopen your class to un-override the method ... The point is not that this kind of thing is a good idea, but rather that in a language where virtually everything done at runtime can be undone a little later in runtime, very few decisions are irreversible. The Ruby philosophy is that if you decide to circumvent the very clear intent of the author of the ClassBasedLogger class by cloning it, the language is there to help you out. You are in the driver’s seat, not the language. By keeping almost everything open to modification, Ruby allows you to do the things that you say you want to do—but it is up to you to say the right things.
+
+Let’s start with the most obvious problem first: A singleton bears a very strong family resemblance to its outlaw cousin, the global variable. No matter whether you implement your singleton with the GoF class-managed technique or as a bunch of class- or module-level methods and variables, you are creating a single object with global scope. Create a singleton, and you have just made it possible for widely separated bits of your program to use that singleton as a secret channel to communicate with each other and, in the process, tightly couple themselves to each other. The horrible consequences of this coupling are why software engineering got out of the global variable business in the first place. There is only one solution to this problem: Don’t do that. Properly applied, singletons are not global variables. Rather, they are meant to model things that occur exactly once. Yes, because it occurs only once, you can use a singleton as a unique communications conduit between bits of your program. But don’t do that. Singletons are like every other pattern and programming technique—which means you can really screw things up if you abuse them. I can only repeat: Don’t do that.
+
+(J: never use singleton for communications)
+
+Which brings us to another obvious-sounding, but all-too-common way to come to grief with the Singleton pattern: to lose count. As you are considering applying the Singleton pattern, ask yourself this question: Am I sure that there is only one of these things? The Singleton pattern gives us a way to model a single instance of something, but this modeling also just happens to come with a nice coding feature that makes that single instance very easily accessible—just call SimpleLogger.instance. That easy access can have a hypnotic allure: “My code will be so much simpler if this thing is a singleton.” Don’t listen to the siren song of that easy access. Instead, focus on the question of how many of these things exist and treat the easy access as a bonus.
+
+Another mistake that many people make is to spread the knowledge of a class’s singleton-ness far and wide. You can look at the fact that a class is a singleton as something of an implementation detail: Once you get hold of the configuration file, exactly how you got hold of it is not really important. Remember that you can always grab the singleton object in one or a few places and then pass it around from there. There are two advantages to doing this. First, there is less code to fix if it turns out that your singleton is not, in fact, quite so alone. Second, by excising the singleton from unneccessary places, you have made those classes much more easily testable.
+
+(J: you should limit the amount of code that is aware of an object’s singleton-ness. you shouldn't use SingletonClass.instance all the time, use it when necessary, and pass the singleton instance around)
+
+One exceedingly nasty thing about the Singleton pattern is the way that it interferes with unit testing. A good unit test needs to start with a known state. After all, your test results are unlikely to be worth much if you aren’t sure how things were set up when you started the test. A good unit test also needs to be independent of any other test, so that test 3 should give you exactly the same results no matter whether you run it between tests 2 and 4, after test 20, or all by itself. The problem, of course, is that if tests 1 through 20 are testing a singleton, each test is liable to modify the one and only singleton instance in some unpredictable way. So much for test independence.
+
+One way to deal with this problem is to create two classes: an ordinary (i.e., non-singleton) class that contains all of the code, and a subclass of the first class that is a singleton. The actual app use the singleton, while test use the non-singleton class.
+
+There are two characteristics that make a singleton a singleton: A singleton class has exactly one instance, and access to that one instance is available globally.
+
+
+
 
 
 
