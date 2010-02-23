@@ -775,6 +775,107 @@ In ruby we can ask method_missing&send brothers to do the heavy job, instead of 
 The Proxy pattern is the second pattern we have encountered in which one object stands in for another. In Chapter 9, we considered the adapter, which wraps one object with another to transform the interface of the first object. Superficially, the proxy is very similar to the adapter: One object stands in for another. But the proxy does not change the interface; the interface of the proxy is exactly the same as the interface of its subject. Instead of trying to transform the interface of that inner object in the same way that an adapter does, the proxy tries to control access to it.
 
 
+Decorator Pattern (AKA: Wrapper)
+================================
+
+GoF
+------------------------------------------------------------------------------
+
+* Intent: Attach additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.
+
+* Motivation: Sometimes we want to add responsibilities to individual objects, not to an entire class. A graphical user interface toolkit, for example, should let you add properties like borders or behaviors like scrolling to any user interface component. One way to add responsibilities is with inheritance. Inheriting a border from another class puts a border around every subclass instance. This is inflexible, however, because the choice of border is made statically. A client can't control how and when to decorate the component with a border. A more flexible approach is to enclose the component in another object that adds the border. The enclosing object is called a decorator. The decorator conforms to the interface of the component it decorates so that its presence is transparent to the component's clients. The decorator forwards requests to the component and may perform additional actions (such as drawing a border) before or after forwarding. Transparency lets you nest decorators recursively, thereby allowing an unlimited number of added responsibilities.
+
+* Applicability: Use Decorator
+  + to add responsibilities to individual objects dynamically and transparently, that is, without affecting other objects. 
+  + for responsibilities that can be withdrawn. 
+  + when extension by subclassing is impractical. Sometimes a large number of independent extensions are possible and would produce an explosion of subclasses to support every combination. Or a class definition may be hidden or otherwise unavailable for subclassing.
+
+* Collaborations: Decorator forwards requests to its Component object. It may optionally perform additional operations before and after forwarding the request.
+
+* Consequences: The Decorator pattern has at least two key benefits and two liabilities:
+
+  1. More flexibility than static inheritance. The Decorator pattern provides a more flexible way to add responsibilities to objects than can be had with static (multiple) inheritance. With decorators, responsibilities can be added and removed at run-time simply by attaching and detaching them. In contrast, inheritance requires creating a new class for each additional responsibility (e.g., BorderedScrollableTextView, BorderedTextView). This gives rise to many classes and increases the complexity of a system. Furthermore, providing different Decorator classes for a specific Component class lets you mix and match responsibilities. Decorators also make it easy to add a property twice. For example, to give a TextView a double border, simply attach two BorderDecorators. Inheriting from a Border class twice is error-prone at best. 
+
+  2. Avoids feature-laden classes high up in the hierarchy. Decorator offers a pay-as-you-go approach to adding responsibilities. Instead of trying to support all foreseeable features in a complex, customizable class, you can define a simple class and add functionality incrementally with Decorator objects. Functionality can be composed from simple pieces. As a result, an application needn't pay for features it doesn't use. It's also easy to define new kinds of Decorators independently from the classes of objects they extend, even for unforeseen extensions. Extending a complex class tends to expose details unrelated to the responsibilities you're adding. 
+
+  3. A decorator and its component aren't identical. A decorator acts as a transparent enclosure. But from an object identity point of view, a decorated component is not identical to the component itself. Hence you shouldn't rely on object identity when you use decorators. 
+
+  4. Lots of little objects. A design that uses Decorator often results in systems composed of lots of little objects that all look alike. The objects differ only in the way they are interconnected, not in their class or in the value of their variables. Although these systems are easy to customize by those who understand them, they can be hard to learn and debug.
+
+* Implementation: Several issues should be considered when applying the Decorator pattern:
+
+  1. Interface conformance. A decorator object's interface must conform to the interface of the component it decorates. ConcreteDecorator classes must therefore inherit from a common class (at least in C++). 
+
+  2. Omitting the abstract Decorator class. There's no need to define an abstract Decorator class when you only need to add one responsibility. That's often the case when you're dealing with an existing class hierarchy rather than designing a new one. In that case, you can merge Decorator's responsibility for forwarding requests to the component into the ConcreteDecorator. 
+
+  3. Keeping Component classes lightweight. To ensure a conforming interface, components and decorators must descend from a common Component class. It's important to keep this common class lightweight; that is, it should focus on defining an interface, not on storing data. The definition of the data representation should be deferred to subclasses; otherwise the complexity of the Component class might make the decorators too heavyweight to use in quantity. Putting a lot of functionality into Component also increases the probability that concrete subclasses will pay for features they don't need. 
+
+  4. Changing the skin of an object versus changing its guts. We can think of a decorator as a skin over an object that changes its behavior. An alternative is to change the object's guts. The Strategy pattern is a good example of a pattern for changing the guts. 
+
+     Strategies are a better choice in situations where the Component class is intrinsically heavyweight, thereby making the Decorator pattern too costly to apply. In the Strategy pattern, the component forwards some of its behavior to a separate strategy object. The Strategy pattern lets us alter or extend the component's functionality by replacing the strategy object. For example, we can support different border styles by having the component defer border-drawing to a separate Border object. The Border object is a Strategy object that encapsulates a border-drawing strategy. By extending the number of strategies from just one to an open-ended list, we achieve the same effect as nesting decorators recursively. 
+
+     In MacApp 3.0 [App89] and Bedrock [Sym93a], for example, graphical components (called "views") maintain a list of "adorner" objects that can attach additional adornments like borders to a view component. If a view has any adorners attached, then it gives them a chance to draw additional embellishments. MacApp and Bedrock must use this approach because the View class is heavyweight. It would be too expensive to use a full-fledged View just to add a border. 
+
+     Since the Decorator pattern only changes a component from the outside, the component doesn't have to know anything about its decorators; that is, the decorators are transparent to the component. With strategies, the component itself knows about possible extensions. So it has to reference and maintain the corresponding strategies.
+
+     The Strategy-based approach might require modifying the component to accommodate new extensions. On the other hand, a strategy can have its own specialized interface, whereas a decorator's interface must conform to the component's. A strategy for rendering a border, for example, need only define the interface for rendering a border (DrawBorder, GetWidth, etc.), which means that the strategy can be lightweight even if the Component class is heavyweight. 
+
+     (J: it's like extract a small part from a heavyweight interface, so we can apply decorator pattern on the small lightweight part. We define a basic strategy, and some strategy decorators.)
+
+     MacApp and Bedrock use this approach for more than just adorning views. They also use it to augment the event-handling behavior of objects. In both systems, a view maintains a list of "behavior" objects that can modify and intercept events. The view gives each of the registered behavior objects a chance to handle the event before nonregistered behaviors, effectively overriding them. You can decorate a view with special keyboard-handling support, for example, by registering a behavior object that intercepts and handles key events.
+
+* Related Patterns:
+  + Adapter: A decorator is different from an adapter in that a decorator only changes an object's responsibilities, not its interface; an adapter will give an object a completely new interface. 
+  + Composite: A decorator can be viewed as a degenerate composite with only one component. However, a decorator adds additional responsibilities. it isn't intended for object aggregation. 
+  + Strategy: A decorator lets you change the skin of an object; a strategy lets you change the guts. These are two alternative ways of changing an object. 
+
+
+DPIR
+------------------------------------------------------------------------------
+
+Inheritance-based approach requires you to come up with all possible combinations of features up-front, at design time. Decorator would allow you to assemble the combination of features that you really need, dynamically, at runtime.
+
+All of the players in the Decorator pattern implement the component interface. The ConcreteComponent is the “real” object, the object that implements the basic component functionality. The Decorator class has a reference to a Component - the next Component in the decorator chain - and it implements all of the methods of the Component type. Each Decorator layers its own special magic onto the workings of the base component, adding its own talent to at least one of the methods. Decorators can also add new methods - that is, operations that are not defined in the Component interface - although this behavior is optional.
+
+In ruby we can use method_missing or forwardable module (suggest) to implement the common interface for decorator. The forwardable module is more of a precision weapon than the method_missing technique. With forwardable, you have control over which methods you delegate. Although you could certainly put logic in method_missing to pick and choose which methods to delegate, the method_missing technique really shines when you want to delegate large numbers of calls.
+
+The runtime flexibility of Ruby presents some interesting alternatives to the GoF Decorator pattern. In particular, we can obtain most of that decorator goodness either by dynamically wrapping methods or via module decorations.
+
+* Wrapping Methods: We have already seen that Ruby allows us to modify the behavior of single instances or whole classes pretty much anytime. Armed with this flexibility, plus some knowledge of the alias keyword, we can turn a plain-vanilla writer into a time-stamping writer:
+
+    w = SimpleWriter.new('out')
+    class << w
+      alias old_write_line write_line
+      def write_line(line)
+        old_write_line("#{Time.new}: #{line}")
+      end
+    end
+
+  Luckily for all you would-be decorators, the “wrap the method” technique is a bit limited. It suffers from the danger of method name collisions. For example, as our code stands right now, if we tried to add two sets of line numbers to our output, we would lose our reference to the original write method because we do the alias twice. You could probably come up with a clever scheme to avoid name collisions, but as your decorations become more complicated they just cry out to live in their own classes. Nevertheless, for smaller-scale problems, the method-wrapping technique is useful enough that it should be in every Ruby programmer’s toolkit.
+
+* Decorating with Modules: Another way to add capabilities to a Ruby object is to dynamically mix in modules with the extend method. To use this technique, we need to refactor our decorating classes into modules:
+
+    module TimeStampingWriter
+      def write_line(line)
+        super("#{Time.new}: #{line}")
+      end
+    end
+
+  The extend method essentially inserts a module into an object’s inheritance tree before its regular class. We can, therefore, start with an ordinary writer and then simply add in the functionality that we need:
+
+    w = SimpleWriter.new('out')
+    w.extend(TimeStampingWriter)
+
+  The last module added will be the first one called. While either of the dynamic techniques work—and they are, in fact, the runaway choice in existing Ruby code—they do have one disadvantage: With both of these techniques, it is hard to undo the decoration. Unwrapping an aliased method is likely to be tedious, and you simply cannot un-include a module.
+
+The classic Decorator pattern is loved more by the folks who build the thing than by those who use it. As we have seen, the Decorator pattern helps the person who is trying to build all of this functionality neatly separate out the various concerns—line numbering in this class, checksumming over in this other class, time stamping in a third. The irritating moment comes when someone tries to assemble all of these little building block classes into a working whole. Instead of being able to instantiate a single object, perhaps with EnhancedWriter.new(path), the client has to put all of the pieces together itself. Of course, there are things that the author of a decorator implementation can do to ease the assembly burden. If there are common chains of decorators that your clients will need, by all means provide a utility (perhaps a Builder?) to get that assembly done.
+
+Another potential drawback of the Decorator pattern is the performance overhead associated with a long chain of decorators. When you trade in that single, monolithic ChecksummingNumberingTimestampingWriter class for a chain of decorators, you are gaining a lot of programming compartmentalization and code clarity. Of course, the price you pay is that you are multiplying the number of objects floating around in your program. This may not be much of a concern if, as in our writer example, you are dealing with a handful of open files. It becomes much more problematic if we are talking about every employee in a very large company. Remember, too, that besides the number of objects involved, any data that you send through a chain of N decorators will change hands N times as the first decorator hands it off to the second decorator, which hands it off to the third decorator, and so on.
+
+Finally, one drawback of the method-aliasing technique for decorating objects is that it tends to make your code harder to debug. Think about it: Your methods will show up in the stack trace with different names than they have in the code stored in your source files. This is not a fatal difficulty, just one more thing to keep in mind.
+
+
+
 ------------------------
 Part II. Patterns in GoF
 ------------------------
