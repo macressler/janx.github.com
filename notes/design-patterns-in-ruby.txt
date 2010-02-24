@@ -1000,6 +1000,105 @@ Factory Pattern
 GoF
 ------------------------------------------------------------------------------
 
+Factory Method (AKA: Virtual Constructor)
+-----------------------------------------
+
+* Intent: Define an interface for creating an object, but let subclasses decide which class to instantiate. Factory Method lets a class defer instantiation to subclasses.
+
+* Motivation: Frameworks use abstract classes to define and maintain relationships between objects. A framework is often responsible for creating these objects as well. Consider a framework for applications that can present multiple documents to the user. Two key abstractions in this framework are the classes Application and Document. Both classes are abstract, and clients have to subclass them to realize their application-specific implementations. To create a drawing application, for example, we define the classes DrawingApplication and DrawingDocument. The Application class is responsible for managing Documents and will create them as required when the user selects Open or New from a menu, for example. Because the particular Document subclass to instantiate is application-specific, the Application class can't predict the subclass of Document to instantiate the Application class only knows when a new document should be created, not what kind of Document to create. This creates a dilemma: The framework must instantiate classes, but it only knows about abstract classes, which it cannot instantiate.  
+
+* Applicability: Use the Factory Method pattern when
+  + a class can't anticipate the class of objects it must create. 
+  + a class wants its subclasses to specify the objects it creates. 
+  + classes delegate responsibility to one of several helper subclasses, and you want to localize the knowledge of which helper subclass is the delegate.
+
+* Collaborations: Creator relies on its subclasses to define the factory method so that it returns an instance of the appropriate ConcreteProduct.
+
+* Consequences: Factory methods eliminate the need to bind application-specific classes into your code. The code only deals with the Product interface; therefore it can work with any user-defined ConcreteProduct classes. A potential disadvantage of factory methods is that clients might have to subclass the Creator class just to create a particular ConcreteProduct object. Subclassing is fine when the client has to subclass the Creator class anyway, but otherwise the client now must deal with another point of evolution. Here are two additional consequences of the Factory Method pattern:
+
+  (J: I think we should only use Factory Method only when we will subclass the Creator anyway)
+
+  + Provides hooks for subclasses. Creating objects inside a class with a factory method is always more flexible than creating an object directly. Factory Method gives subclasses a hook for providing an extended version of an object. In the Document example, the Document class could define a factory method called CreateFileDialog that creates a default file dialog object for opening an existing document. A Document subclass can define an application-specific file dialog by overriding this factory method. In this case the factory method is not abstract but provides a reasonable default implementation. 
+
+  (J: in this case, factory method is invoked by another Creator method)
+
+  + Connects parallel class hierarchies. In the examples we've considered so far, the factory method is only called by Creators. But this doesn't have to be the case; clients can find factory methods useful, especially in the case of parallel class hierarchies. Parallel class hierarchies result when a class delegates some of its responsibilities to a separate class. Consider graphical figures that can be manipulated interactively; that is, they can be stretched, moved, or rotated using the mouse. Implementing such interactions isn't always easy. It often requires storing and updating information that records the state of the manipulation at a given time. This state is needed only during manipulation; therefore it needn't be kept in the figure object. Moreover, different figures behave differently when the user manipulates them. For example, stretching a line figure might have the effect of moving an endpoint, whereas stretching a text figure may change its line spacing. 
+
+    With these constraints, it's better to use a separate Manipulator object that implements the interaction and keeps track of any manipulation-specific state that's needed. Different figures will use different Manipulator subclasses to handle particular interactions. The resulting Manipulator class hierarchy parallels (at least partially) the Figure class hierarchy. The Figure class provides a CreateManipulator factory method that lets clients create a Figure's corresponding Manipulator. Figure subclasses override this method to return an instance of the Manipulator subclass that's right for them. Alternatively, the Figure class may implement CreateManipulator to return a default Manipulator instance, and Figure subclasses may simply inherit that default. The Figure classes that do so need no corresponding Manipulator subclass - hence the hierarchies are only partially parallel. Notice how the factory method defines the connection between the two class hierarchies. It localizes knowledge of which classes belong together.
+
+  (J: but here, the factory method is invoked by client directly)
+
+* Implementation: Consider the following issues when applying the Factory Method pattern:
+
+  + Two major varieties. The two main variations of the Factory Method pattern are (1) the case when the Creator class is an abstract class and does not provide an implementation for the factory method it declares, and (2) the case when the Creator is a concrete class and provides a default implementation for the factory method. It's also possible to have an abstract class that defines a default implementation, but this is less common. The first case requires subclasses to define an implementation, because there's no reasonable default. It gets around the dilemma of having to instantiate unforeseeable classes. In the second case, the concrete Creator uses the factory method primarily for flexibility. It's following a rule that says, "Create objects in a separate operation so that subclasses can override the way they're created." This rule ensures that designers of subclasses can change the class of objects their parent class instantiates if necessary. 
+
+  + Parameterized factory methods. Another variation on the pattern lets the factory method create multiple kinds of products. The factory method takes a parameter that identifies the kind of object to create. All objects the factory method creates will share the Product interface. In the Document example, Application might support different kinds of Documents. You pass CreateDocument an extra parameter to specify the kind of document to create.
+
+  + Language-specific variants and issues. Different languages lend themselves to other interesting variations and caveats. Smalltalk programs often use a method that returns the class of the object to be instantiated. A Creator factory method can use this value to create a product, and a ConcreteCreator may store or even compute this value. The result is an even later binding for the type of ConcreteProduct to be instantiated. 
+
+    Factory methods in C++ are always virtual functions and are often pure virtual. Just be careful not to call factory methods in the Creator's constructor - the factory method in the ConcreteCreator won't be available yet. You can avoid this by being careful to access products solely through accessor operations that create the product on demand. Instead of creating the concrete product in the constructor, the constructor merely initializes it to 0. The accessor returns the product. But first it checks to make sure the product exists, and if it doesn't, the accessor creates it. This technique is sometimes called lazy initialization.
+
+  + Using templates to avoid subclassing. As we've mentioned, another potential problem with factory methods is that they might force you to subclass just to create the appropriate Product objects. Another way to get around this in C++ is to provide a template subclass of Creator that's parameterized by the Product class.
+
+  + Naming conventions. It's good practice to use naming conventions that make it clear you're using factory methods.
+
+* Related Patterns
+  + Abstract Factory is often implemented with factory methods. The Motivation example in the Abstract Factory pattern illustrates Factory Method as well. 
+  + Factory methods are usually called within Template Methods (325). In the document example above, NewDocument is a template method. 
+  + Prototypes (117) don't require subclassing Creator. However, they often require an Initialize operation on the Product class. Creator uses Initialize to initialize the object. Factory Method doesn't require such an operation. 
+
+Abstract Factory (AKA: Kit)
+---------------------------
+
+* Intent: Provide an interface for creating families of related or dependent objects without specifying their concrete classes. (J: family of objects is the key. If there's only one factory method, then we don't need Abstract Factory)
+
+* Motivation: Consider a user interface toolkit that supports multiple look-and-feel standards, such as Motif and Presentation Manager. Different look-and-feels define different appearances and behaviors for user interface "widgets" like scroll bars, windows, and buttons. To be portable across look-and-feel standards, an application should not hard-code its widgets for a particular look and feel. Instantiating look-and-feel-specific classes of widgets throughout the application makes it hard to change the look and feel later. 
+
+  We can solve this problem by defining an abstract WidgetFactory class that declares an interface for creating each basic kind of widget. There's also an abstract class for each kind of widget, and concrete subclasses implement widgets for specific look-and-feel standards. WidgetFactory's interface has an operation that returns a new widget object for each abstract widget class. Clients call these operations to obtain widget instances, but clients aren't aware of the concrete classes they're using. Thus clients stay independent of the prevailing look and feel.
+
+  There is a concrete subclass of WidgetFactory for each look-and-feel standard. Each subclass implements the operations to create the appropriate widget for the look and feel. For example, the CreateScrollBar operation on the MotifWidgetFactory instantiates and returns a Motif scroll bar, while the corresponding operation on the PMWidgetFactory returns a scroll bar for Presentation Manager. Clients create widgets solely through the WidgetFactory interface and have no knowledge of the classes that implement widgets for a particular look and feel. In other words, clients only have to commit to an interface defined by an abstract class, not a particular concrete class. A WidgetFactory also enforces dependencies between the concrete widget classes. A Motif scroll bar should be used with a Motif button and a Motif text editor, and that constraint is enforced automatically as a consequence of using a MotifWidgetFactory. 
+
+* Applicability: Use the Abstract Factory pattern when:
+  + a system should be independent of how its products are created, composed, and represented. 
+  + a system should be configured with one of multiple families of products. 
+  + a family of related product objects is designed to be used together, and you need to enforce this constraint. 
+  + you want to provide a class library of products, and you want to reveal just their interfaces, not their implementations.
+
+* Collaborations: 
+  + Normally a single instance of a ConcreteFactory class is created at run-time. This concrete factory creates product objects having a particular implementation. To create different product objects, clients should use a different concrete factory. 
+  + AbstractFactory defers creation of product objects to its ConcreteFactory subclass.
+
+* Consequences: The Abstract Factory pattern has the following benefits and liabilities:
+
+  + It isolates concrete classes. The Abstract Factory pattern helps you control the classes of objects that an application creates. Because a factory encapsulates the responsibility and the process of creating product objects, it isolates clients from implementation classes. Clients manipulate instances through their abstract interfaces. Product class names are isolated in the implementation of the concrete factory; they do not appear in client code.  
+
+  + It makes exchanging product families easy. The class of a concrete factory appears only once in an application - that is, where it's instantiated. This makes it easy to change the concrete factory an application uses. It can use different product configurations simply by changing the concrete factory. Because an abstract factory creates a complete family of products, the whole product family changes at once.
+
+  + It promotes consistency among products. When product objects in a family are designed to work together, it's important that an application use objects from only one family at a time. AbstractFactory makes this easy to enforce. 
+
+  + Supporting new kinds of products is difficult. Extending abstract factories to produce new kinds of Products isn't easy. That's because the AbstractFactory interface fixes the set of products that can be created. Supporting new kinds of products requires extending the factory interface, which involves changing the AbstractFactory class and all of its subclasses. We discuss one solution to this problem in the Implementation section.
+
+  (J: you should notice this is a common problem: add a new method to a class which has lots of subclass usually requires you add corresponding new method in all the subclasses)
+
+* Implementation: Here are some useful techniques for implementing the Abstract Factory pattern.
+
+  + Factories as singletons. An application typically needs only one instance of a ConcreteFactory per product family. So it's usually best implemented as a Singleton.
+
+  + Creating the products. AbstractFactory only declares an interface for creating products. It's up to ConcreteProduct subclasses to actually create them. The most common way to do this is to define a factory method (see Factory Method ) for each product. A concrete factory will specify its products by overriding the factory method for each. While this implementation is simple, it requires a new concrete factory subclass for each product family, even if the product families differ only slightly.
+
+    If many product families are possible, the concrete factory can be implemented using the Prototype pattern. The concrete factory is initialized with a prototypical instance of each product in the family, and it creates a new product by cloning its prototype. The Prototype-based approach eliminates the need for a new concrete factory class for each new product family. (see line#1121)
+
+  + Defining extensible factories. AbstractFactory usually defines a different operation for each kind of product it can produce. The kinds of products are encoded in the operation signatures. Adding a new kind of product requires changing the AbstractFactory interface and all the classes that depend on it. 
+
+    A more flexible but less safe design is to add a parameter to operations that create objects. This parameter specifies the kind of object to be created. It could be a class identifier, an integer, a string, or anything else that identifies the kind of product. In fact with this approach, AbstractFactory only needs a single "Make" operation with a parameter indicating the kind of object to create. This is the technique used in the Prototype- and the class-based abstract factories discussed earlier. 
+
+    This variation is easier to use in a dynamically typed language like Smalltalk than in a statically typed language like C++. You can use it in C++ only when all objects have the same abstract base class or when the product objects can be safely coerced to the correct type by the client that requested them. The implementation section of Factory Method shows how to implement such parameterized operations in C++. 
+
+    But even when no coercion is needed, an inherent problem remains: All products are returned to the client with the same abstract interface as given by the return type. The client will not be able to differentiate or make safe assumptions about the class of a product. If clients need to perform subclass-specific operations, they won't be accessible through the abstract interface. Although the client could perform a downcast (e.g., with dynamic_cast in C++), that's not always feasible or safe, because the downcast can fail. This is the classic trade-off for a highly flexible and extensible interface.
+
+* Related Patterns:
+  + AbstractFactory classes are often implemented with factory methods (create object in subclass), but they can also be implemented using Prototype (create object use passed-in prototype).
+  + A concrete factory is often a singleton (Singleton ).
 
 
 DPIR
@@ -1007,7 +1106,78 @@ DPIR
 
 The key detail that I have been glossing over until now is the one where your code magically knows which class to pick at some critical point. Picking the right class usually requires very little brain power: If I need a String or a Date or even a PersonnelRecord, I generally just call new on the String or Date or PersonnelRecord class and I am done. But sometimes the choice of which class to use is a critical decision. Examples of this kind of situation are easy to come by. For example, think about the Template Method pattern. When you use the Template Method pattern, you need to pick one of the subclasses—and the subclass that you pick determines which variation of the algorithm you will end up using. Will you be using a PlainReport or an HTMLReport today? Similarly, with the Strategy pattern, you must pick the correct strategy to feed to your context object: Do you need the VirginiaTaxCalculator or the NewJerseyTaxCalculator? Likewise, if you plan to proxy an object, you need to select the proxy class that does what you want.
 
+The GoF called this technique of pushing the “which class” decision down on a subclass the Factory Method pattern. On the one hand, we have the creators, the base and concrete classes that contain the factory methods (J: invoked in template method). On the other hand, we have the products, the objects that are being created. ConcretCreator is subclass of creator, implement the factory method.
 
+You may discover that the Factory Method pattern is not really a new pattern at all. At its heart, this pattern is really just the Template Method pattern applied to the problem of creating new objects. In both the Factory Method pattern and the Template Method pattern, a generic part of the algorithm (in our pond example, its day-to-day aquatic existence) is coded in the generic base class, and subclasses fill in the blanks left in the base class. With the factory method, those filled-in blanks determine the class of objects that will be living in the pond.
+
+If you have more than 1 factory method in creator class, each concrete creator will need to implement more than 1 factory methods, and you may need to define a concrete creator for every possible combination of factory method implementation. A different and perhaps cleaner way to go is to have a single factory method that takes a parameter, a parameter that tells the method which kind of object to create. With Parameterized Factory Method, you don't need to change the interface when you want to add a new factory, you just modify the parameterized factory method. Parameterized Factory Method may ease the problem, but you still need to write a concrete creator for every combination.
+
+But in ruby class is just object. So you can pass class directly as a Factory. So instead of implement factory method in subclass, you pass in product class, and use the class object to create the object you want. Perfect!
+
+We may create inconsist objects when using multiple factories. To solve this problem, we can pass a single object that knows how to create a consistent set of products instead of passing in multiple factories directly. An object dedicated to creating a compatible set of objects is called an abstract factory. In fact, the Abstract Factory pattern is yet another of those patterns made famous by the GoF. (J: Abstract Factory is a factory, which produces a combination of factories used in client. If we write Abstract Factory ourselves it will be boring if there's many combinations, we can create abstract factory dynamically, see below.)
+
+The Abstract Factory pattern really boils down to a problem and a solution. The problem is that you need to create sets of compatible objects. The solution is that you write a separate class to handle that creation. In the same way that the Factory Method pattern is really the Template Method pattern applied to object creation, so the Abstract Factory pattern is simply the Strategy pattern applied to the same problem.
+
+One way to look at the abstract factory is to view it as a sort of super-duper-class object. While ordinary class objects know how to create only one type of object (i.e., instances of themselves), the abstract factory knows how to create several different types of objects (i.e., its products). This suggests a way to simplify our Abstract Factory pattern implementation: We can make it a bundle of class objects, with one class for each product. This is exactly the same “classes are just objects” insight that helped us simplify the Factory Method pattern. Instead of having several different abstract factory classes, one class for each set of things that the factory needs to produce, we can have just one factory class that stores the class objects of the things that it needs to produce:
+
+  class OrganismFactory
+    def initialize(plant_class, animal_class)
+      @plant_class = plant_class
+      @animal_class = animal_class
+    end
+    def new_animal(name)
+      @animal_class.new(name)
+    end
+    def new_plant(name)
+      @plant_class.new(name)
+    end
+  end
+
+With this class-based abstract factory, we can create a new instance of the factory for each compatible set of objects that we need:
+
+  jungle_organism_factory = OrganismFactory.new(Tree, Tiger)
+  pond_organism_factory = OrganismFactory.new(WaterLily, Frog)
+
+  jungle = Habitat.new(1, 4, jungle_organism_factory)
+  jungle.simulate_one_day
+
+  pond = Habitat.new( 2, 4, pond_organism_factory)
+  pond.simulate_one_day
+
+This all may seem a bit circular. After all, didn’t we originally create the abstract factory to avoid specifying the individual classes? And with our latest abstract factory implementation, aren’t we right back to being able to create a pond full of tigers or a jungle overrun by algae? Not really. The important thing about the abstract factory is that it encapsulates the knowledge of which product types go together. You can express that encapsulation with classes and subclasses, or you can get to it by storing the class objects as we did in the code above. Either way, you end up with an object that knows which kind of things belong together.
+
+Another way that we can simplify the implementation of abstract factories is to rely on a consistent naming convention for the product classes. This approach won’t work for our habitat example, which is populated with things like tigers and frogs that have unique names, but imagine you need to produce an abstract factory for objects that know how to read and write a variety of file formats, such as PDF, HTML, and PostScript files. Certainly we could implement IOFactory using any of the techniques that we have discussed so far. But if the reader and writer class names follow some regular pattern, something like HTMLReader and HTMLWriter for HTML and PDFReader and PDFWriter for PDF, we can simply derive the class name from the name of the format. That’s exactly what the following code does:
+
+  class IOFactory
+    def initialize(format)
+      @reader_class = self.class.const_get("#{format}Reader")
+      @writer_class = self.class.const_get("#{format}Writer")
+    end
+    def new_reader
+      @reader_class.new
+    end
+    def new_writer
+      @writer_class.new
+    end
+  end
+
+  html_factory = IOFactory.new('HTML')
+  html_reader = html_factory.new_reader
+
+  pdf_factory = IOFactory.new('PDF')
+  pdf_writer = pdf_factory.new_writer
+
+The best way to go wrong with any of the object creation techniques that we have examined in this chapter is to use them when you don’t need them. Not every object needs to be produced by a factory. In fact, most of the time you will want to create most of your objects with a simple call to MyClass.new. Use the techniques discussed in this chapter when you have a choice of several different, related classes and you need to choose among them.
+
+Remember, chances are You Ain’t Gonna Need It. The YAGNI principle applies with a vengeance to factories. Perhaps I am dealing with only ducks and lilies at the moment, but maybe in the future I might need to cope with tigers and trees. Should I build a factory now to get ready? Probably not. You have to balance the cost of the additional, currently useless factory infrastructure against the likelihood that you will actually need the factory. Factor in the price of back-fitting a factory in later. The answer depends on the details, but engineers do have a tendency to build the Queen Mary (or perhaps the Titanic?) when a canoe will suffice. If you have a choice of exactly one class at the moment, put off adding in a factory.
+
+It is actually fairly difficult to find the classic inheritance-based versions of either factory pattern in the Ruby code base. Ruby programmers have resoundingly voted with their keyboards for the more dynamic versions of the factories, the ones based on the class objects or on various class naming schemes.
+
+The Factory Method pattern involves the application of the Template Method pattern to object creation. True to its Template Method roots, this pattern says to just leave the “which class” question to be answered by a subclass. The Abstract Factory pattern comes into play when you want to create compatible sets of objects. You need to create an abstract factory for each valid combination.
+
+The key thing that we discovered in this chapter is how both of these patterns morphed in Ruby’s dynamic environment—specifically, how they became much simpler. While the GoF concentrated on inheritance-based implementations of their factories, we can get the same results with much less code by taking advantage of the fact that in Ruby, classes are just objects. In Ruby we can look up classes by name, pass them around, and store them away for future use.
+
+Looking ahead, the next pattern that we will examine is the Builder pattern, which also produces new objects but is much more tightly focused on constructing complex objects than on picking the right class.
 
 
 
