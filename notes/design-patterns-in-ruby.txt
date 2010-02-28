@@ -1303,6 +1303,130 @@ The need for the Builder pattern sometimes creeps up on you as your application 
  When you create a builder, and especially when you use one, you need to be aware of the reusability issue. Can you use a single instance of a builder to create multiple instances of the product? It is certainly easier to write one-shot builders, or builders that need to be reset before reuse, than it is to create completely reusable builders. The question is this: Which kind of builder are you creating or using? The Builder pattern is the last of the patterns that we will examine that is concerned with object creation.
 
 
+Interpreter Pattern
+===================
+
+DoF
+------------------------------------------------------------------------------
+
+* Intent: Given a language, define a represention for its grammar along with an interpreter that uses the representation to interpret sentences in the language.
+
+* Motivation: If a particular kind of problem occurs often enough, then it might be worthwhile to express instances of the problem as sentences in a simple language. Then you can build an interpreter that solves the problem by interpreting these sentences. For example, searching for strings that match a pattern is a common problem. Regular expressions are a standard language for specifying patterns of strings. Rather than building custom algorithms to match each pattern against strings, search algorithms could interpret a regular expression that specifies a set of strings to match. 
+
+  The Interpreter pattern describes how to define a grammar for simple languages, represent sentences in the language, and interpret these sentences. In this example, the pattern describes how to define a grammar for regular expressions, represent a particular regular expression, and how to interpret that regular expression. 
+
+  Suppose the following grammar defines the regular expressions: 
+    expression ::= literal | alternation | sequence | repetition | '(' expression ')'
+    alternation ::= expression  '|' expression
+    sequence ::= expression '&' expression
+    repetition ::= expression '*'
+    literal ::= 'a' | 'b' | 'c' | ... { 'a' | 'b' | 'c' | ... }*
+
+  The Interpreter pattern uses a class to represent each grammar rule. Symbols on the right-hand side of the rule are instance variables of these classes. The grammar above is represented by five classes: an abstract class RegularExpression and its four subclasses LiteralExpression, AlternationExpression, SequenceExpression, and RepetitionExpression. The last three classes define variables that hold subexpressions. 
+
+  We can create an interpreter for these regular expressions by defining the Interpret operation on each subclass of RegularExpression. Interpret takes as an argument the context in which to interpret the expression. The context contains the input string and information on how much of it has been matched so far. Each subclass of RegularExpression implements Interpret to match the next part of the input string based on the current context.
+
+* Applicability: Use the Interpreter pattern when there is a language to interpret, and you can represent statements in the language as abstract syntax trees. The Interpreter pattern works best when
+
+  + the grammar is simple. For complex grammars, the class hierarchy for the grammar becomes large and unmanageable. Tools such as parser generators are a better alternative in such cases. They can interpret expressions without building abstract syntax trees, which can save space and possibly time. 
+
+  + efficiency is not a critical concern. The most efficient interpreters are usually not implemented by interpreting parse trees directly but by first translating them into another form. For example, regular expressions are often transformed into state machines. But even then, the translator can be implemented by the Interpreter pattern, so the pattern is still applicable.
+
+* Participants:
+  + AbstractExpression (RegularExpression) 
+    - declares an abstract Interpret operation that is common to all nodes in the abstract syntax tree.
+  + TerminalExpression (LiteralExpression) 
+    - implements an Interpret operation associated with terminal symbols in the grammar. 
+    - an instance is required for every terminal symbol in a sentence.
+  + NonterminalExpression (AlternationExpression, RepetitionExpression, SequenceExpressions) 
+    - one such class is required for every rule R ::= R1 R2 ... Rn in the grammar. 
+    - maintains instance variables of type AbstractExpression for each of the symbols R1 through Rn. 
+    - implements an Interpret operation for nonterminal symbols in the grammar. Interpret typically calls itself recursively on the variables representing R1 through Rn.
+  + Context 
+    - contains information that's global to the interpreter.
+  + Client 
+    - builds (or is given) an abstract syntax tree representing a particular sentence in the language that the grammar defines. The abstract syntax tree is assembled from instances of the NonterminalExpression and TerminalExpression classes. 
+    - invokes the Interpret operation.
+
+* Collaborations
+  + The client builds (or is given) the sentence as an abstract syntax tree of NonterminalExpression and TerminalExpression instances. Then the client initializes the context and invokes the Interpret operation. 
+  + Each NonterminalExpression node defines Interpret in terms of Interpret on each subexpression. The Interpret operation of each TerminalExpression defines the base case in the recursion. 
+  + The Interpret operations at each node use the context to store and access the state of the interpreter.
+
+* Consequences: The Interpreter pattern has the following benefits and liabilities:
+
+  + It's easy to change and extend the grammar. Because the pattern uses classes to represent grammar rules, you can use inheritance to change or extend the grammar. Existing expressions can be modified incrementally, and new expressions can be defined as variations on old ones. 
+
+  + Implementing the grammar is easy, too. Classes defining nodes in the abstract syntax tree have similar implementations. These classes are easy to write, and often their generation can be automated with a compiler or parser generator. 
+
+  + Complex grammars are hard to maintain. The Interpreter pattern defines at least one class for every rule in the grammar (grammar rules defined using BNF may require multiple classes). Hence grammars containing many rules can be hard to manage and maintain. Other design patterns can be applied to mitigate the problem (see Implementation). But when the grammar is very complex, other techniques such as parser or compiler generators are more appropriate. 
+
+  + Adding new ways to interpret expressions. The Interpreter pattern makes it easier to evaluate an expression in a new way. For example, you can support pretty printing or type-checking an expression by defining a new operation on the expression classes. If you keep creating new ways of interpreting an expression, then consider using the Visitor pattern to avoid changing the grammar classes.
+
+* Implementation: The Interpreter and Composite patterns share many implementation issues. The following issues are specific to Interpreter:
+
+  + Creating the abstract syntax tree. The Interpreter pattern doesn't explain how to create an abstract syntax tree. In other words, it doesn't address parsing. The abstract syntax tree can be created by a table-driven parser, by a hand-crafted (usually recursive descent) parser, or directly by the client. 
+
+  + Defining the Interpret operation. You don't have to define the Interpret operation in the expression classes. If it's common to create a new interpreter, then it's better to use the Visitor pattern to put Interpret in a separate "visitor" object. For example, a grammar for a programming language will have many operations on abstract syntax trees, such as as type-checking, optimization, code generation, and so on. It will be more likely to use a visitor to avoid defining these operations on every grammar class. 
+
+  + Sharing terminal symbols with the Flyweight pattern. Grammars whose sentences contain many occurrences of a terminal symbol might benefit from sharing a single copy of that symbol. Grammars for computer programs are good examples - each program variable will appear in many places throughout the code. In the Motivation example, a sentence can have the terminal symbol dog (modeled by the LiteralExpression class) appearing many times. 
+
+    Terminal nodes generally don't store information about their position in the abstract syntax tree. Parent nodes pass them whatever context they need during interpretation. Hence there is a distinction between shared (intrinsic) state and passed-in (extrinsic) state, and the Flyweight (195) pattern applies. 
+
+    For example, each instance of LiteralExpression for dog receives a context containing the substring matched so far. And every such LiteralExpression does the same thing in its Interpret operation - it checks whether the next part of the input contains a dog - no matter where the instance appears in the tree.
+
+The Interpreter pattern is more than just an operation distributed over a class hierarchy that uses the Composite pattern. We consider Evaluate an interpreter because we think of the BooleanExp class hierarchy as representing a language. Given a similar class hierarchy for representing automotive part assemblies, it's unlikely we'd consider operations like Weight and Copy as interpreters even though they are distributed over a class hierarchy that uses the Composite pattern - we just don't think of automotive parts as a language. It's a matter of perspective; if we started publishing grammars of automotive parts, then we could consider operations on those parts to be ways of interpreting the language. 
+
+* Related Patterns
+  + Composite: The abstract syntax tree is an instance of the Composite pattern. 
+  + Flyweight: shows how to share terminal symbols within the abstract syntax tree. 
+  + Iterator: The interpreter can use an Iterator to traverse the structure. 
+  + Visitor: can be used to maintain the behavior in each node in the abstract syntax tree in one class. 
+
+
+DPIR
+------------------------------------------------------------------------------
+
+Interpreters typically work in two phases. First, the parser reads in the program text and produces a data structure, called an abstract syntax tree (AST). The AST represents the same information as the original program, but transformed into a tree of objects that, unlike the original program text, can be executed with reasonable efficiency. Second, the AST is evaluated against some set of external conditions, or context, to produce the desired computation.
+
+The leaf nodes of the AST - that is, the 5.0, the 3, and the x - are called terminals, and represent the most basic building blocks of the language. The nonleaf nodes - in this example, the + and the * - are called (logically enough) nonterminals. The nonterminals represent the higher-order concepts in the language. With the AST in hand, we are almost ready to evaluate our expression, save for one small detail: What is the value of x? To evaluate our expression, we need to supply a value for x. Is x equal to 1 or 167 or –279? The GoF called such values or conditions supplied at the time the AST is interpreted the context. 
+
+ASTs are, in fact, specialized examples of the Composite pattern, with the nonterminal expressions playing the parts of the composites.
+
+Although the GoF called the key method in the Interpreter pattern interpret, names such as evaluate or execute also make sense and show up in code frequently.
+
+First, the Interpreter pattern has a lot of moving parts. Think of all the different classes that make up the AST and then add in the parser. The sheer number of components is why the Interpreter pattern is in practice limited to relatively simple languages: We are presumably trying to solve some real business problem and not engage in programming language research. The second thing that we can take away from the example is that the Interpreter pattern is unlikely to be fast. Aside from the parsing overhead, traversing the AST will inevitably exact some speed penalty of its own.
+
+We do get a couple of things back in return for the interpreter’s complexity and speed penalty. First, we get flexibility. Once you have an interpreter, it is usually very easy to add new operations to it. Certainly we can imagine that once we have built an interpreter for our little arithmetic expressions that it would be easy to add subtraction and multiplication nodes to the AST. Second, we get the AST itself. An AST is a data structure that represents some specific bit of programming logic. While we originally built the AST to evaluate it, we can manipulate it so that it does other things, too. 
+
+Surprisingly, the Interpreter pattern as defined by the GoF is silent on the origins of the AST. The pattern simply assumes that you have somehow gotten your hands on an AST and works from there. Of course, the AST has to come from somewhere. In practice, there are a surprising number of alternative ways to create an AST.
+
+Although the parser that we built was not really all that difficult to create, it did take some effort and raises a somewhat subversive-sounding question: Do we really need a parser at all? The file-searching classes that we have built so far would, all by themselves, make a fine internal programmer-oriented API. If we just need a good way to specify file searches from code, then perhaps we can just create the file-searching AST in code in exactly the same way we did in the examples in the previous section. In this way, we can still get all of the flexibility and extensibility benefits of the Interpreter pattern without the bother of dealing with parsing.
+
+(J: Interpreter = Composite + Builder?)
+
+If you do decide to go with a parser-less interpreter, it is frequently worth the trouble of adding some shortcuts to make life easier for your users. For example, we could extend our file-searching interpreter by defining some operators in the Expression class that will create And and Or expressions with a little less syntax:
+
+  class Expression
+    def |(other)
+      Or.new(self, other)
+    end
+    def &(other)
+      And.new(self, other)
+    end
+  end
+
+If you do decide that you need a parser, a tempting alternative to building your own is to define your new language in XML or even YAML.6 If you do this, then you can use the built-in XML or YAML parsing libraries that come with your Ruby installation to handle the parsing. On the surface, this sounds like a great idea—you get to enjoy all of the flexibility and extensibility of a full interpreter and you don’t have to mess with the details of a parser. Who could complain?
+
+Unfortunately, your users might well complain. While XML and YAML are great choices for representing data, neither is really ideal for expressing programs. Keep in mind that the main motivation behind building an interpreter is to give your users a natural way to express the kind of processing that needs to be done. If the ideas embodied in your interpreter can be naturally expressed in XML or YAML, then go ahead and use that format and take full advantage of the built-in parser for that format. But if your language does not fit—and I would venture to guess that most Interpreter pattern languages will not—then don’t try to jam your language into the wrong format just to save a bit of coding.
+
+If your language is fairly complex and neither XML nor YAML seems appropriate, you might consider using a parser generator such Racc. Racc is modeled (and named) after the venerable UNIX YACC utility. Racc takes as input a description of the grammar for your language and spits out a parser, written in Ruby for that language. While Racc is a fine tool, it is not for the faint of heart—learning how to use a parser generator entails a fairly long walk up a steep learning curve.
+
+There is one other answer to the parser question. Perhaps, just perhaps, you could implement your Interpreter pattern in such a way that users could write their programs in actual Ruby code. Maybe you could design your AST API in such a way that the code flows so naturally that your users might be unaware that they are, in fact, writing Ruby code.
+
+The Interpreter pattern is good at solving well-bounded problems such as query or configuration languages and is a good option for combining chunks of existing functionality together. The heart of the Interpreter pattern is the abstract syntax tree. You think of your new little language as a series of expressions, and decompose those expressions into a tree structure. How you perform that decomposition is up to you: You can supply your clients with an API for building up the tree in code, or you can write a parser that takes strings and turns them into the AST. Either way, once you have the AST, you can use it to evaluate itself and come up with the solution.
+
+The Interpreter pattern brings with it the advantages of flexibility and extensibility. By building different ASTs, you can get the same Interpreter classes to do different things. It is usually straightforward to extend your language by adding new kinds of nodes to your AST. These benefits carry a cost, however, in terms of performance and complexity. Interpreters do tend to be slow and making them run fast is difficult, so it is probably best to limit your use of the Interpreter pattern to areas that do not demand high performance. The complexity comes from the simple fact that the Interpreter pattern requires a fair bit of infrastructure: You need all of the classes that go into building the AST, and maybe a parser to boot.
 
 
 
