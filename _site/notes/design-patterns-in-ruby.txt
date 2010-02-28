@@ -1180,6 +1180,131 @@ The key thing that we discovered in this chapter is how both of these patterns m
 Looking ahead, the next pattern that we will examine is the Builder pattern, which also produces new objects but is much more tightly focused on constructing complex objects than on picking the right class.
 
 
+Builder
+=======
+
+GoF
+------------------------------------------------------------------------------
+
+* Intent: Separate the construction of a complex object from its representation so that the same construction process can create different representations.
+
+* Applicability: Use the Builder pattern when:
+  * the algorithm for creating a complex object should be independent of the parts that make up the object and how they're assembled. 
+  * the construction process must allow different representations for the object that's constructed. 
+
+* Participants:
+  + Builder (TextConverter)
+    - specifies an abstract interface for creating parts of a Product object.
+  + ConcreteBuilder (ASCIIConverter, TeXConverter, TextWidgetConverter)
+    - constructs and assembles parts of the product by implementing the Builder interface. 
+    - defines and keeps track of the representation it creates. 
+    - provides an interface for retrieving the product (e.g., GetASCIIText, GetTextWidget).
+  + Director (RTFReader) 
+    - constructs an object using the Builder interface.
+  + Product (ASCIIText, TeXText, TextWidget) 
+    - represents the complex object under construction. ConcreteBuilder builds the product's internal representation and defines the process by which it's assembled. 
+    - includes classes that define the constituent parts, including interfaces for assembling the parts into the final result.
+
+(J: builder have two kinds of methods. first, build_part() to record product configuration; second, get_result() to get the configured/assembled object.)
+
+* Collaborations:
+  + The client creates the Director object and configures it with the desired Builder object. 
+  + Director notifies the builder whenever a part of the product should be built. 
+  + Builder handles requests from the director and adds parts to the product. 
+  + The client retrieves the product from the builder.
+
+* Consequences: Here are key consequences of the Builder pattern:
+
+  + It lets you vary a product's internal representation. The Builder object provides the director with an abstract interface for constructing the product. The interface lets the builder hide the representation and internal structure of the product. It also hides how the product gets assembled. Because the product is constructed through an abstract interface, all you have to do to change the product's internal representation is define a new kind of builder. 
+
+  + It isolates code for construction and representation. The Builder pattern improves modularity by encapsulating the way a complex object is constructed and represented. Clients needn't know anything about the classes that define the product's internal structure; such classes don't appear in Builder's interface. 
+
+    Each ConcreteBuilder contains all the code to create and assemble a particular kind of product. The code is written once; then different Directors can reuse it to build Product variants from the same set of parts. In the earlier RTF example, we could define a reader for a format other than RTF, say, an SGMLReader, and use the same TextConverters to generate ASCIIText, TeXText, and TextWidget renditions of SGML documents. 
+
+  + It gives you finer control over the construction process. Unlike creational patterns that construct products in one shot, the Builder pattern constructs the product step by step under the director's control. Only when the product is finished does the director retrieve it from the builder. Hence the Builder interface reflects the process of constructing the product more than other creational patterns. This gives you finer control over the construction process and consequently the internal structure of the resulting product.
+
+* Implementation: Typically there's an abstract Builder class that defines an operation for each component that a director may ask it to create. The operations do nothing by default. A ConcreteBuilder class overrides operations for components it's interested in creating. Here are other implementation issues to consider:
+
+  + Assembly and construction interface. Builders construct their products in step-by-step fashion. Therefore the Builder class interface must be general enough to allow the construction of products for all kinds of concrete builders. 
+
+    A key design issue concerns the model for the construction and assembly process. A model where the results of construction requests are simply appended to the product is usually sufficient. In the RTF example, the builder converts and appends the next token to the text it has converted so far. 
+
+    But sometimes you might need access to parts of the product constructed earlier. In the Maze example we present in the Sample Code, the MazeBuilder interface lets you add a door between existing rooms. Tree structures such as parse trees that are built bottom-up are another example. In that case, the builder would return child nodes to the director, which then would pass them back to the builder to build the parent nodes. 
+
+  + Why no abstract class for products? In the common case, the products produced by the concrete builders differ so greatly in their representation that there is little to gain from giving different products a common parent class. In the RTF example, the ASCIIText and the TextWidget objects are unlikely to have a common interface, nor do they need one. Because the client usually configures the director with the proper concrete builder, the client is in a position to know which concrete subclass of Builder is in use and can handle its products accordingly. 
+
+  + Empty methods as default in Builder. In C++, the build methods are intentionally not declared pure virtual member functions. They're defined as empty methods instead, letting clients override only the operations they're interested in.
+
+* Related Patterns:
+  + Abstract Factory is similar to Builder in that it too may construct complex objects. The primary difference is that the Builder pattern focuses on constructing a complex object step by step. Abstract Factory's emphasis is on families of product objects (either simple or complex). Builder returns the product as a final step, but as far as the Abstract Factory pattern is concerned, the product gets returned immediately. 
+  + A Composite is what the builder often builds. 
+
+
+DPIR
+------------------------------------------------------------------------------
+
+Even with this somewhat simplified model of, constructing a new instance of Computer is painfully tedious:
+
+  # Build a fast computer with lots of memory...
+  motherboard = Motherboard.new(TurboCPU.new, 4000)
+
+  # ...and a hard drive, a CD writer, and a DVD
+  drives  = []
+  drives  << Drive.new(:hard_drive, 200000, true)
+  drives  << Drive.new(:cd, 760, true)
+  drives  << Drive.new(:dvd, 4700, false)
+
+  computer = Computer.new(:lcd, motherboard, drives)
+
+The very simple idea behind the Builder pattern is that you take this kind of construction logic and encapsulate it in a class all of its own. The builder class takes charge of assembling all of the components of a complex object. Each builder has an interface that lets you specify the configuration of your new object step by step. In a sense, a builder is sort of like a multipart new method, where objects are created in an extended process instead of all in one shot.
+
+The ComputerBuilder class factors out all of the details involved in creating an instance of Computer. To use it, you simply make a new instance of the builder and step through the process of specifying all the options that you need on your computer:
+
+  builder = ComputerBuilder.new
+  builder.turbo
+  builder.add_cd(true)
+  builder.add_dvd
+  builder.add_hard_disk(100000)
+
+  computer = builder.computer
+
+The GOF called the client of the builder object the director because it directs the builder in the construction of the new object (called the product). Builders not only ease the burden of creating complex objects, but also hide the implementation details. The director does not have to know the specifics of what goes into creating the new object. When we use the ComputerBuilder class, we can stay blissfully ignorant of which classes represent the DVDs or the hard disks; we just ask for the computer configuration that we need.
+
+This chapter began by contrasting the Builder pattern with factories and saying that builders are less concerned about picking the right class and more focused on helping you configure your object. Factoring out all of that nasty construction code is the main motivation behind builders. Nevertheless, given that builders are involved in object construction, they also are incredibly convenient spots to make those “which class” decisions. You can build different builder for different product, and choose correct builder in code.
+
+In addition to making object construction easier, builders can make object construction safer. That final “give me my object” method makes an ideal place to check that the configuration requested by the client really makes sense and that it adheres to the appropriate business rules.
+
+An important issue to consider when writing and using builders is whether you can use a single builder instance to create multiple objects. One way to deal with this issue is to equip your builder with a reset method, which reinitializes the object under construction. The reset method will let you reuse the builder instance, but it also means that you have to start the configuration process all over again for each computer. If you want to perform the configuration once and then have the builder produce any number of objects based on that configuration, you need to store all of the configuration information in instance attributes and create the actual product only when the client asks for it.
+
+The idea behind a magic method is to let the caller make up a method name according to a specific pattern. For example, we might configure a new laptop with
+
+  builder.add_turbo_and_dvd_and_harddisk
+
+Magic methods are very easy to implement using the method_missing technique that we first met back when we were talking about proxies. To use a magic method, you simply catch all unexpected methods calls with method_missing and parse the method name to see if it matches the pattern of your magic method name:
+
+  def method_missing(name, *args)
+    words = name.to_s.split("_")
+    return super(name, *args) unless words.shift == 'add'
+    words.each do |word|
+      next if word == 'and'
+      add_cd if word == 'cd'
+      add_dvd if word == 'dvd'
+      add_hard_disk(100000) if word == 'harddisk'
+      turbo if word == 'turbo'
+    end
+  end
+
+The magic method technique is certainly not limited to builders. You can use it in any situation where you want to let client code specify multiple options succinctly.
+
+The need for the Builder pattern sometimes creeps up on you as your application becomes increasingly complex. For example, in its early days your Computer class may have just tracked the CPU type and memory size. Using a builder for so simple a class would clearly be overdoing things. But as you enhanced the Computer class to model the drives, the number of options and the interdependences between those options suddenly explodes—and a build starts to make more sense. It is usually fairly easy to spot code that is missing a builder: You can find the same object creation logic scattered all over the place. Another hint that you need a builder is when your code starts producing invalid objects: “Oops, I checked the number of drives when I create a new Computer over here, but not over there.”
+
+ As with factories, the main way that you can abuse the Builder pattern is by using it when you don’t need it. I don’t think it is a good idea to anticipate the need for a builder. Instead, let MyClass.new be your default way of creating new objects. Add in a builder only when cruel fate, or ever-escalating requirements, force your hand.
+
+ When you create a builder, and especially when you use one, you need to be aware of the reusability issue. Can you use a single instance of a builder to create multiple instances of the product? It is certainly easier to write one-shot builders, or builders that need to be reset before reuse, than it is to create completely reusable builders. The question is this: Which kind of builder are you creating or using? The Builder pattern is the last of the patterns that we will examine that is concerned with object creation.
+
+
+
+
 
 ------------------------
 Part II. Patterns in GoF
