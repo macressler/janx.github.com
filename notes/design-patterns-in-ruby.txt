@@ -1430,6 +1430,30 @@ The Interpreter pattern brings with it the advantages of flexibility and extensi
 
 
 
-------------------------
-Part II. Patterns in GoF
-------------------------
+-------------------------
+Part II. Patterns in Ruby
+-------------------------
+
+Domain Specific Languages
+=========================
+
+The DSL pattern suggests that you should focus on the language itself, not on the interpreter. It says that sometimes you can make problems easier to solve by giving the user a convenient syntax for expressing the problem in the first place.
+
+External DSLs are external in the sense that there is a parser and an interpreter for the DSL, and there are the programs written in the DSL, and the two are completely distinct. 
+
+An internal DSL, is one in which we start with some implementation language, perhaps Ruby, and we simply bend that one language into being our DSL. If we are using Ruby to implement our DSL—and if you have looked at the title of this book, you know we are—then anyone who writes a program in our little language is actually, and perhaps unknowingly, writing a Ruby program.
+
+The structure of the PackRat interpreter is pretty typical of this style of internal DSL. Start by defining your data structures—in our case, the Backup class and its friends. Next, set up some top-level methods that will support the actual DSL language—in PackRat, the interval, to, and backup methods. Then, suck in the DSL text with an eval(File.read(. . .)) statement. Typically, the effect of pulling in the DSL text is to fill in your data structures; in our case, we ended up with a fully configured Backup instance. Finally, do whatever it is that the user asked you to do.
+
+Using internal DSL pattern, we inherit all capabilities from the original interpreter for free! You can do anything allowed in original language in the DSL. But you're limited the to original interpreter's capabilities too, like it's obviously hard to write a HTML-like internal DSL in ruby. Another issue is error messages. Unless you are very careful, errors in the DSL program can produce some pretty strange messages. With careful coding and judicious use of exception catching, you can frequently mitigate this problem. Nevertheless, these kinds of non sequitur error messages are a constant problem in internal DSLs.
+
+Finally, if security is an issue, stay away from internal DSLs—far, far away. After all, the whole point of an internal DSL is that you take some arbitrary code that someone else wrote and suck it into your program. That requires a toothbrush-sharing level of trust.
+
+
+
+-------------------------
+Part III. Patterns in GoF
+-------------------------
+
+
+
