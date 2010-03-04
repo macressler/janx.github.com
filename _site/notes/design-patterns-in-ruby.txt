@@ -1483,6 +1483,33 @@ This version of CompositeBase will throw an exception if the parent_<composite_n
 The idea that sometimes the easiest way to get to the code that you need is not to write it at your keyboard but rather to conjure it up programmatically, at runtime. In real life, meta-programming is one of the key underpinnings of the Domain-Specific Language pattern. While you can build a DSL with little or no meta-programming meta-programming is frequently a key ingredient in building DSLs that are both powerful and easy to use.
 
 
+Convention Over Configuration
+=============================
+
+* Anticipate Needs
+
+  No matter whether we are talking about the GUI for an e-mail client or the design of an API, there is one thing that sets a good user interface apart from a bad one: If the user wants to do it (whatever it is) a lot, it is the default. Conversely, if the user does not want to do it all that often, it can be a bit harder. All too often we build APIs that assume every action is exactly as likely as every other action.
+
+* Let Them Say It Once
+
+  Another way to drive your technical users crazy is by forcing them to repeat themselves. We know this when it comes to the traditional user interfaces (the kind with menus and icons), but for some reason we tend not to apply the same logic to APIs. How can we avoid making our technical users repeat themselves? We can give them a way to tell us what they want and not ask again. Engineers naturally tend to adopt conventions as a natural part of the way they work. They tend to name files and classes a certain way, to group source files that do similar things in the same directory, and to christen methods with names that follow regular patterns.
+
+  The Convention Over Configuration pattern suggests that you define a convention that a sensible engineer might use anyway—put all of the adapters in this directory or name all of the authorization methods this way—and then run with it. Designing a good convention, like designing any good user interface, involves putting yourself in your user’s shoes. Try to deduce how your users will behave, what they would call something, and where they would naturally put things; then build your convention around those assumptions. Once you have that convention in hand, get as much mileage out of it as you possibly can—by naming his or her class or putting it in a given directory, the engineer is telling you something. Listen and don’t make the engineer tell you again.
+
+* Provide a Template
+
+  Another thing that you can do is to give your user a kick start by supplying him or her with a model, a template, or an example to follow. Modern word processors no longer expect you to start with a completely blank sheet of electronic paper. Instead, when you create a new document, the program wants to know if it is a résumé, a letter, or a presidential speech. If your document is any one of those or another hundred document types, a good word processor will start you off with the right margins and paragraph styles.
+
+  You can do the same for the people who are trying to extend your system: You can give them samples, templates, and working examples to help them get off the ground. If a picture is worth a thousand words, then one or two good examples have got to be worth at least twenty pages of documentation.
+
+
+Allowing classes to override the conventions when necessary.
+
+Another potential source of trouble is the possibility that a system that uses a lot of conventions may seem like it is operating by magic to the new user. Configuration files may be a pain in the neck to write and maintain, but they do provide a sort of road map—perhaps a very complicated and hard-to-interpret road map, but a map nevertheless—to the inner workings of the system. A well-done convention-based system, by contrast, needs to supply its operational road map in the form of (gasp!) documentation.
+
+Also keep in mind that as the convention magic becomes deeper and more complex, you will need ever more thorough unit tests to ensure that your conventions behave, well, conventionally. There are few things more confusing to users than a system driven by an inconsistent or just plain broken set of conventions.
+
+
 
 
 -------------------------
