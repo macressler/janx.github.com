@@ -1826,7 +1826,7 @@ Chain of Responsibility
 
   + Added flexibility in assigning responsibilities to objects. Chain of Responsibility gives you added flexibility in distributing responsibilities among objects. You can add or change responsibilities for handling a request by adding to or otherwise changing the chain at run-time. You can combine this with subclassing to specialize handlers statically. 
 
-  + Receipt isn't guaranteed. Since a request has no explicit receiver, there's no guarantee it'll be handledthe request can fall off the end of the chain without ever being handled. A request can also go unhandled when the chain is not configured properly.
+  + Receipt isn't guaranteed. Since a request has no explicit receiver, there's no guarantee it'll be handled - the request can fall off the end of the chain without ever being handled. A request can also go unhandled when the chain is not configured properly.
 
 * Implementation: Here are implementation issues to consider in Chain of Responsibility:
 
@@ -1847,3 +1847,59 @@ Chain of Responsibility
   + Automatic forwarding in Smalltalk. You can use the doesNotUnderstand mechanism in Smalltalk to forward requests. Messages that have no corresponding methods are trapped in the implementation of doesNotUnderstand, which can be overridden to forward the message to an object's successor. Thus it isn't necessary to implement forwarding manually; the class handles only the request in which it's interested, and it relies on doesNotUnderstand to forward all others.
 
 * Related Patterns: Chain of Responsibility is often applied in conjunction with Composite . There, a component's parent can act as its successor.
+
+
+Mediator Pattern
+================
+
+* Intent: Define an object that encapsulates how a set of objects interact. Mediator promotes loose coupling by keeping objects from referring to each other explicitly, and it lets you vary their interaction independently.
+
+* Motivation: Object-oriented design encourages the distribution of behavior among objects. Such distribution can result in an object structure with many connections between objects; in the worst case, every object ends up knowing about every other. 
+
+  Though partitioning a system into many objects generally enhances reusability, proliferating interconnections tend to reduce it again. Lots of interconnections make it less likely that an object can work without the support of others - the system acts as though it were monolithic. Moreover, it can be difficult to change the system's behavior in any significant way, since behavior is distributed among many objects. As a result, you may be forced to define many subclasses to customize the system's behavior.
+
+  A mediator is responsible for controlling and coordinating the interactions of a group of objects. The mediator serves as an intermediary that keeps objects in the group from referring to each other explicitly. The objects only know the mediator, thereby reducing the number of interconnections.
+
+* Applicability: Use the Mediator pattern when:
+  + a set of objects communicate in well-defined but complex ways. The resulting interdependencies are unstructured and difficult to understand. 
+  + reusing an object is difficult because it refers to and communicates with many other objects. 
+  + a behavior that's distributed between several classes should be customizable without a lot of subclassing.
+
+* Participants
+  + Mediator (DialogDirector) 
+    - defines an interface for communicating with Colleague objects.
+  + ConcreteMediator (FontDialogDirector) 
+    - implements cooperative behavior by coordinating Colleague objects. 
+    - knows and maintains its colleagues.
+  + Colleague classes (ListBox, EntryField) 
+    - each Colleague class knows its Mediator object. 
+    - each colleague communicates with its mediator whenever it would have otherwise communicated with another colleague.
+
+* Collaborations: Colleagues send and receive requests from a Mediator object. The mediator implements the cooperative behavior by routing requests between the appropriate colleague(s).
+
+* Consequences: The Mediator pattern has the following benefits and drawbacks:
+
+  + It limits subclassing. A mediator localizes behavior that otherwise would be distributed among several objects. Changing this behavior requires subclassing Mediator only; Colleague classes can be reused as is. 
+
+  + It decouples colleagues. A mediator promotes loose coupling between colleagues. You can vary and reuse Colleague and Mediator classes independently. 
+
+  + It simplifies object protocols. A mediator replaces many-to-many interactions with one-to-many interactions between the mediator and its colleagues. One-to-many relationships are easier to understand, maintain, and extend. 
+
+  + It abstracts how objects cooperate. Making mediation an independent concept and encapsulating it in an object lets you focus on how objects interact apart from their individual behavior. That can help clarify how objects interact in a system. 
+
+  + It centralizes control. The Mediator pattern trades complexity of interaction for complexity in the mediator. Because a mediator encapsulates protocols, it can become more complex than any individual colleague. This can make the mediator itself a monolith that's hard to maintain.
+
+* Implementation: The following implementation issues are relevant to the Mediator pattern:
+
+  + Omitting the abstract Mediator class. There's no need to define an abstract Mediator class when colleagues work with only one mediator. The abstract coupling that the Mediator class provides lets colleagues work with different Mediator subclasses, and vice versa. 
+
+  + Colleague-Mediator communication. Colleagues have to communicate with their mediator when an event of interest occurs. One approach is to implement the Mediator as an Observer using the Observer pattern. Colleague classes act as Subjects, sending notifications to the mediator whenever they change state. The mediator responds by propagating the effects of the change to other colleagues. 
+
+    Another approach defines a specialized notification interface in Mediator that lets colleagues be more direct in their communication. Smalltalk/V for Windows uses a form of delegation: When communicating with the mediator, a colleague passes itself as an argument, allowing the mediator to identify the sender. 
+
+* Related Patterns:
+  + Facade differs from Mediator in that it abstracts a subsystem of objects to provide a more convenient interface. Its protocol is unidirectional; that is, Facade objects make requests of the subsystem classes but not vice versa. In contrast, Mediator enables cooperative behavior that colleague objects don't or can't provide, and the protocol is multidirectional. 
+  + Colleagues can communicate with the mediator using the Observer pattern. 
+
+  (J: and create colleages use template method pattern, or abstract factory)
+  
