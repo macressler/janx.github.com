@@ -1,0 +1,150 @@
+Google File System (GFS)
+=======================
+
+Bigtable
+========
+
+a centralized DHT
+*distributed* storage system
+use GFS to store log and data files
+Sawzall scripts can run on bigtable server to get data, but can't write data
+
+goals: wide applicability, scalability, high performance, high availability
+not goals: highly variable bandwidth, untrusted participants, frequent reconfiguration, decentralized control and Byzantine falut tolernace
+
+Data Model
+----------
+
+rows, column, column families, timestamps, form a biiiiiiiiiiig, 3D table:
+* axis x: row
+* axis y: column
+* axis z: timestamp
+
+what is row?
+* same with sql database
+* bigtable make operations on a single row atomic, like atomic read-modify-write sequences, through Mutation abstraction
+* bigtable has no trasaction: no atomic operation on multi rows
+* rows are dynamically partitioned, each row range is called a tablet, which is the unit of distribution and load balancing
+
+what is column?
+* like column in sql database
+
+what is column family?
+* it's group of columns
+* it resembles table in traditional database
+* any column must belong to a column family, the syntax of a column name is "#{family_name}:#{column_name}"
+
+what is timestamp?
+* every value (cell) has a timestamp
+* bigtable provide 2 column family level version garbage collection strategies on timestamp 
+  - keep only last n versions
+  - keep only versions in last n days
+
+We can think bigtable data model like this:
+* there's only one, big, table
+* the table can grow in 2 directions, row and column
+* a cell itself, can grow in the 3rd direction: time
+* the big table is divided into many sub-tables, by column family
+
+
+Structure
+---------
+
+METADATA table and files on GFS are persistent data
+tablets and locks on Chubby are dynamic
+master is the man sitting between dyanmic and static
+tablet server is dynamic, like memory
+tablets distributed on tablet servers, 1 tablet server stores many tablets
+tablet consists of many SSTables, SSTable is the structure persistent on GFS
+
+table is splited into tablets horizontally: grouped by rows
+tablet is splited into SSTables vertically (I guess): grouped by columns, each SSTable contains some columns
+so eventually, a table is divided into many grids, a SSTable is a grid
+
+Chubby:
+* high-available, persistent distributed lock service
+* consists of 5 active replicas
+* use Paxos algorithm to keep consistent
+* directories/files as lock
+* has memory cache
+
+one master server
+* assigning tablets to tablet servers
+* addition and expiration of tablet servers
+* load balance
+* garbage collection files in GFS
+* handle schema (like column family) changes
+* client do not rely on master server for tablets information, so master load is light
+* one active master server at any time (by Chubby lock)
+* keep tablets distribution information on tablet servers
+* periodically check tablet servers' Chubby file lock
+
+many tablet servers
+* can be dynamically added or removed
+* read/write tablets on it
+* client communicate with tablet server directly to read/write data
+* 1:1 mapping to a file in special directory on Chubby, has exclusive lock on that file. master server monitor that special directory to manage tablet servers
+* if the file no longer exists, tablet server will kill itself, master will reassign its tablets
+* cache for read
+  - Scan Cache: cache key-value pairs returned by SSTable interface to tablet server code
+  - Block Cache: cache SSTable block read from GFS
+
+lots of tablet
+* 3-tier
+  - a file in Chubby store the location of root tablet
+  - root tablet store locations of all tablets of a special METADATA table
+  - METADATA tablet store locations of user tablets, location s a pointer to SSTable on GFS
+* root tablet is never splitted, it's in fact the first tablet of METADATA table
+* a maximum 2^34 tablets, or 2^61 bytes in 128MB tablets
+* METADATA table also store other informations for debugging and analysis
+* tablet can be merged or splited
+
+memtable:
+* SSTable in memory, a cache
+* write to tablet log and memtable, one log per tablet server for all tablets on that server, for performance reason (GFS feature)
+* read from merged view of memtable and SSTable
+* read/write operation need authorization, authorization is performed by reading a list of permitted readers/writers in a Chubby file
+* readable/writable while SSTable is merging/spliting
+* compactions
+  - minor compaction: when size reach a threshold, memtable frozen and converted to SSTable and flush to GFS, new memtable create
+  - merging compaction: merge a few SSTables and memtable into one SSTable file, old SSTables will be deleted after merge
+  - major compaction: merge all SSTables into one SSTable
+* deleted rows is marked deleted only before major compaction, they're really destroyed in major compaction
+
+SSTable:
+* the physical structure on GFS
+* a persistent, ordered, immutable map
+* keys and values are arbitrary byte strings
+* operations: find a key/value pair, iterate all pair in a key range
+* immutable
+* mark-and-sweep garbage collection by using METADATA table
+
+SSTable Block:
+* SSTable consists of a sequence of blocks
+* 64KB, configurable
+* SSTable save a index of blocks at the end of SSTable
+* index is loaded into memory when SSTable is open, when lookup a key, SSTable search index to get the block, then read the block from disk
+* optionally, the whole SSTable can be loaded into memory when SSTable opened
+
+client library
+* has a cache of tablets locations
+* prefetch locations
+
+locality group:
+* grouped column families
+* a seperate SSTable is generated for each locality group in each tablet
+* Segregating column families that are not typically accessed together into separate locality groups enables more efficient reads
+* have locality group level tuning parameters
+  - lazy-loading and prefetch SSTable: once open load all SSTable blocks into memory
+  - compression: compress SSTable
+  - bloom filter: for SSTable, allow to ask whether an SSTable might contain data for a specific row/column pair, reduce disk read dramatically
+
+
+Comments
+--------
+
+Oracle's Real Application Cluster database uses shared disks to store data (like GFS) and a distributed lock manager (like Chubyy).
+
+IBM's DB2 Parallel Edition is based on a shared-nothing architecture similar to Bigtable. Each DB2 server is responsible for a subset of the rows in a table which it stores in a local relational database.
+
+Both Oracle and IBM products provide a complete relational model with transactions. -_-!!!
