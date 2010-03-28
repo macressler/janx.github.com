@@ -5,6 +5,7 @@ Bigtable
 ========
 
 a centralized DHT
+a big sharded table
 *distributed* storage system
 use GFS to store log and data files
 Sawzall scripts can run on bigtable server to get data, but can't write data
@@ -24,7 +25,7 @@ what is row?
 * same with sql database
 * bigtable make operations on a single row atomic, like atomic read-modify-write sequences, through Mutation abstraction
 * bigtable has no trasaction: no atomic operation on multi rows
-* rows are dynamically partitioned, each row range is called a tablet, which is the unit of distribution and load balancing
+* rows are dynamically partitioned, each row range is called a tablet (a shard), which is the unit of distribution and load balancing
 
 what is column?
 * like column in sql database
