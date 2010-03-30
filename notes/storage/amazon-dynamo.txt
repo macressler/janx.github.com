@@ -1,0 +1,173 @@
+Dynamo
+======
+
+completely decentralized system
+eventually consistency
+
+Goals:
+1. reliability
+2. performance, efficiency, scalability
+3. sacrifices consistency under certain failure scenarios
+4. give services control over their system properties, to let services make their own tradeoffs between functionality, performance and cost-effectiveness
+
+Dyanmo is used to manage the state of services that have very high reliability requirements and need tight control over the tradeoffs between availability, consistency, cost-effectiveness and performance.
+provides a simple primary-key only interface
+data is partitioned and replicated using consistent hashing
+consistency by object versioning
+consistency among replicas during updates is maintained by a quorum-like technique and a decentralized replica synchronization protocol
+gossip based distributed failure detection and membership protocol
+incremental scalability (+1 node), symmetry (all nodes are the same), decentralized, heterogeneity (more work distribution on high capacity machine)
+zero-hop DHT, where each node maintains enough routing information locally to route a request to the appropriate node directly
+
+Bigtable is a distributed storage system for managing structured data. It maintains a sparse, multi-dimensional sorted map and allows applications to access their data using multiple attributes. Compared to Bigtable, Dynamo targets applications that require only key/value access with primary focus on high availability where updates are not rejected even in the wake of network partitions or server failures.
+
+Traditional replicated relational database systems focus on the problem of guaranteeing strong consistency to replicated data. Although strong consistency provides the application writer a convenient programming model, these systems are limited in scalability and availability. There systems are not capable of handling network partitions because they typically provide strong consistency guarantees.
+
+For services like this:
+* Query Model: key-value based simple read/write operations; no operations span multiple data items; value is relatively small (< 1MB)
+* ACID Properties: (Atomicity, Consistency, Isolation, Durability) weak consistency, no isolation gurantees, permits only single key updates
+* Efficiency: tradeoffs in performance, cost efficiency, availability and durability for stringent latency and throughput requirements
+* non-hostile environment: no auth
+
+Service Level Agreements (SLA):
+* a formally negotiated contract where a client and a service agree on serveral system-related characteristics, which most prominently include the client's expected request rate distribution for a particular API and the expected service latency under those conditions.
+* each and every dependency in the platform needs to deliver its functionality with even tighter bounds
+* 99.9 percentile metric instead of mean/median metrics
+* typical SLA require 99.9% of the read/write requests execute within 300ms
+
+Optimistic Replication: Eventually Consistent
+* changes are allowed to propagate to replicas in the background
+* concurrent, disconnected work is tolerated
+* conflict must be detected and resolved
+  + when to resolve them: traditional data stores prefer conflict resolution during write and keep the read complexity simple, in such systems, writes may be rejected if the data store cannot reach all (or majority of) the replicas at a given time. Dynamo targets an "always writeable" data store.
+  + who resolves them: by data store or application? data store can provide only simple strategy like 'last write wins', application is powerful but complex.
+
+System Architecture
+* Partitioning: Consistent Hashing (incremental scalability)
+* High Availability for writes: Vector clocks with reconciliation during reads (version size is decoupled from update rates)
+  - each modification as a new and immutable version of the data
+  - allows multiple versions of an object to be present in the system at the same time
+  - auto resolve (syntactic reconciliation)
+  - semantic reconciliation by application for hard conflict
+* Handling temporary failures: Sloppy Quorum and hinted handoff (Provides high availability and durability guarantee when some of the replicas are not available)
+* Recovering from permanent failures: Anti-entropy using Merkle trees (Synchroinzes divergent replicas in the background)
+* Membership and failure detection: Gossip-based membership protocol and failure detection (Preservs symmetry and avoids having a centralized registry for storing membership and node liveness information)
+
+System Interface
+* get() and put()
+* get(Key) return a single object or a list of objects with conflicting versions along with a context
+* put(key, context, object) write data to disk. context encodes system metadata about the object that is opaque to the caller and includes information such as the version of the object. The context information is stored along with the object so that the system can verify the validity of the context object supplied in the put request.
+* treat key/object as array of bytes
+* use 128bit MD5 hash of key to determine storage nodes
+
+Operation
+* get() and put()
+  + on get(), coordinator requests all existing versions of data from N highest-ranked reachable nodes, then waits for R responses. if multi versions gathered, it returns all versions it deems to be causally unrelated.
+  + on put(), coordinator generate vector clock for new version and writes the new version locally, then sends the new version to the N highest-ranked reachable nodes. if W-1 nodes response the write is considered successful.
+* route: 2 strategies
+  + use a generic load balancer, select a node based on load (no aware of Dynamo)
+  + use a partition-aware client, select the appropriate coordinate node directly (fast), need to poll nodes (every 10s now)
+* involve first N healthy nodes in preference list
+* latency is dictated by the slowest of the R/W replicas
+
+Eventually Consistency
+* similar to Quorum. R+W > N
+* traditional quorum would be unavailable during server failures and network partitions
+* sloppy quorum: first N healthy instead of first N on ring
+* Hinted Handoff: handle temporary failure
+* anti-entropy (replica synchronization) protocol: handle permanent failure
+  + each node maintains a separate Merkle tree for each key range (the set of keys covered by a virtual node)
+  + two nodes exchange the root of the Merkel tree corresponding to the key ranges that they host in common
+  + if the roots are equal, then values of leaf nodes are equal.
+* conflict versions are rarely see, and most of them are triggered by busy robots not by humans
+
+Node: each storage node has tree main software components (Java)
+* request coordination
+  + event-driven messaging substrate, multi-stage pipeline
+  + implemented using Java NIO channels
+  + execute read/write requests on behalf of clients: collecting data from one or more nodes (when read) or storing data at one or more nodes (when write)
+  + each client request will result in the creation of a state machine on the node, which contains all the logic for identifying the nodes responsible for a key, sending the requests, waiting for reponses, potentially doing retries, processing the replies and packaging the reponse to the client. each statemachine instance handles exactly one client request.
+  + read repair: state machine waits for a small period of time to receive any outstanding responses, if stale versions were returned in any of the responses, the coordinator updates those nodes with the latest version
+  + the coordinator for a write is chosen to be the node that replied fastest to the previous read operation, increasing the chances of getting 'read-your-writes' consistency
+* membership and failure detection
+  + explicit mechanism to initiate the addition and removal of nodes: administrator uses a command line tool or a browser to connect to a Dynamo node and issue a membership change to join or remove, the node will change its memerbship info, and gossip with other nodes
+  + node chooses a set of tokens (virtual nodes in consistent hash space) when start
+  + seeds (see below)
+  + local notion of failure detection: node A may consider node B failed if node B does not respond to node A' message, even if B respond to node C's message
+  + gossip when client request
+  + explicit node join/leave obviates the need for a global view of failure state
+  + reallocate keys when node join/leave
+* local persistence engine
+  + allows different storage engines (Berkeyley Database, MySQL, etc.)
+  + most nodes use BDB Transactional Data Store
+* Balancing background and foreground tasks on node
+
+Typical Configuration
+* Business logic specific reconciliation
+* Timestamp based reconciliation
+* High performance read engine
+  + for high read request rate and small number of updates
+  + set R=1, W=N
+    - typical Dynamo (N,R,W) = (3,2,2)
+    - N determines the durability of each object, typical value in Dynamo is 3
+    - W/R impact object availability, durability and consistency
+  + if still not fast enough, provide write cache. a write thread will flush the cache periodically, read will check the cache first. (trade durability for performance)
+  + Dynamo provides the ability to partition and replicate their data across multiple nodes thereby offering incremental scalability
+  + some of these instances function as the authoritative persistence cache for data stored in more heavy weight backing stores
+  + latency between data centers (nodes) affect response time of operations
+
+Load Balance
+* measure total number of requests received by each node in 30mins, keep latest 24hours measures
+* in-balance: if node's request load deviates from average < 15%
+* out-balance
+* load balancing efficiency: ratio of average number of requests served by each node to the maximum number of requests service by the hottest node
+
+
+
+
+Consistent Hashing (partition)
+* consistent hash: the output range of the hash is treated as a fixed circular space or 'ring' (max value wrap around min value)
+* each node is assigned a random value on the ring
+* each data item is hashed to a position on the ring, then walking clockwise to find the first node with a position larger than item's position
+* each node is responsible for the region between it and its predecessor
+* departure and arrival of a node only affects its immediate neighbors and other nodes remain unaffected
+
+Virtual Node
+* basic consistent hashing is oblivious to the heterogeneity of nodes, so Dynamo introduces Virtual Node
+* each node can be responsible for more than one virtual node
+* when a new node is added to the system, it is assigned multiple positions (tokens) in the ring
+* when a node becomes unavailable, load is evenly dispersed across remaining nodes
+* number of virtual nodes of a node can decide based on its capacity
+
+Coordinateor node (replication)
+* handling read/write of a particular item
+* first in preference list
+* in charge of the replication of the data items that fall within its range
+* each key has a coordinator node
+* each data item is replicated at N hosts, where N is configured "per-instance"
+* replicates its keys to N-1 clockwise successor nodes in the ring
+* so each node is responsible for the region of the ring between it and its Nth predeccesor
+
+Seeds
+* nodes that are discovered via an external mechanism and are known to all nodes
+* all nodes eventually reconcile their membership with a seed
+* configured in either static configuration or a configuration service
+
+Preference List
+* list of nodes that stores a particular key
+* every node can determine which nodes should be in the list for any particular key, O(1) key search
+* contains more than N (physical) nodes
+
+Vector Clocks
+* a list of (node, counter) pairs
+* one vector clock is associated with every version of every object
+* if the counters on the first object's clock are less-than-or-equal to all of the second's clock, then the first is an ancestor of the second and can be forgotten. Otherwise they're conflict and require reconciliation
+* when update client must specify which version it is updating, context from previous read contains vector clock
+* when read and Dynamo found many branches, it will return all leaves with corresponding version info in context, later update using this context is considered to have reconciled the divergent versions and the branches are collapsed into a single new version
+* a timestamp is stored with the (node, counter) pair in vector clock, when size of vector clock reaches a threshold, oldest pairs will be removed (may cause problem for relationship checking)
+
+Merkle Tree
+* used in anti-entropy protocol
+* a hash tree where leaves are hashes of the values of individual keys
+* parent nodes higher in the tree are hashes of their respective children
+* each branch of the tree can be checked independently without requiring nodes to download the entire tree or the entire data set
