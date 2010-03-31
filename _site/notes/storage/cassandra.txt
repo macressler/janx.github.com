@@ -1,0 +1,96 @@
+Cassandra
+=========
+
+decentralized structured storage system
+for managing very large amounts of structured data spread out across many commodity servers
+a simple data model that supports dynamic control over data layout and format
+run on cheap hardware and handle high write throughput while not sacrificing read efficiency
+manual addition/removal of nodes by a command line tool or a browser
+
+Data Model
+* distributed multi dimensional map indexed by a key
+* value is an object which is highly structured
+* row key is a string with no size restriction (typically 16-36 bytes long)
+* operation under a single row key is atomic per replica no matter how many columns are involved
+* columns are grouped together into column families
+* 2 kinds of column families: simple and super. super column families can be visualized as a column family within a column family
+* application can specify sort order of columns
+* column convention: column_family:column and column_family:super_column:column
+* although the system supports the notion of multiple tables, all deployments have only one table in their schema
+
+API:
+* insert(table, key, rowMutation)
+* get(table, key, columnName)
+* delete(table, key, columnName)
+* columnName can refer to a specific column, a column family or a super column family
+
+Typically a read/write request for a key gets routed to any node in the Cassandra cluster. The node then determines the replicas for this particular key. For writes, the system routes the requests to the replicas and waits for a quorum of replicas to acknowledge the completion of the writes. For reads, based on the consistency guarantees required by the client, the system either routes the requests to the closest replica or routes the requests to all replicas and waits for a quorum of responses.
+
+Key Architecture Techniques:
+* partitioning
+  + consistent hashing with an order preserving hash function
+  + random node position, first clockwise node as coordinator for key
+  + analyze load information on the ring and have lightly loaded nodes move on the ring to alleviate heavily loaded nodes
+* replication
+  + for high availability and durability
+  + each data item is replicated at N nodes, N is configured per-instance
+  + coordinator is in charge of replicating data on it, to N-1 nodes in the ring. Cassandra provides various replication policies:
+    - Rack Unaware: replicate to N-1 successors of the coordinator on the ring
+    - Rack Aware (within a data center): use Zookeeper
+    - Datacenter Aware: use Zookeeper
+* membership
+  + based on Scuttlebutt, a very efficient anti-entropy Gossip based mechanism
+* failure handling and scaling
+  + failure detection is a mechanism by which a node can locally determine if any other node is up or down: use Accrual Failure Detector
+
+Bootstrapping
+* when node start, choose a random token, the mapping is persited locally, and in Zookeeper
+* the token is choosed so that new node can alleviate a heavily loaded node
+* gossip to spread the info
+* when node join, it reads its configuration which contains a list of a few contact points, we call these initial contact points, seeds of the cluster, seeds can also come from a configuration service like Zookeeper
+
+Persistence
+* use local file system
+* commit log
+  + write will write into a commit log for durability and recoverability 
+  + write into memory after a successful write to commit log
+  + dedicated disk on each machine for commit log, all writes into the commit log are sequential so we can maximize disk throughput
+  + a new commit log is rolled out after an older one exceeds a particular, configurable, size
+  + commit log has a header which is a bit vector whose size is fixed and typically more than the number of column families that a particular system will ever handle
+  + an in-memory data structure and a data file is generated per column family
+  + every time the in-memory data for a column family dumped to disk, we set its bit in commit log header to state this column family has been persisted successfully
+  + the header is per commit log and in memory
+  + when log rolled, all bit vectors are checked, if all data persisted, log deleted
+* when in-memory data crosses a certain threshold (data size and number of objects), flush to disk
+* all writes are sequential to disk and also generate an index for efficient lookup based on row key. Indices are also persisted along with data file
+* over time data files will be merged. cassandra compaction is very similar to Bigtable
+* lookup
+  + lookup in memory first, then looking into multi files on disk
+  + if lookup fail to find key in memory, cassandra perform disk I/O against all data files on disk in reverse time order
+  + a bloom filter is stored in each data file and keeped in memory to detect which data file contains a certain key
+  + in order to prevent scanning of every column on disk we maintain column indices which allow to jump to the right chunk on disk for column retrieval
+* data file
+  + files dumped to disk are never mutated no locks need to be taken while reading them, so Cassandra is practically lockless for read/write operations
+  + indexes all data based on primary key
+  + composite of sequence of blocks, each block contains at most 128 keys, a block index captures the relative offset of a key and the size of it
+
+Cassandra process
+* 3 modules using Java:
+  + partitioning module
+  + membership and failure detection module (non-blocking I/O)
+  + storage engine module
+* rely on an event driven substrate
+* message processing pipeline and the task pipeline are split into multiple stages along the line of the SEDA (Staged event-driven architecture) (like dynamo)
+* system control messages rely on UDP, application related messages rely on TCP
+* request routing module is a state machine, when request arrives at any node, the state machine will
+  + identify the node(s) that own the data for the key
+  + route the requests to the nodes and wait for response
+  + if replies don't arrive before timeout, fail it and return to client
+  + figure out the latest response based on timestamp
+  + schedule a repair of the data at any replica if they do not have the latest data
+
+Zookeeper
+* cassandra elects a leader amongst its nodes using Zookeeper
+* all nodes on joining the cluster contact the leader who tells them for what ranges they are replicas for 
+* the leader makes a concerted effort to maintain the invariant that no node is responsible for more than N-1 ranges in the ring
+* the metadata about the ranges a node is responsible is cached locally at each node and in a fault-tolerant manner inside Zookeeper - this way a node that crashes and comes back up knows what ranges it was responsible for
