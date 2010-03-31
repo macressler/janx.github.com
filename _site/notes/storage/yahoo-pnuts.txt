@@ -1,0 +1,136 @@
+PNUTS
+=====
+
+a massively parallel and geographically distributed database system
+focus on data serving for web applications, rather than copmlex queries like offline analysis of web crawls
+C++ + PHP/Perl
+
+key decisions
+* Data Model and Features
+  + simple relational model, supports single-table scans with predicates
+  + scatter-gather operations
+  + asynchronous notification
+  + bulk loading
+* Fault Tolerance
+* Pub-Sub Message System
+  + async operations are carried out over a topic-based pub/sub system, Yahoo! Message Broker (YMB)
+  + PNUTS + YMB  = Yahoo!'s Sherpa data services platform
+  + choose Pub-Sub over gossip because it can be optimized for geographically distant replicas and replicas don't need to know the location of others
+* Record-level Mastering
+  + make all high latency operations asynchronous
+* Hosting: hosted, centrally-managed database service shared by multiple applications
+
+Data and Query Model
+* simplified relational data model
+  + data is organized into tables of records with attributes
+  + typical data types
+  + blob is a data type which allow arbitrary structure inside a record
+  + schemas are flexible: new attributes can be added at any time, without halting query or updates
+  + tables can be hashed or ordered
+* query language
+  + supports selection and projection from a single table
+  + updates and deletes must specify the primary key
+
+Consistency Model
+* between two extreme: general serializability (strong consistent) and eventual consistency
+* per-record timeline consistency: all replicas of a given record apply all updates to the record in the same order
+  + one replica is designated as master, independently for each record
+  + all updates to that record are forwarded to the master
+  + the master replica for a record is adaptively changed to suit the workload: the replica receiving the majority of write requests for a particular record becomes the master for that record
+  + record carries a sequence number, increase on every write
+  + sequence number consists of generation number (each new insert is a new generation) and version number (each update is a new version)
+  + support a range of API with different level of consistencies:
+    - Read-any: returns a possible stale version of record.
+    - Read-critical(required_version): returns a version of the record that is strictly newer than, or the same as the required_version. (write call will returns the version number)
+    - Read-latest: returns the latest copy of the record that reflects all writes that have succeeded
+    - Write: gives the same ACID gurantees as a transaction with a single write operation in it. useful for blind writes, like a user updating his status on his profile
+    - Test-and-set-write(required_version): perform write if and only if the present version of record is the same as required_version
+    (in future)
+    - bundled updates
+    - relaxed consistency (like dynamo, let application choose conflict resolution)
+
+Replication
+* async replication to ensure low-latency updates
+* YMB both as replicement for a redo log and a replication mechanism
+* data updates are considered "commited" when they have been published to YMB
+* at some point after being commited, the update will be async propagated to different regions and applied to their replicas
+* YMB guarantees published messages will be delivered to all topic subscribers even in the presence of single broker machine failures
+* the message is not purged from the YMB log until PNUTS has verified that the update is applied to all replicas of the database
+* YMB will replicate across data-centers
+* YMB provides partial ordering of published messages: messages published to a particular YMB cluster will be delivered to all subscribers in the order they were published
+
+Consistency
+* per-record timeline consistency
+* designating one copy of a record as the master, directing all updates to the master copy
+* in this record-level mastering mechanism, mastership is assigned on a record-by-record basis, different records in a table can be mastered in different clusters
+* master commit update to YMB, YMB propogate them to non-master replicas, order preserved
+* update originate in a non-master region must be forwarded to master replica
+* each record maintains current master id in hidden field
+* record mastership can migrate between replicas, due to write distribution
+* in order to enforce primary key constraints on insert, we must send inserts with same key to same storage unit, so we need a tablet master for each tablet
+
+Recovery
+* copy tablets between replicas
+  + tablet controller requests a copy from source region
+  + publish "checkpoint message" to YMB, ensure any in-flight updates are applied to the source tablet
+  + source tablet is copied to destination region
+* tablet boundaries are keyp sync across replicas to support copy
+* tablet splits are conducted by having all regions split a tablet at the same point
+
+Notification
+* allow user to subscribe to the stream of updates on a table
+
+Bottleneck
+* storage units and message brokers
+* so different PNUTS customers are assigned different clusters of storage units and message broker machines
+* routers and tablet controllers can be shared
+
+
+
+Regions
++ contains a full complement of system components and a complete copy of each table
++ typically georgraphically distributed
+
+Tablets
+* tables are horizontally partitioned into groups of records (sharding)
+* tablets are scattered across many servers
+* each tablet is stored on a single server within a region
+* there is one message broker topic per tablet
+
+Storage Unit
+* store tablets
+* respond to get() and scan() by retrieving and returning matching records
+* respond to set() by processing the update
+* can use any physical storage layer
+  + for hash tables, use a UNIX filesystem-based hash table
+  + for ordered tables, use MySQL with InnoDB because it stores records ordered by primary key
+  + schema flexibility is provided for both engines by storing records as parsed JSON objects
+
+Router
+* first determine which tablet contains a record, then determine which storage unit has that tablet
+* for ordered tables
+  + the primary-key space of a table is divided into intervals, and each interval corresponds to one tablet
+  + router stores an interval mapping, defines boundaries of each tablet, and map tablet to storage unit
+  + binary search key in inverval
+* for hash-organized tables
+  + use n-bit hash function H() that 0 <= H() < 2^n
+  + hash space [0, 2^n) is divided into intervals, each interval is a tablet
+  + binary search key in inverval
+* interval mapping is in memory
+* pools tablet controller to get any changes to inverval mapping
+* for a short time after tablet moves or splits, router's mapping will be outdate, request will be misdirected. a misdirected request results in a storage unit error response, causing the router to retrieve a new copy of the mapping from tablet controller.
+
+Tablet Controller
+* own interval mapping, Router is only a cache
+* load balance tablets between storage unit
+* storage unit recovery, tablet split
+
+scatter-gather engine
+* operations that touch multiple records require a component that generates multiple requests and monitors their success or failure
+* a component of router
+* split request, initiates them in parallel, assembles results, pass to client. choose this server side approach because:
+  + one client connection
+  + allow server side to optimize, like group multi requests to same storage unit in one call
+* the engine can begin streaming results back to client as soon as they appear
+* for range query, scan only one tablet at a time, this is about as fast as a typical client can process results
+* for range scan, return continuation object (damn cool)
