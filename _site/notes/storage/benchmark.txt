@@ -1,0 +1,105 @@
+Benchmark
+=========
+
+relevance to an application domain
+portability to allow benchmarking of different systems
+scalability to support benchmarking large systems
+simplicity so the results are understandable. 
+
+
+Tradeoffs
+---------
+
+* Read performance vs Write performance
+
+  In a serving system, it is difficult to predict which record will be read or written next. Unless all data fits in memory, this means that random I/O to the disk is needed to serve reads (e.g., as opposed to scans). Random I/O can be used for writes as well, but much higher write throughput can be achieved by appending all updates to a sequential disk-based log. However, log-structured systems that only store update deltas can very inefficient for reads if the data is modified over time, as typically multiple updates from different parts of the log must be merged to provide a consistent record. Writing the complete record to the log on each update avoids the cost of reconstruction at read time, but there is a correspondingly higher cost on update. Log-structured merge trees avoid the cost of reconstructing on reads by using a background process to merge updates and cluster records by primary key, but the disk cost of this process can reduce performance for other operations. Overall, then, there is an inherent tradeoff between optimizing for reads and optimizing for writes.
+
+* Latency vs Durability
+
+* Synchronous vs Asynchronous replication
+
+  Replication is used to improve system availability (by directing traffic to a replica after a failure), avoid data loss (by recovering lost data from a replica), and improve performance (by spreading load across multiple replicas and by making low-latency access available to users around the world). However, there are different approaches to replication. Synchronous replication ensures all copies are up to date, but potentially incurs high latency on updates. Furthermore, availability may be impacted if synchronously replicated updates cannot complete while some replicas are offline. Asynchronous replication avoids high write latency (in particular, making it suitable for wide area replication) but allows replicas to be stale. Furthermore, data loss may occur if an update is lost due to failure before it can be replicated.
+
+* Data Partitioning
+
+  Systems may be strictly row-based, or allow for column storage. In row-based storage all of a record’s fields are stored contiguously on disk. With column storage, different columns or groups of columns can be stored separately (possibly on different servers). Row-based storage supports efficient access to an entire record (including low latency reads and insertion/update in a serving-oriented system), and is ideal if we typically access a few records in their entirety. Column-based storage is more efficient for accessing a subset of the columns, particularly when multiple records are accessed.
+
+------------------------------------------------------------------
+    System    Read/Write Latency/durability Sync/async  Row/column
+               optimized                    replication
+    PNUTS        Read        Durability        Async       Row
+   BigTable      Write       Durability        Sync       Column
+     HBase       Write        Latency          Async      Column
+   Cassandra     Write        Tunable         Tunable     Column
+Sharded MySQL    Read         Tunable          Async       Row
+------------------------------------------------------------------
+
+
+
+
+
+Performance Tier
+----------------
+
+The Performance tier of the benchmark focuses on the latency of requests when the database is under load. On a given hardware setup, as the amount of load increases, the latency of individual requests increases as well since there is more contention for disk, CPU, network, and so on. Typically application designers must decide on an acceptable latency, and provision enough servers to achieve the desired throughput while preserving acceptable latency. A system with better performance will achieve the desired latency and throughput with fewer servers.
+
+Scaling Tier
+------------
+
+Examing the impact on performance as more machines are added to the system. Two metrics:
+
+* Scaleup
+
+  How does the database perform as the number of machines increases? In this case, we load a given number of servers with data and run the workload. Then, we delete the data, add more servers, load a larger amount of data on the larger cluster, and run the workload again. If the database system has good scaleup properties, the performance (e.g., latency) should remain constant, as the number of servers, amount of data, and offered throughput scale proportionally.
+
+* Elastic speedup
+
+  How does the database perform as the number of machines increases while the system is running? In this case, we load a given number of servers with data and run the workload. As the workload is running, we add one or more servers, and observe the impact on performance.  A system that offers good elasticity should show a performance improvement when the new servers are added, with a short or non-existent period of disruption while the system is reconfiguring itself to use the new server.
+
+Availability Tier
+-----------------
+
+Replication Tier
+----------------
+* Performance cost or benefit
+* Availability cost or benefit
+* Freshness
+* Wide area performance
+
+
+
+
+
+Workloads
+---------
+
+Operation type:
+* Insert
+* Update
+* Read: Read a record, either one randomly chosen field or all fields.
+* Scan: Scan records in order, starting at a randomly chosen record key. The number of records to scan is randomly chosen.
+
+Operation distribution:
+* Uniform: Choose an item uniformly at random. For example, when choosing a record, all records in the database are equally likely to be chosen.
+* Zipfian: Choose an item according to the Zipfian distribution. For example, when choosing a record, some records will be extremely popular (the head of the distribution) while most records will be unpopular (the tail ).
+* Latest: Like the Zipfian distribution, except that the most recently inserted records are in the head of the distribution.
+* Multinomial: Probabilities for each item can be specified. For example, we might assign a probability of 0.95 to the Read operation, a probability of 0.05 to the Update operation, and a probability of 0 to Scan and Insert. The result would be a read-heavy workload.
+
+Workload type:
+Workload       Operations  Record selection Application example
+A—Update heavy Read: 50%   Zipfian           Session store recording recent actions in a user session
+               Update: 50%
+B—Read heavy   Read: 95%   Zipfian           Photo tagging; add a tag is an update, but most operations
+               Update: 5%                   are to read tags
+C—Read only    Read: 100%  Zipfian           User profile cache, where profiles are constructed elsewhere
+                                            (e.g., Hadoop)
+D—Read latest  Read: 95%   Latest           User status updates; people want to read the latest statuses
+               Insert: 5%
+E—Short ranges Scan: 95%   Zipfian/Uniform*  Threaded conversations, where each scan is for the posts in a
+               Insert: 5%                   given thread (assumed to be clustered by thread id)
+
+
+
+
+Ref.
+[1] Benchmarking Cloud Serving Systems with YCSB

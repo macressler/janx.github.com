@@ -1,0 +1,90 @@
+CouchDB: Relax
+==============
+
+self-contained document
+simlimar in semantics, vary in syntax
+multitude of knobs you could turn
+
+Replication
+* sync two or more CouchDB databases
+* through the same REST API
+* incrementally: continue from last break point
+* only transfer neccessary/minial data
+* local data is king: scale down
+
+CAP
+* Consistency: all database clients see the same data, even with concurrent updates
+* Availability: all database clients are able to access some version of the data
+* Partition tolerance: the database can be split over multiple servers
+
+Single Node
+* B-tree storage engine: a sorted data structure allows for searches, insertions and deletions in logarithmic time.
+* the engine is used for all internal data, documents, views
+* use MapReduce to compute results of a view, map/reduce are applied to each document in isolation
+* lookup by key or key range are extremely efficient
+* no lock! Multi-Version Concurrency Control (MVCC)
+  + CouchDB can run at full speed, all the time
+  + documents are versioned, like in a VCS
+  + a read request will always see the most recent snapshot of your database
+  + write won't overwrite old data, but create new data copy with new version
+* per-document validation, use javascript
+* independent and self-sufficient
+
+Distributed
+* periodically copy changes between servers
+* shared nothing
+* no single point of contention
+* couchdb will auto-resolve conflict, winning version is saved as the most recent version, losing version is saved as a previous version. client can resolve the conflict itself then.
+
+
+Server
+
+Database
+
+Document
+* Two kinds of documents
+  + "user profile"
+    - a query to get enough to display
+    - you can create 'virtual' document by using views to collate data togeter, this is only useful when the presented view will be created by merging the work of different authors
+  + event log
+    - used when you don't trust user input or where you need to trigger an async job
+    - records user action as an event, so minimal validation needs to occur at save time
+    - you'd check for complex relational-style constraints when you load the document
+* you can treat documents as state machines, with a combination of user input and background processing managing document state
+* each has an ID, ID is unique per database, saved in _id
+* ID can be any string, but UUID/GUID is recommended
+* when update a document, couchdb doesn't modify the document, but copy it, modify the copy, and save the copy as new version (document is immutable!)
+* revision save id _rev
+* when update/delete, couchdb expects a _rev included in request.
+* couchdb does NOT guarantee the older versions are kept around
+* _rev is used as Etag
+* _attachments: can have attachment, which is identified by its name, mime type and size, can be any data
+
+Replication
+* sync documents between databases
+* request for replication will stay open until replication complete
+* couchdb maintains a session history of replications
+* replication replicates the database only as it was at the point in time when replication started, any later changes won't be replicated
+* push replication: local -> remote, pull replication: remote -> local, local replication: local -> local, remote replication: remote -> remote
+* Replication API is not RESTful, REST is not for everything!
+
+Query Server
+* executes design document functions
+* default query server is written in js
+* there are views servers available for nearly any langauge now
+
+Design Document
+* a document whose id begins with _design/
+* the same with any other document
+* couchdb looks for views and other application functions here
+* static html pages are serviced as attachments to the design document
+
+View
+* map function, no side-effect
+* emit(key, value) insert pair into a sorted B-tree
+* view results is stored in their own file
+* list entry will include document 'id' automatically
+* reduce function: apply to each B-tree node recursively, each node contains many key/value pairs emitted by map function. reduce in this way to save memory
+* when reduce run on leaf nodes, rereduce is set to false; when run on internal nodes, rereduce is set to true
+* when rereduce is true, the values passed to the function are intermediate reduction values as cached from previous calculations. when the tree is more than two levels deep, the rereduce phase is repeated, consuming chunks of the previous level's output until the final reduce value is calculated at the root node
+* a common mistake is to construct complex aggregate values with a reduce function. full reduction should result in a scalar value like 5, not a JSON array.
