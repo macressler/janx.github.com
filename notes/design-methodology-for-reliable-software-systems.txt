@@ -1,0 +1,8 @@
+The traditional technique for modularization is to analyze the execution-time flow of the system and organize the system structure around each major sequential task. This technique leads to a structure which has very simple connections in control, but the connections in data tend to be complex.
+
+Guidelins for selecting abstractions
+* abstraction of resources (hardware)
+* abstract characteristics of data (data structure)
+* simplification via limiting information (limit information of function need to know, by introducing a new lower level)
+* simplification via generalization
+* system maintenance and modification (for easy maintainence and modification)
