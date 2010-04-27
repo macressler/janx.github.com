@@ -1,0 +1,20 @@
+a canonical form of data and function
+
+{function name| collection name} [expression, ...]
+
+if name is a function, expression will be evaluated and use as arguments
+if name is a collection, expression will be evaluated, result must be integer, and set CURRENT to collection[i]. so later program can operate on the selected collection value
+
+you won't know whether you're using a data collection or function
+data collection = function (haskell!)
+
+the key is a CURRENT reference
+missing reference will point to CURRENT
+
+seperate data representation and data manipulation
+
+internal/external iterator idea!! like filter+each in ruby + iterator in java
+
+human readable code: make syntax more human readable, like rails dsl
+
+I think they do the right thing in wrong way: what's CURRENT? a global state!
