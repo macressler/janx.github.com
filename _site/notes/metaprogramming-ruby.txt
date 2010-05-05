@@ -1,0 +1,63 @@
+# Metaprogramming Ruby #
+
+Def a. Metaprogramming is writing code that writing code.
+
+  This definition is too general - it includes static code generation techs, like compiler and generator.
+
+Def b. Metaprogramming is writing code that manipulates language constructs at runtime.
+
+  This is a much better definition, especially for metaprogramming in Ruby.
+
+
+A program written in C spans two different worlds: compile time, where you have language constructs such as variables and functions, and runtime, where you just have a bunch of machine code. Since most information from compile time is lost at runtime, C doesn’t support metaprogramming or introspection. In C++, some language constructs do survive compilation, and that’s why you can ask a C++ object for its class. In Java, the distinction between compile time and runtime is even fuzzier. You have enough introspection available to list the methods of a class or climb up a chain of superclasses.
+
+Ruby is arguably the most metaprogramming-friendly of the current fashionable languages. It has no compile time at all, and most constructs in a Ruby program are available at runtime. You don’t come up against a brick wall dividing the code that you’re writing from the code that your computer executes when you run the program. There is just one world.
+
+
+## The Object Model ##
+
+In Ruby there is no real distinction between code that defines a class and code of any other kind. You can put any code you want in a class definition, Ruby executed the code within the class just as it would execute any other code.
+
+In a sense, the class keyword in Ruby is more like a scope operator than a class declaration. Yes, it does create classes that don’t yet exist, but you might argue that it does this as a side effect. For class, the core job is to move you in the context of the class, where you can define methods.
+
+** Metaprogramming Technique: Open Class **
+
+Unlike in Java or other static languages, in Ruby there is no connection between an object’s class and its instance variables. Instance variables just spring into existence when you assign them a value, so you can have objects of the same class that carry different sets of instance variables.
+
+An object is composed of a bunch of instance variables and a link to a class. An object’s instance variables live in the object itself, and an object’s methods live in the object’s class.
+
+Object#methods vs Class#instance_methods
+
+Classes themselves are nothing but objects. The methods of an object are also the instance methods of its class. This means that the methods of a class are the instance methods of Class.
+
+All classes ultimately inherit from Object, which in turn inherits from BasicObject, the root of the Ruby class hierarchy. (1.9)
+
+A class is just a souped-up module with three additional methods - new( ), allocate( ), and superclass( )—that allow you to create objects or arrange classes into hierarchies. Apart from these (admittedly important) differences, classes and modules are pretty much the same.
+
+Using load(), variables fall out of scope when the file has finished loading, constants don’t. As a result, loaded file can pollute your program with the names of its own constants - in particular, class names. You can force the file to keep its constants to itself by passing a second, optional argument to load(): load('file.rb' , true)
+
+If you load a file this way, Ruby creates an anonymous module, uses that module as a Namespace to contain all the constants from file.rb, and then destroys the module. The require() method is quite similar to load(), but it’s meant for a different purpose. You use load() to execute code, and you use require( ) to import libraries. That’s why require() has no second argument: those leftover class names are probably the reason why you imported the file in the first place.
+
+What’s an object? It’s just a bunch of instance variables, plus a link to a class. The object’s methods don’t live in the object—they live in the object’s class, where they’re called the instance methods of the class.
+
+What’s a class? It’s just an object (an instance of Class), plus a list of instance methods and a link to a superclass. Class is a subclass of Module, so a class is also a module.
+
+When you call a method, Ruby does two things:
+
+  1. It finds the method. This is a process called method lookup. To find a method, Ruby goes in the receiver’s class, and from there it climbs the ancestors chain until it finds the method. Because of the way most people draw diagrams, this behavior is also called the “one step to the right, then up” rule: go one step to the right into the receiver’s class, and then go up the ancestors chain until you find the method.
+
+  2. It executes the method. To do that, Ruby needs something called self.
+
+This process - find a method and then execute it - happens in every object-oriented language.
+
+When you include a module in a class (or even in another module), Ruby plays a little trick. It creates an anonymous class that wraps the module and inserts the anonymous class in the chain, just above the including class itself. These “wrapper” classes are called include classes (or sometimes proxy classes). Include classes are a well-kept secret of Ruby. The superclass() method pretends that they don’t even exist, and in general you cannot access them from regular Ruby code.
+
+Ruby includes some methods, such as print( ), that you can call from anywhere in your code. It looks like each and every object has the print( ) method. The trick here is that class Object includes Kernel, so Kernel gets into every object’s ancestors chain. And since you’re always sitting inside an object, you can call the Kernel methods from anywhere. You can take advantage of this mechanism yourself: if you add a method to Kernel, this Kernel Method will be available to all objects.
+
+(J: but you can't do foo.print, because now you specify a receiver and you're trying to call a public method :print!)
+
+Every line of Ruby code is executed inside an object - the so–called current object. The current object is also known as self, because you can access it with the self keyword. Only one object can take the role of self at a given time, but no object holds that role for a long time. In particular, when you call a method, the receiver becomes self. From that moment on, all instance variables are instance variables of self, and all methods called without an explicit receiver are called on self. As soon as your code explicitly calls a method on some other object, that other object becomes self.
+
+Usually the role of self is taken by the last object who received a method call. However, in a class or module definition (and outside of any meth- od), the role of self is taken by the class or module.
+
+Private methods are governed by a single simple rule: you cannot call a private method with an explicit receiver. In other words, every time you call a private method, it must be on the implicit receiver - self.
