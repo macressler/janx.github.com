@@ -14,13 +14,21 @@ A program written in C spans two different worlds: compile time, where you have 
 Ruby is arguably the most metaprogramming-friendly of the current fashionable languages. It has no compile time at all, and most constructs in a Ruby program are available at runtime. You don’t come up against a brick wall dividing the code that you’re writing from the code that your computer executes when you run the program. There is just one world.
 
 
+Metaprogramming Techniques:
+* Open Class
+* Dynamic Dispatch (send)
+* Pattern Dispatch (reflect, select, and send)
+* Dynamic Method (define_method)
+* Ghost Methods (method_missing)
+* Dynamic Proxies (method_missing)
+* undef_method and remove_method
+
+
 ## The Object Model ##
 
 In Ruby there is no real distinction between code that defines a class and code of any other kind. You can put any code you want in a class definition, Ruby executed the code within the class just as it would execute any other code.
 
 In a sense, the class keyword in Ruby is more like a scope operator than a class declaration. Yes, it does create classes that don’t yet exist, but you might argue that it does this as a side effect. For class, the core job is to move you in the context of the class, where you can define methods.
-
-** Metaprogramming Technique: Open Class **
 
 Unlike in Java or other static languages, in Ruby there is no connection between an object’s class and its instance variables. Instance variables just spring into existence when you assign them a value, so you can have objects of the same class that carry different sets of instance variables.
 
@@ -61,3 +69,44 @@ Every line of Ruby code is executed inside an object - the so–called current o
 Usually the role of self is taken by the last object who received a method call. However, in a class or module definition (and outside of any meth- od), the role of self is taken by the class or module.
 
 Private methods are governed by a single simple rule: you cannot call a private method with an explicit receiver. In other words, every time you call a private method, it must be on the implicit receiver - self.
+
+
+## Methods ##
+
+A message that’s processed by method_missing() looks like a regular call from the caller’s side but has no corresponding method on the receiver’s side. This is named a Ghost Method.
+
+An object that catches Ghost Methods and forwards them to another object, maybe wrapping some logic around the call, is called a Dynamic Proxy.
+
+(J: Override respond_to?() may be a good idea when you use method_missing(), but override methods() seems not a good idea. Note respond_to? is passive while methods() is positive)
+
+There is a common problem with Ghost Methods: since unknown calls become calls to method_missing( ), your object might accept a call that’s just plain wrong. Finding a bug like this one in a large program can be pretty painful. To avoid this kind of trouble, don’t introduce more Ghost Methods than necessary.
+
+Whenever the name of a Ghost Method clashes with the name of a real, inherited method, the latter wins. If you don’t need the inherited method, you can fix the problem by removing it. To stay on the safe side, you might want to remove most inherited methods from your proxies right away. The result is called a Blank Slate, a class that has fewer methods than the Object class itself.
+
+This performance issue is something that you should be aware of, but usually it’s not really a problem. Avoid guesswork, and measure your code’s performance with a profiler before you start worrying too much about optimizations. If the performance of Ghost Methods ever turns out to be a problem, you can sometimes find a middle ground. For example, you might be able to arrange things so that the first call to a Ghost Method defines a Dynamic Method (68) for the next calls.
+
+class BlankSlate
+  # Hide the method named +name+ in the BlankSlate class. Don't
+  # hide +instance_eval+ or any method beginning with "__".
+  def self.hide(name)
+    if instance_methods.include?(name.to_s) and
+      name !~ /^(__|instance_eval)/
+      @hidden_methods ||= {}
+      @hidden_methods[name.to_sym] = instance_method(name)
+      undef_method name
+    end
+  end
+
+  instance_methods.each { |m| hide(m) }
+
+  ...
+end
+
+Some of the methods in Object are used internally by Ruby. If you redefine or remove them, the language might break in subtle ways. To make this less likely to happen, Ruby identifies these methods with a leading double underscore and issues a warning if you mess with them. At the time of writing, Ruby has two such reserved methods, __send__() and __id__(), which are synonyms for send() and id(). Some libraries, such as Test::Unit, protect themselves from maverick client code by calling the reserved methods rather than their “regular” counterparts. In general, you don’t have to worry that much: just call the regular methods, unless you know for certain that they’ve been redefined.
+
+Starting with Ruby 1.9, Blank Slates are an integral part of the language. In previous versions of Ruby, Object used to be the root of the class hierarchy. In Ruby 1.9, Object has a superclass named BasicObject that provides only a handful of essential methods:
+
+  p BasicObject.instance_methods
+  [:==, :equal?, :!, :!=, :instance_eval, :instance_exec, :__send__]
+
+By default, classes still inherit from Object. Classes that inherit directly from BasicObject are automatically Blank Slates.
