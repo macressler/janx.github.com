@@ -1,0 +1,166 @@
+# On Understanding Types, Data Abstraction, and Polymorphism #
+
+
+## From Untyped To Typed Universes ##
+
+
+### Organizing Untyped Universes ###
+
+"Untyped" actually means there is only one type.
+
+As soon as we start working in an untyped universe, we begin to organize it in different ways for different purposes. Types arise informally in any domain to categorize objects according to their usage and behavior. The classification of objects in terms of the purposes for which they are used eventually results in a more or less well-defined type system. Types arise naturally, even starting from untyped universes.
+
+Untyped universes of computational objects decompose naturally into subsets with uniform behavior. Sets of objects with uniform behavior may be named and are referred to as types.
+
+After a valiant organization effort, then, we may start thinking of untyped universes as if they were typed. But this is just an illusion, because it is very easy to violate the type distinctions that we have just created. In computer memory, what is the bitwise Boolean OF of a character and a machine operation? In LISP, what is the effect of treating an arbitrary S-expression as a program? In the lambda calculus, what is the effect of a conditional over a non-Boolean value? In set theory, what is the set union of the function successor and the function predecessor? Such questions are the unfortunate consequence of organizing untyped universes without going all the way to typed systems; it is then meaningful to ask about the (arbitrary) representations of higher level concepts and their interactions.
+
+### Static and Strong Typing ###
+
+Types impose constraints on object interaction that prevent objects from inconsistent interaction with other objects.
+
+A type may be viewed as a set of clothes (or a suit of armor) that protects an underlying untyped representation from arbitrary or unintended use. It provides a protective covering that hides the underlying representation and constrains the way objects may interact with other objects. In an untyped system untyped objects are naked in that the underlying representation is exposed for all to see. Violating the type system involves removing the protective set of clothing and operating directly on the naked representation.
+
+To prevent type violations, we generally impose a static type structure on programs. Types are associated with constants, operators, variables, and function symbols. A type inference system can be used to infer the types of expressions when little or no type information  is given explicitly.
+
+Programming languages in which the type of every expression can be determined by static program analysis are said to be statically typed. Static typing is a useful property, but the requirement that all variables and expressions are bound to a type at compile time is sometimes too restrictive. It may be replaced by the weaker requirement that all expressions are guaranteed to be type consistent although the type itself may be statically unknown; this can be generally done by introducing some run-time type checking. Languages in which all expressions are type consistent are called strongly typed languages. If a language is strongly typed, its compiler can guarantee that the programs it accepts will execute without type errors. In general, we should strive for strong typing and adopt static typing whenever possible. Note that every statically typed language is strongly typed, but the converse is not necessarily true.
+
+Traditional statically typed systems exclude programming techniques that, although sound, are incompatible with early binding of program objects to a specific type. For example, they exclude generic procedures, such as sorting, that capture the structure of an algorithm uniformly applicable to a range of types.
+
+### Kinds of Polymorphism ###
+
+Conventional typed languages, such as Pascal, are based on the idea that functions and procedures, and hence their operands, have a unique type. Such languages are said to be monomorphic, in the sense that every value and variable can be interpreted to be of one and only one type. Monomorphic programming languages may be contrasted with polymorphic languages in which some values and variables may have more than one type. Polymorphic functions are functions whose operands (actual parameters) can have more than one type. Polymorphic types may be defined as types whose operations are applicable to operands of more than one type.
+
+Strachey [1967] distinguished, informally, between two major kinds of polymorphism. Parametric polymorphism is obtained when a function works uniformly on a range of types; these types normally exhibit some common structure. Ad-hoc polymorphism is obtained when a function works, or appears to work, on several different types (which may not exhibit a common structure) and may behave in unrelated ways for each type. Our classification of polymorphism in Figure 1 refines that of Strachey by introducing a new form of polymorphism called inclusion polymorphism to model subtypes and inheritance. Parametric and inclusion polymorphism are classified as the two major subcategories of “universal polymorphism,” which is contrasted with nonuniversal or ad-hoc polymorphism. Thus Figure 1 reflects Strachey’s view of polymorphism but adds inclusion polymorphism to model object-oriented programming.
+
+Parametric polymorphism is so called because the uniformity of type structure is normally achieved by type parameters, but uniformity can be achieved in different ways, and this more general concept is called universal polymorphism. Universally polymorphic functions will normally work on an infinite number of types (all the types having a given common structure), whereas an ad-hoc polymorphic function will only work on a finite set of different and potentially unrelated types. In the case of universal polymorphism, one can assert with confidence that some values (i.e., polymorphic functions) have many types, whereas in ad-hoc polymorphism this is more difficult to maintain, as one may take the position that an ad-hoc polymorphic function is really a small set of monomorphic functions. In terms of implementation, a universally polymorphic function will execute the same code for arguments of any admissible type, whereas an ad-hoc polymorphic function may execute different code for each type of argument.
+
+  Figure 1. Varieties of polymorphism
+
+  polymorphism --- universal --- parametric
+                |             |
+                |             -- inclusion
+                |
+                -- ad hoc    --- overloading
+                              |
+                              -- coercion
+
+There are two major kinds of universal polymorphism, that is, two major ways in which a value can have many types. In parametric polymorphism, a polymorphic function has an implicit or explicit type parameter which determines the type of the argument for each application of that function. In inclusion polymorphism an object can be viewed as belonging to many different classes that need not be disjoint; that is, there may be inclusion of classes. These two views of universal polymorphism are not unrelated, but are sufficiently distinct in theory and in practice to deserve different names. The functions that exhibit parametric polymorphism are also called generic functions.
+
+There are also two major kinds of ad-hoc polymorphism. In overloading, the same variable name is used to denote different functions and the context is used to decide which function is denoted by a particular instance of the name. We may imagine that a preprocessing of the program will eliminate overloading by giving different names to the different functions; in this sense overloading is just a convenient syntactic abbreviation. A coercion is instead a semantic operation that is needed to convert an argument to the type expected by a function, in a situation that would otherwise result in a type error. Coercions can be provided statically, by automatically inserting them between arguments and functions at compile time, or they may have to be determined dynamically by run-time tests on the arguments.
+
+Our definition of polymorphism is applicable only to languages with a very clear notion of both type and value. In particular, there must be a clear distinction between the inherent type of an object and the apparent type of its syntactic representations in languages that permit overloading and coercion.
+
+  4 ways of extending monomorphic type system:
+
+  * Overloading is a purely syntactic way of using the same name for different semantic objects; the compiler can resolve the ambiguity at compile time and then proceed as usual.
+
+  * Coercion allows the user to omit semantically necessary type conversions. The required type conversions must be determined by the system, inserted in the program, and used by the compiler to generate required type conversion code. Coercions are essentially a form of abbreviation that may reduce program size and improve program readability, but may also cause subtle and sometimes dangerous system errors. The need for run-time coercions is usually detected at compile time, but languages like (impure) LISP have plenty of coercions that are only detected and performed at run time.
+
+  * Subtyping is an instance of inclusion polymorphism. The idea of a type being a subtype of another type is useful not only for subranges of ordered types such as integers, but also for more complex structures such as a type representing Toyotas, which is a subtype of a more general type such as Vehicles. Every object of a subtype can be used in a supertype context, in the sense that every Toyota is a vehicle and can be operated on by all operations that are applicable to vehicles. (inclusion polymorphism)
+
+  * Value sharing is a special case of parametric polymorphism. We could think of the symbol nil as being heavily overloaded, but this would be some strange kind of open-ended overloading, since nil is a valid element of an infinite collection of types which have not even been declared yet. Moreover, all the uses of nil denote the same value, which is not the common case for overloading. We could also think that there is a different nil for every type, but all the nils have the same representation and can be identified. The fact that an object having many types is uniformly represented for all types is characteristic of parametric polymorphism.
+
+Universal polymorphism is considered true polymorphism, whereas ad-hoc polymorphism is some kind of apparent polymorphism whose polymorphic character disappears at close range.
+
+Overloading is not true polymorphism; instead of a value having many types, we allow a symbol to have many types, but the values denoted by that symbol have distinct and possibly incompatible types. Similarly, coercions do not achieve true polymorphism: An operator may appear to accept values of many types, but the values must be converted to some representation before the operator can use them; hence that operator really works on (has) only one type. Moreover, the output type is no longer dependent on the input type, as is the case in parametric polymorphism.
+
+In contrast to overloading and coercion, subtyping is an example of true polymorphism: Objects of a subtype can be uniformly manipulated as if belonging to their supertypes. In the implementation, the representations are chosen very carefully, so that no coercions are necessary when using an object of a subtype in place of an object of the supertype. In this sense the same object has many types (e.g., in Simula a member of a subclass may be a longer memory segment than a member of its superclass, and its initial segment has the same structure as the member of the superclass). Similarly, operations are careful to interpret the representations uniformly so that they can work uniformly on elements of subtypes and supertypes.
+
+Parametric polymorphism is the purest form of polymorphism: the same object or function can be used uniformly in different type contexts without changes, coercions, or any kind of run-time tests or special encodings of representations. However, it should be noted that this uniformity of behavior requires that all data be represented, or somehow dealt with, uniformly.
+
+ALGOL 68 is well known for its baroque coercion scheme. The ALGOL 68 experience suggests that coercions should generally be explicit, and this view has been taken in many later language designs.
+
+We should mention generic procedures of the kind found in Ada, which are parameterized templates that must be instantiated with actual parameter values before they can be used. The polymorphism of Ada’s generic procedures is similar to the parametric polymorphism of languages like ML but is specialized to particular kinds of parameters. Parameters may be type parameters, procedure parameters, or value parameters. Generic procedures with type parameters are polymorphic in the sense that formal type parameters can take different actual types for different instantiations. Generic type polymorphism in Ada, however, is syntactic since generic instantiation   is performed at compile time with actual type values that must be determinable (manifest) at compile time. The semantics of generic procedures is macroexpansion driven by the type of the arguments. Thus generic procedures can be considered abbreviations for sets of monomorphic procedures. With respect to polymorphism, they have the advantage that specialized optimal code can be generated for the different forms of inputs. On the other hand, in true polymorphic systems, code is generated only once for every generic procedure.
+
+### The Evolution of Types in Programming Languages ###
+
+STONE AGE: no type, or, a single arithmetic type
+
+FORTRAN: distinguish between integer and float-point numbers, by the first letter or their names
+
+ALGOL 60: integer, real, boolean. ALGOL 60 was the first significant language to have an explicit notion of type and associated requirements for compile-time type checking.
+
+PL/I: arrays, records, pointers, try to combine features of FORTRAN, ALGOL 60, COBOL, LISP. It has numerous type loopholes, such as not requiring the type of values pointed to by pointer variables to be specified, which weaken the effectiveness of compile-time type checking.
+
+Pascal: arrays, records, pointers, user-defined types. Pascal does not define type equivalence, so that the question of when two type expressions denote the same type is implementation dependent.
+
+ALGOL 68: ALGOL 68 has a more rigorous notion of type than Pascal, with a well-defined notion of type equivalence (structural equivalence). The notion of type (mode in ALGOL 68) is extended to include procedures as first-class values. Primitive modes include int, real, char, bool, string, bits, bytes, format, file, whereas mode include array, struct, proc, union, and ref for constructors (type constructors) constructing,  respectively, array types, record types, procedure types, union (variant) types, and pointer types. ALGOL 68 has carefully defined rules for coercion, using dereferencing, deproceduring, widening, rowing, uniting, and voiding to transform values to the type required for further computation. Type checking in ALGOL 68 is decidable, but the type-checking algorithm is so complex that questions of type equivalence and coercion cannot always be checked by the user. This complexity was felt by some to be a flaw, resulting in a reaction against complex type systems. Thus later languages like Ada had a simpler notion of type equivalence with severely restricted coercion.
+
+Simula: Simula is the first object-oriented language. Its notion of type includes classes whose instances may be assigned as values of class-valued variables and may persist between the execution of the procedures they contain. Procedures and data declarations of a class constitute its interface and are accessible to users. Subclasses inherit declared entities in the interface of superclasses and may define additional operations and data that specialize the behavior of the subclass. Instances of a class are like data abstractions in having a declarative interface and a state that persists between invocation of operations, but lack the information-hiding mechanism of data abstractions. Subsequent object-oriented languages like Smalltalk and Loops combine the class concept derived from Simula with a stronger notion of information hiding.
+
+Modula-2: Modula-2 [Wirth 1983] is the first widespread language to use modularization as a major structuring principle (these ideas were first developed in Mesa). Typed interfaces specify the types and operations available in a module; types in an interface can be made opaque to achieve data abstraction. An interface can be specified separately from its implementation,   thereby separating the specification and implementation tasks. Block-structured  scoping, preserved within modules, is abandoned at a more global level in favor of flexible intermodule visibility rules achieved by import and export lists. Module interfaces are similar to class declarations (except for the above-mentioned scoping rules), but unlike class instances, module instances are not first-class values. A linking phase is necessary to interconnect module instances for execution; this phase is specified by the module interfaces but is external to the language.
+
+ML: ML has introduced the notion of parametric polymorphism in languages. ML types can contain type variables that are instantiated to different types in different contexts. Hence it is possible to partially specify type information and to write programs based on partially specified types that can be used on all the instances of those types. A way of partially specifying types is just to omit type declarations: The most general (less specific) types that fit a given situation are then automatically inferred.
+
+
+Packages in Ada have an interface specification of named components that may be simple variables, procedures, exceptions, and even types. They may hide a local state either by a private data type or in the package body. Packages are like record instances in having a user interface of named components. Ada packages differ from records in that record components must be typed values, whereas package components may be procedures, exceptions, types, and other named entities. Since packages are not themselves types, they cannot be parameters, components of structures, or values of pointer variables [Wegner 1983]. Packages in Ada are second-class objects, whereas class instances in Simula or objects in object-oriented languages are first-class objects.
+
+(J: type and data abstraction can be totally seperated in Ada.)
+
+The differences in behavior between packages and records in Ada are avoided in object-oriented languages by extending the notion of type to procedures and data abstractions. In the context of this discussion it is useful to define object-oriented languages as extensions of procedure-oriented languages that support typed data abstractions with inheritance. Thus we say that a language is object oriented if and only if it satisfies the following requirements:
+
+  * It supports objects that are data abstractions with an interface of named operations and a hidden local state.
+  * Objects have an associated object type.
+  * Types may inherit attributes from supertypes.
+
+These requirements may be summarized as
+
+  object oriented = data abstractions + object types + type inheritance.
+
+Data abstraction by itself provides a way of organizing data with associated operations that differs considerably from the traditional methodology of procedure-oriented programming. The realization of data abstraction methodology was one of the primary objectives of Ada. However, Ada satisfies only the first of our three requirements for object-oriented programming,
+
+The requirement that all objects have a type allows objects to be first-class values so that they can be managed as data structures within the language as well as used for computation. The requirement of type inheritance allows relations among types to be specified. Inheritance may be viewed as a type composition mechanism that allows the properties of one or more types to be reused in the definition of a new type. The specification B inherits A may be viewed as an abbreviation mechanism that avoids redefining the attributes of type A in the definition of type B. Inheritance, however, is more than a shorthand, since it imposes structure upon a collection of related types that can greatly reduce the conceptual complexity of a system specification. This is illustrated by the Smalltalk object hierarchy in Goldberg and Robson [1983].
+
+The Smalltalk object hierarchy is a description of the Smalltalk programming environment in Smalltalk. It is conceptually similar to the LISP apply function, which describes the LISP language interpreter in LISP, but is a great deal more complex. It describes a collection of over 75 related system object types by an inheritance hierarchy. The object types include numerical, structured, input-output, concurrent, and display objects. The object hierarchy carefully factors out properties common to numeric objects into the supertype Number. It factors out properties common to different kinds of structured objects into the supertype Collection. It further factors out properties common to numbers, collections, and other kinds of objects into the supertype Object. In doing this the collection of over 75 object types that comprise the Smalltalk environment is described as a relatively simple structured hierarchy of object types. The shorthand provided by the object hierarchy in reusing superclasses whose attributes are shared by subclasses is clearly incidental to the conceptual parsimony achieved by imposing a coherent structure on the collection of object types.
+
+The Smalltalk object hierarchy is also significant as an illustration of the power of polymorphism. We may characterize a polymorphic function as a function applicable to values of more than one type and inclusion polymorphism as a relation among types that allows operations to be applied to objects of different types related by inclusion. Objects are seen as collections of such polymorphic operations (attributes). This view emphasizes the sharing of operations by operands of many types as a primary feature of polymorphism.
+
+(J: my thought was the primary feature of polymorphism is dispatching. These different views will lead to different programs, e.g. my view will lead to abusing of polymorphism.)
+
+The Smalltalk object hierarchy realizes polymorphism in the above sense by factoring out attributes common to a collection of subtypes into a supertype. Thus polymorphism is intimately related to the notion of inheritance, and we can say that the expressive power of object-oriented type systems is due in large measure to the polymorphism they facilitate.
+
+ML is an interactive functional programming language in which type specifications omitted by the user may be reintroduced by type inference. ML supports type inference not only for traditional  types but also for parametric (polymorphic) types, such as the length function for lists. If the user then enters “length[l; 2; 3]“, applying length to a list of integers, the system infers that length is to be specialized to the type “int list ---, int” and then applies the specialized function to the list of integers.
+
+(J: not type check and apply the general function to the list of integers?)
+
+When we say that a parametric function is applicable to lists of arbitrary type, we really mean that it may be specialized by (implicitly or explicitly) providing a type parameter T, and that the specialized function may then be applied to the specialized operands. There is an important distinction between the parametric function length for lists of arbitrary type and the specialized function for lists of type int. Functions like length are applicable to lists of arbitrary type because they have a uniform parametric representation that allows them to be specialized by supplying a type parameter. This distinction between a parametric function and its specialized versions is blurred in languages like ML because type parameters omitted by the user are automatically reintroduced by the type inference mechanism.
+
+Supertypes in object-oriented languages may be viewed as parametric types whose parameter is omitted by the user. In order to understand the similarity between parametric types and supertypes, it is useful to introduce a notation in which supertype parameters must be explicitly supplied in specializing a supertype to a subtype. We shall see below that Fun has explicit type parameters for both parametric types and supertypes in order to provide a uniform model for both parametric and subtype polymorphism. This results in a uniform treatment of type inference when parameters are omitted in parametric types and supertypes.
+
+### Type Expression Sublanguages ###
+
+Type expression sublanguages generally include basic types like integer and boolean and composite types like arrays, records, and procedures constructed from basic types:
+
+  Type ::= BasicType | ConstructedType
+  BasicType ::= Int | Boo1 | ...
+  ConstructedType ::= Array(Type) | Type -> Type | ...
+
+The type expression sublanguage should be sufficiently rich to support types for all values with which we wish to compute, but sufficiently tractable to permit decidable and efficient type checking. One of the purposes of this paper is to examine trade-offs between richness and tractability for type expression sublan- guages of strongly typed languages.
+
+The type expression sublanguage can generally be specified by a context-free grammar. However, we are interested not only in the syntax of the type expression sublanguage, but also in its semantics. This is, we are interested in what types denote and in relations among type expressions. The most basic relation among type expressions is type equivalence. However, we are also interested in similarity relations among types that are weaker than equivalence, such as inclusion, which is related to subtypes.
+
+Similarity relations among type expressions that permit a type expression to denote more than one type, or to be compatible with many types, are referred to as polymorphism.
+
+The usefulness of a type system lies not only in the set of types that can be represented, but also in the kinds of relationships among types that can be expressed. The ability to express relations among types involves some ability to perform computations on types to determine whether they satisfy the desired relationship. Such computations could, in principle, be as powerful as computations performable on values.
+
+### Preview of Fun ###
+
+Fun is a X-calculus-based language that enriches the first-order typed X-calculus with second-order features designed to model polymorphism and object-oriented languages.
+
+Section 2 reviews the untyped and typed X-calculus and develops first-order features of the Fun type expression sublanguage. Fun has the basic types Bool, Int, Real, String and constructed types for record, variant, function, and recursive types. This set of first-order types is used as a base for introducing parametric types, abstract data types, and type inheritance by means of second-order language features in subsequent sections.
+
+Section 3 briefly reviews theoretical models of types related to features of Fun, especially models that view types as sets of values. Viewing types as sets allows us to define parametric polymorphism in terms of set intersection of associated types and inheritance polymorphism in terms of subsets of associated types. Data abstraction may also be defined in terms of set operations (in this case unions) on associated types.
+
+Sections 4, 5, and 6, respectively, augment the first-order X-calculus with universal quantification for realizing parameterized types, existential quantification for realizing data abstraction, and bounded quantification for realizing type inheritance. The syntactic extensions of the type expression sublanguage determined by these features may be summarized as follows:
+
+  Type ::= ... | QuantifiedType
+  QuantifiedType ::=
+                      Forall A. Type        |                             # Universal Quantification
+                      Exists A. Type        |                             # Existential Quantification
+                      Forall A < Type. Type | Exists A < Type. Type       # Bounded Quantification
+
+Universal quantification enriches the first-order X-calculus with parameterized types that may be specialized by substituting actual type parameters for universally quantified parameters. Universally quantified types are themselves first-class types and may be actual parameters in such a substitution. Existential quantification enriches first-order features by allowing abstract data types with hidden representation.
+
+Fun supports information hiding not only through existential quantification, but also through its let construct, which facilitates hiding of local variables of a module body. Hiding by means of let is referred to as first-order hiding because it involves hiding of local identifiers and associated values, whereas hiding by means of existential quantifiers is referred to as second-order hiding because it involves hiding of type representations.
+
+Bounded quantification enriches the first-order X-calculus by providing explicit subtype parameters. Inheritance (i.e., subtypes and supertypes) is modeled by explicit parametric specialization of supertypes to the subtype for which the operations will actually be executed. In object-oriented languages every type is potentially a supertype for subsequently defined subtypes and should therefore be modeled by a bounded quantified type. Bounded quantification provides an explanatory mechanism for object-oriented polymorphism that is cumbersome to use explicitly but useful in illuminating the relation between parametric and inherited polymorphism.
