@@ -40,7 +40,7 @@ Classes themselves are nothing but objects. The methods of an object are also th
 
 All classes ultimately inherit from Object, which in turn inherits from BasicObject, the root of the Ruby class hierarchy. (1.9)
 
-A class is just a souped-up module with three additional methods - new( ), allocate( ), and superclass( )—that allow you to create objects or arrange classes into hierarchies. Apart from these (admittedly important) differences, classes and modules are pretty much the same.
+A class is just a souped-up module with three additional methods - new(), allocate(), and superclass() - that allow you to create objects or arrange classes into hierarchies. Apart from these (admittedly important) differences, classes and modules are pretty much the same.
 
 Using load(), variables fall out of scope when the file has finished loading, constants don’t. As a result, loaded file can pollute your program with the names of its own constants - in particular, class names. You can force the file to keep its constants to itself by passing a second, optional argument to load(): load('file.rb' , true)
 
@@ -110,3 +110,117 @@ Starting with Ruby 1.9, Blank Slates are an integral part of the language. In pr
   [:==, :equal?, :!, :!=, :instance_eval, :instance_exec, :__send__]
 
 By default, classes still inherit from Object. Classes that inherit directly from BasicObject are automatically Blank Slates.
+
+
+## Blocks ##
+
+A block is not just a floating piece of code. You can’t run code in a vacuum. When code runs, it needs an environment: local variables, instance variables, self... Since these entities are basically names bound to objects, you can call them the bindings for short. The main point about blocks is that they are all inclusive and come ready to run. They contain both the code and a set of bindings. A computer scientist would say that a block is a closure. For the rest of us, this means a block captures the local bindings and carries them along with it.
+
+Some languages, such as Java and C#, allow an “inner scope” to see variables from an “outer scope.” That kind of nested visibility doesn’t happen in Ruby, where scopes are sharply separated: as soon as you enter a new scope, the previous bindings are simply replaced by a new set of bindings.
+
+There are exactly three places where a program leaves the previous scope behind and opens a new one:
+
+  • Class definitions
+  • Module definitions
+  • Methods
+
+Scope changes whenever the program enters (or exits) a class or module definition or a method. These three borders are marked by the keywords class, module, and def, respectively. Each of these keywords acts like a Scope Gate.
+
+There is a subtle difference between class and module on one side and def on the other. The code in a class or module definition is executed immediately. Conversely, the code in a method definition is executed later, when you eventually call the method.
+
+To pass scope gate:
+* use Class.new instead of class keyword, capture variable in clojure and pass it to Class.new, Class.new accepts a block
+* use Module#define_method instead of def keyword
+* use Module.new instead of module keyword
+
+If you replace Scope Gates with methods, you allow one scope to see variables from another scope. Technically, this trick should be called nested lexical scopes, but many Ruby coders refer to it simply as “flattening the scope,” meaning that the two scopes share variables as if the scopes were squeezed together. For short, you can call this spell a Flat Scope.
+
+Once you know about Flat Scopes, you can do pretty much whatever you want with scopes. For example, assume that you want to share a variable among a few methods, and you don’t want anybody else to see that variable. You can do that by defining all the methods in the same Flat Scope as the variable:
+
+  def define_methods
+    shared = 0
+
+    Kernel.send :define_method, :counter do
+      shared
+    end
+
+    Kernel.send :define_method, :inc do |x|
+      shared += x
+    end
+  end
+
+  define_methods
+
+  counter             # => 0
+  inc(4)
+  counter             # => 4
+
+This smart way to control the sharing of variables is called a Shared Scope.
+
+instance_eval() changes self, it leaves all the other bindings alone, you can call the block that you pass to instance_eval() a Context Probe, because it’s like a snippet of code that you dip inside an object to do something in there.
+
+Ruby 1.9 introduced a method named instance_exec(). This is similar to instance_eval( ), but it also allows you to pass arguments to the block.
+
+With a Context Probe, you can wreak havoc on encapsulation! Pragmatically, there are some situations where encapsulation just gets in your way. For one, you might want to take a quick peek inside an object from an irb command line. In a case like this, breaking into the object with instance_eval() is often the shortest route. The most socially acceptable reason to break encapsulation is arguably testing.
+
+Sometimes you create an object just to evaluate blocks inside it. An object like that can be called a Clean Room:
+
+  class CleanRoom
+    def complex_calculation
+       # ...
+    end
+    def do_something
+       # ...
+    end
+  end
+
+  clean_room = CleanRoom.new
+  clean_room.instance_eval do
+    if complex_calculation > 10
+      do_something
+    end
+  end
+
+A Clean Room is just an environment where you can evaluate your blocks, and it usually exposes a few useful methods that the block can call.
+
+If you get to the bottom of it, using a block is a two-step process. First, you set some code aside, and second, you call the block (with yield) to execute the code. This “package code first, call it later” mechanism is not exclusive to blocks. There are at least three other places in Ruby where you can package code:
+
+  • In a proc, which is basically a block turned object
+  • In a lambda, which is a slight variation on a proc
+  • In a method
+
+Although most things in Ruby are objects, blocks are not. To solve this problem, Ruby provides the standard library class Proc. A Proc is a block that has been turned into an object. You can create a Proc by passing the block to Proc.new. Later, you can evaluate the block-turned-object with Proc#call(). This technique is called a Deferred Evaluation.
+
+Ruby also provides two Kernel Methods that convert a block to a Proc: lambda() and proc(). In a short while, you’ll see that there are subtle differences between lambda(), proc(), and Proc.new(), but in most cases you can just use whichever one you like best.
+
+The real meaning of the & is this: “This is a Proc that I want to use as a block.” Just drop the &, and you’ll be left with a Proc. You can prefix & at a proc object to convert it into a block.
+
+Procs created with lambda() are called lambdas, while the others are simply called procs. Ruby 1.9 introduces a Proc#lambda?( ) method that returns true if the Proc is a lambda. Previous versions of Ruby didn’t provide a direct way to tell a lambda from a regular proc.
+
+There are two differences between procs and lambdas. One has to do with the return keyword, and the other concerns the checking of arguments.
+
+In a lambda, return just returns from the lambda. In a proc, rather than return from the proc, it returns from the scope where the proc itself was defined.
+
+(J: thinking about it in a different way: proc consider return address (the code address where the proc is created) as part of binding, lambda don't.)
+
+The second difference between procs and lambdas concerns the way they check their arguments. For example, a particular proc or lambda might have an Proc#arity of two, meaning that it accepts two arguments. Now, what happens if you call this callable object with three arguments or a single argument? The long answer to this question is complicated and littered with special cases.12 The short answer is that, in general, lambdas tend to be less tolerant than procs (and regular blocks) when it comes to arguments. Call a lambda with the wrong arity, and it fails with an ArgumentError. On the other hand, a proc fits the argument list to its own expectations. If there are too many arguments, a proc drops the excess arguments. If there are too few arguments, it assigns nil to the missing arguments.
+
+Generally speaking, lambdas are more intuitive than procs because they’re more similar to methods. They’re pretty strict about arity, and they simply exit when you call return. For this reason, many Rubyists use lambdas as a first choice, unless they need the specific features of procs.
+
+  callable = proc { return }
+  callable.call # fails in Ruby 1.9
+
+Distressingly, the previous code will either succeed or fail, depending on the version of Ruby you’re using. In Ruby 1.8, Kernel#proc() is actually a synonym for Kernel#lambda(). Because of loud protest from programmers, Ruby 1.9 made proc() a synonym for Proc.new() instead.
+
+By calling Object#method(), you get the method itself as a Method object, which you can later execute with Method#call( ). A Method object is similar to a lambda, with an important difference: a lambda is evaluated in the scope it’s defined in (it’s a closure, remember?), while a Method is evaluated in the scope of its object.
+
+You can detach a method from its object with Method#unbind(), which returns an UnboundMethod object. You can’t execute an UnboundMethod, but you can turn it back into a Method by binding it to an object. This technique works only if another_object has the same class as the method’s original object—otherwise, you’ll get an exception.
+
+(J: to a method object, the object is its binding)
+
+Finally, you can convert a Method object to a Proc object by calling Method#to_proc, and you can convert a block to a method with define_method().
+
+Callable objects are snippets of code that you can evaluate, and they carry their own scope along with them: blocks, procs, lambdas, and methods.
+
+Different callable objects exhibit subtly different behaviors. In methods and lambdas, return returns from the callable object, while in procs and blocks, return returns from the callable object’s original context. Different callable objects also react differently to calls with the wrong arity. Methods are stricter, lambdas are almost as strict (save for some corner cases), and procs and blocks are more tolerant.
+
