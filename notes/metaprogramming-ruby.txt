@@ -224,3 +224,82 @@ Callable objects are snippets of code that you can evaluate, and they carry thei
 
 Different callable objects exhibit subtly different behaviors. In methods and lambdas, return returns from the callable object, while in procs and blocks, return returns from the callable object’s original context. Different callable objects also react differently to calls with the wrong arity. Methods are stricter, lambdas are almost as strict (save for some corner cases), and procs and blocks are more tolerant.
 
+
+## Class Definitions ##
+
+Class definitions also return the value of the last statement, just like methods and blocks do.
+
+In a class (or module) definition, the class itself takes the role of the current object self.
+
+As you know, wherever you are in a Ruby program, you always have a current object: self. Likewise, you always have a current class (or module). When you define a method, that method becomes an instance method of the current class.
+
+Although you can get a reference to the current object through self, there’s no equivalent keyword to get a reference to the current class. However, it’s not difficult to keep track of the current class just by looking at the code. Whenever you open a class with the class keyword (or a module with the module keyword), that class becomes the current class.
+
+However, the class keyword has a limitation: it needs the name of a class. Unfortunately, in some situations you may not know the name of the class that you want to open. For example, think of a method that takes a class and adds a new instance method to it. How can you open the class if you don’t know its name? You need some way other than the class keyword to change the current class. Enter the class_eval() method.
+
+  class MyClass
+    def method_one
+      def method_two; 'Hello!' ; end
+    end
+  end
+
+  obj = MyClass.new
+  obj.method_one
+  obj.method_two     # => "Hello!"
+
+Which class does method_two() belong to? Or, to ask the same question in a different way, which class is the current class when method_two() is defined? In this case, the current class cannot be the same as self, because self is not a class. Instead, the role of the current class is taken by the class of self: MyClass. The same principle applies if you’re at the top level of your program. In that situation, the current class is Object, the class of main. That’s why, if you define a method at the top level, that method becomes an instance method of Object.
+
+Module#class_eval() is actually more flexible than class. You can use class_eval() on any variable that references the class, while class requires a constant. Also, class opens a new scope, losing sight of the current bindings, while class_eval( ) has a Flat Scope. This means you can reference variables from the outer scope in a class_eval() block.
+
+The Ruby interpreter always keeps a reference to the current class (or module). All methods defined with def become instance methods of the current class.
+
+In a class definition, the current class is the same as self - the class being defined.
+
+If you have a reference to the class, you can open the class with class_eval() (or module_eval()).
+
+When you assign an anonymous class to a constant, Ruby understands that you’re trying to give a name to the class, and it does something special: it turns around to the class and says, “Here’s your new name.” Now the constant references the Class, and the Class also references the constant. If it weren’t for this trick, a class wouldn’t be able to know its own name.
+
+Class methods are Singleton Methods of a class.
+
+class << object opens eigenclass. eigenclasses have only a single instance (that’s why they’re also called singleton classes), and they can’t be inherited. More important, an eigenclass is where an object’s Singleton Methods live.
+
+instance_eval will set current class to the object's eigenclass, it's the second way to get eigenclass.
+
+  obj.instance_eval:
+    self  -> obj
+    klass -> obj's eigenclass
+
+  cls.class_eval:
+    self  -> cls
+    klass -> cls
+
+
+7 Rules:
+1. There is only one kind of object—be it a regular object or a module.
+2. There is only one kind of module—be it a regular module, a class, an eigenclass, or a proxy class.
+3. There is only one kind of method, and it lives in a module - most often in a class.
+4. Every object, classes included, has its own “real class,” be it a regular class or an eigenclass.
+5. Every class has exactly one superclass, with the exception of BasicObject (or Object if you’re using Ruby 1.8), which has none. This means you have a single ancestors chain from any class up to BasicObject.
+6. The superclass of the eigenclass of an object is the object’s class. The superclass of the eigenclass of a class is the eigenclass of the class’s superclass.
+7. When you call a method, Ruby goes “right” in the receiver’s real class and then “up” the ancestors chain. That’s all there is to know about the way Ruby finds methods.
+
+
+Object#extend() is simply a shortcut that includes a module in the receiver’s eigenclass.
+
+In alias, the new name for the method comes first, and the original name comes second. You can provide the names either as symbols or as plain names without a leading colon. (Most Rubyists would use a symbol.)
+
+Note that alias is a keyword, not a method. That’s why there’s no comma between the two method names. Ruby also provides Module#alias_method(), a method equivalent to alias.
+
+When you redefine a method, you don’t really change the method. Instead, you define a new method and attach an existing name to that new method. You can still call the old version of the method as long as you have another name that’s still attached to it.
+
+Note that you can have different visibilities for different aliases. It’s the method name, not the method itself, that is either public or private.
+
+You must be aware of two potential pitfalls when you use Around Alias:
+
+First, Around Aliases are a form of Monkeypatching, and as such, they can break existing code. Look back at the last section. Although JCode redefines String#succ, it stops shy of redefining String#length - probably because that would break libraries that expect the “length” of a string to be its size in bytes. Instead, JCode defines a separate String#jlength( ) method to calculate the length of a Unicode string in characters. As usual, the more powerful the tricks you pull, the more testing of code you need to do!
+
+The second potential problem has to do with loading. You should never load an Around Alias twice, unless you want to end up with an exception when you call the method.
+
+Even if a class is just a special case of a module, many programmers think of classes as “more important” than modules. Old habits tend to linger, and most of us are used to seeing classes as the stars of the object-oriented show. Even Bill focused on classes for most of today’s examples.
+
+However, all the concepts you learned today can be generalized from classes to modules. So, when Bill says that “you always have a current class,” that class might actually be a module; when he says that “you can define the instance variable of a class,” that doesn’t stop you from defining the instance variable of a module; when he says that you have “eigenclasses,” those could also be “eigenmodules,” and so on.
