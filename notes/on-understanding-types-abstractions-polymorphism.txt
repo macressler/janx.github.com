@@ -135,7 +135,7 @@ Type expression sublanguages generally include basic types like integer and bool
   BasicType ::= Int | Boo1 | ...
   ConstructedType ::= Array(Type) | Type -> Type | ...
 
-The type expression sublanguage should be sufficiently rich to support types for all values with which we wish to compute, but sufficiently tractable to permit decidable and efficient type checking. One of the purposes of this paper is to examine trade-offs between richness and tractability for type expression sublan- guages of strongly typed languages.
+The type expression sublanguage should be sufficiently rich to support types for all values with which we wish to compute, but sufficiently tractable to permit decidable and efficient type checking. One of the purposes of this paper is to examine trade-offs between richness and tractability for type expression sublanguages of strongly typed languages.
 
 The type expression sublanguage can generally be specified by a context-free grammar. However, we are interested not only in the syntax of the type expression sublanguage, but also in its semantics. This is, we are interested in what types denote and in relations among type expressions. The most basic relation among type expressions is type equivalence. However, we are also interested in similarity relations among types that are weaker than equivalence, such as inclusion, which is related to subtypes.
 
@@ -145,13 +145,13 @@ The usefulness of a type system lies not only in the set of types that can be re
 
 ### Preview of Fun ###
 
-Fun is a X-calculus-based language that enriches the first-order typed X-calculus with second-order features designed to model polymorphism and object-oriented languages.
+Fun is a lambda-calculus-based language that enriches the first-order typed lambda-calculus with second-order features designed to model polymorphism and object-oriented languages.
 
-Section 2 reviews the untyped and typed X-calculus and develops first-order features of the Fun type expression sublanguage. Fun has the basic types Bool, Int, Real, String and constructed types for record, variant, function, and recursive types. This set of first-order types is used as a base for introducing parametric types, abstract data types, and type inheritance by means of second-order language features in subsequent sections.
+Section 2 reviews the untyped and typed lambda-calculus and develops first-order features of the Fun type expression sublanguage. Fun has the basic types Bool, Int, Real, String and constructed types for record, variant, function, and recursive types. This set of first-order types is used as a base for introducing parametric types, abstract data types, and type inheritance by means of second-order language features in subsequent sections.
 
 Section 3 briefly reviews theoretical models of types related to features of Fun, especially models that view types as sets of values. Viewing types as sets allows us to define parametric polymorphism in terms of set intersection of associated types and inheritance polymorphism in terms of subsets of associated types. Data abstraction may also be defined in terms of set operations (in this case unions) on associated types.
 
-Sections 4, 5, and 6, respectively, augment the first-order X-calculus with universal quantification for realizing parameterized types, existential quantification for realizing data abstraction, and bounded quantification for realizing type inheritance. The syntactic extensions of the type expression sublanguage determined by these features may be summarized as follows:
+Sections 4, 5, and 6, respectively, augment the first-order lambda-calculus with universal quantification for realizing parameterized types, existential quantification for realizing data abstraction, and bounded quantification for realizing type inheritance. The syntactic extensions of the type expression sublanguage determined by these features may be summarized as follows:
 
   Type ::= ... | QuantifiedType
   QuantifiedType ::=
@@ -159,8 +159,166 @@ Sections 4, 5, and 6, respectively, augment the first-order X-calculus with univ
                       Exists A. Type        |                             # Existential Quantification
                       Forall A < Type. Type | Exists A < Type. Type       # Bounded Quantification
 
-Universal quantification enriches the first-order X-calculus with parameterized types that may be specialized by substituting actual type parameters for universally quantified parameters. Universally quantified types are themselves first-class types and may be actual parameters in such a substitution. Existential quantification enriches first-order features by allowing abstract data types with hidden representation.
+Universal quantification enriches the first-order lambda-calculus with parameterized types that may be specialized by substituting actual type parameters for universally quantified parameters. Universally quantified types are themselves first-class types and may be actual parameters in such a substitution. Existential quantification enriches first-order features by allowing abstract data types with hidden representation.
 
 Fun supports information hiding not only through existential quantification, but also through its let construct, which facilitates hiding of local variables of a module body. Hiding by means of let is referred to as first-order hiding because it involves hiding of local identifiers and associated values, whereas hiding by means of existential quantifiers is referred to as second-order hiding because it involves hiding of type representations.
 
-Bounded quantification enriches the first-order X-calculus by providing explicit subtype parameters. Inheritance (i.e., subtypes and supertypes) is modeled by explicit parametric specialization of supertypes to the subtype for which the operations will actually be executed. In object-oriented languages every type is potentially a supertype for subsequently defined subtypes and should therefore be modeled by a bounded quantified type. Bounded quantification provides an explanatory mechanism for object-oriented polymorphism that is cumbersome to use explicitly but useful in illuminating the relation between parametric and inherited polymorphism.
+Bounded quantification enriches the first-order lambda-calculus by providing explicit subtype parameters. Inheritance (i.e., subtypes and supertypes) is modeled by explicit parametric specialization of supertypes to the subtype for which the operations will actually be executed. In object-oriented languages every type is potentially a supertype for subsequently defined subtypes and should therefore be modeled by a bounded quantified type. Bounded quantification provides an explanatory mechanism for object-oriented polymorphism that is cumbersome to use explicitly but useful in illuminating the relation between parametric and inherited polymorphism.
+
+
+## The Lambda Calculus
+
+
+### The Untyped Lambda Calculus
+
+e ::= x       -- a variable is a lambda-expression
+e ::= fun(x)e -- functional abstraction of e
+e ::= e(e)    -- operator e applied to operand e
+
+value id = fun(x) x     -- identity function
+value succ = fun(x) x+1 -- successor function (for integers)
+
+The identity function may be applied to an arbitrary lambda-expression and always yields the lambda-expression itself. In order to define addition on integers in the pure lambda-calculus we pick a representation for integers and define the addition operation so that its effect on lambda-expressions representing the integers n and m is to produce the lambda-expression that represents n + m. The successor function should be applied only to lambda-expressions that represent integers and suggests a notion of typing. The infix notation x + 1 is an abbreviation for the functional notation + (x)(l). The symbols 1 and + above should in turn be viewed as abbreviations for a pure lambda-calculus expression for the number 1 and addition.
+
+Correctness of integer addition requires no assumptions about what happens when the lambda-expression representing addition is applied to lambda-expressions that do not represent integers. However, if we want our notation to have good error-checking properties, it is desirable to define the effect of addition on arguments that are not integers as an error. This is accomplished in typed programming languages by type checking that eliminates, at compile time, the possibility of operations on objects of an incorrect type.
+
+Type checking in the lambda-calculus, just as in conventional programming languages, has the effect that large classes of lambda-expressions legal in the untyped lambda-calculus become illegal. The class of illegally typed expressions type system that one adopts, and, although undesirable, it may a particular type-checking algorithm.
+
+### The Typed Lambda Calculus
+
+The typed lambda-calculus is like the lambda-calculus, except that every variable must be explicitly typed when introduced as a bound variable. Thus the successor function in the typed X-calculus has the following form:
+
+  value succ = fun (x: Int) x+1
+
+(J: type is an attribute of *bound variable*!!)
+
+The function twice from integers to integers has a parameter f whose type is Int -> Int (the type of functions from integers to integers) and may be written as follows:
+
+  value twice = fun(f: Int -> Int) fun (y:Int) f(f(y))
+
+This notation approximates that of functional specification in typed programming languages but omits specification of the result type. We may denote the result type with a returns keyword as follows:
+
+  value succ = fun(x: Int) (returns Int) x + 1
+
+However, the type of the result can be determined from the form of the function body x + 1. We omit result type specifications in the interests of brevity. Type inference mechanisms that allow this information to be recovered during compilation are discussed in a later section.
+
+Type declarations are introduced by the keyword type. Throughout this paper, type names begin with uppercase letters, whereas value and function names begin with lowercase letters:
+
+  type IntPair = Int x Int
+  type IntFun = Int -> Int
+
+Type declarations introduce names (abbreviations) for type expressions; they do not create new types in any sense. This is sometimes expressed by saying that we used structural equivalence on types instead of name equivalence: Two types are equivalent when they have the same structure, regardless of the names we use as abbreviations. The fact that a *value* v has a type T is indicated by v : T:
+
+  (3,4): IntPair
+  succ: IntFun
+
+We need not introduce variables by type declarations of the form var : T because the type of a variable may be determined from the form of the assigned value. For example, the fact that intPair below has the type IntPair can be determined by the fact that (3, 4) has type Int X Int, which has been declared equivalent to IntPair:
+
+(J: which means if the variable is not assigned a value (unbind), you have to introduce type declaration for it)
+
+  value intPair = (3,4)
+
+However, if we want to indicate the type of a variable as part of its initialization, we can do so by the notation value var : T = value:
+
+  value intPair: IntPair = (3,4)
+  value succ: Int -> Int = fun(x: Int) x + 1
+
+
+Local variables can be declared by the let-in construct, which introduces a new initialized variable (following let) in a local scope (an expression following in). The value of the construct is the value of that expression:
+
+  let a = 3 in a + 1 -- yields 4
+
+If we want to specify types, we can also write
+
+  let a : Int = 3 in a + 1
+
+The let-in construct can be defined in terms of basic fun expressions:
+
+  let a : T = M in N  ===  (fun(a:T) N)(M)
+
+### Basic Types, Structured Types, and Recursion
+
+The typed X-calculus is usually augmented with various kinds of basic and structured types. For basic types we shall use
+
+  Unit:   the trivial type, with only element ()
+  Bool:   with an if-then-else operation
+  Int:    with arithmetic and comparison operations
+  Real:   with arithmetic and comparison operations
+  String: with string concatenation (infix) ^
+
+Structured types can be built up from these basic types by means of type constructors. The type constructors in our language include function spaces (->), Cartesian products (x), record types (also called labeled Cartesian products), and variant types (also called labeled disjoint sums).
+
+A pair is an element of a Cartesian product type, for example,
+
+  value p = 3,true : Int x Bool
+
+Operations on pairs are selectors for the first and second components:
+
+  fst(p) yields 3
+  snd(p) yields true
+
+A record is an unordered set of labeled values. Its type may be specified by indicating the type associated with each of its labels. A record type is denoted by a sequence of labeled types, separated by commas and enclosed in curly braces:
+
+  type ARecordType = (a: Int, b: Bool, c: String}
+
+A record of this type may be created by initializing each of the record labels to a value of the required type. It is written as a sequence of labeled values separated by commas and enclosed in curly braces:
+
+  value r: ARecordType = { a = 3, b = true, c = “abed” }
+
+The labels must be unique within any given record or record type. The only operation on records is field selection, denoted by the usual dot notation:
+
+  r.b yields true
+
+Since functions are first-class values, records may in general have function components:
+
+  type FunctionRecordType = { fl : Int -> Int, f2: Real -> Real }
+  value functionRecord = {fl = succ, 12 = sin}
+
+A record type can be defined in terms of existing record types by an operator &, which concatenates two record types:
+
+  type NewFunctionRecordType = FunctionRecordType & {f3: Bool -> Bool}
+
+This is intended as an abbreviation, instead of writing the three fields f1, f2, and f3 explicitly. It is valid only when used on record types, and when no duplicated labels are involved.
+
+A data structure can be made local and private to a collection of functions by let-in declarations. Records with function components are a particularly convenient way of achieving this; here is a private counter variable shared by an increment and a total function:
+
+  value counter = let count = ref(0)
+                  in {increment = fun(n:Int) count := count + n,
+                      total = fun() count
+                     }
+
+  counter.increment(3)
+  counter.total() yields 3
+
+This example involves side effects, since the main use of private variables is to update them privately. The primitive ref returns an updatable reference to an object, and assignments are restricted to work on such references. This is a common form of information hiding that allows updating of local state by using static scoping to restrict visibility.
+
+A variant type is also formed from an unordered set of labeled types, which are now enclosed in brackets:
+
+  type AVariantType = [a: Int, b:Bool, c: String]
+
+An element of this type can either be an integer labeled a, a Boolean labeled b, or a string labeled C:
+
+  value vl = [a = 31
+  value v2 = [b = true]
+  value v3 = [c = “abed”]
+
+The only operation on variants is case selection, A case statement for a variant of type AVariantType has the following form:
+
+  case variunt of
+    [a = (variable) of type Int]    (action for case a)
+    [b = (variable) of type Bool]   (action for case b)
+    [c = (variable) of type String] (action for case c)
+
+where in each case a new variable is introduced and bound to the respective contents of the variant. That variable can then be used in the respective action.
+
+In the untyped lambda-calculus it is possible to express recursion operators and to use them to define recursive functions. However, all computations expressible in the typed lambda-calculus must terminate (roughly, the type of a function is always strictly more complex than the type of its result; hence, after some number of applications of the function, we obtain a basic type; moreover, we do not have nonterminating primitives). Hence, recursive definitions are introduced as a new primitive concept. The factorial function can be expressed as
+
+  ret value fact = fun (n:Int) if n=O then 1 else n*fact(n-1)
+
+For simplicity we assume that the only *values* that can be recursively defined are functions.
+
+Finally, we introduce recursive type definitions. This allows us, for example, to define the type of integer lists out of record and variant types:
+
+  ret type IntList = [nil:Unit,
+                      cons: (head: Int, tail: IntList)
+                     ]
