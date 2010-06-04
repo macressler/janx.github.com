@@ -313,12 +313,44 @@ where in each case a new variable is introduced and bound to the respective cont
 
 In the untyped lambda-calculus it is possible to express recursion operators and to use them to define recursive functions. However, all computations expressible in the typed lambda-calculus must terminate (roughly, the type of a function is always strictly more complex than the type of its result; hence, after some number of applications of the function, we obtain a basic type; moreover, we do not have nonterminating primitives). Hence, recursive definitions are introduced as a new primitive concept. The factorial function can be expressed as
 
-  ret value fact = fun (n:Int) if n=O then 1 else n*fact(n-1)
+  rec value fact = fun (n:Int) if n=O then 1 else n*fact(n-1)
 
 For simplicity we assume that the only *values* that can be recursively defined are functions.
 
 Finally, we introduce recursive type definitions. This allows us, for example, to define the type of integer lists out of record and variant types:
 
-  ret type IntList = [nil:Unit,
-                      cons: (head: Int, tail: IntList)
-                     ]
+  rec type IntList = [nil:Unit, cons: (head: Int, tail: IntList) ]
+
+
+## Types Are Sets of Values
+
+There is a universe V of all values, containing simple values like integers, data structures like pairs, records and variants, and functions. This is a complete partial order, built by using Scott’s techniques [Scott 19761,but in first approximation we can think of it as just a large set of all possible computable values.
+
+A type is a set of elements of V. Not all subsets of V are legal types: They must obey some technical properties. The subsets of V obeying such properties are called ideals. All the types found in programming languages are ideals in this sense, so we do not have to worry too much about subsets of V that are not ideals.
+
+Hence, a type is an ideal, which is a set of values. Moreover, the set of all types (ideals) over V, when ordered by set inclusion, forms a lattice. The top of this lattice is the type Top (the set of all values, i.e., V itself). The bottom of the lattice is, essentially, the empty set (actually, it is the singleton set containing the least element of V).
+
+The phrase having a type is then interpreted as membership in the appropriate set. Because ideals over V may overlap, a value can have many types. The set of types of any given programming language is generally only a small subset of the set of all ideals over V. For example, any subset of the integers determines an ideal (and hence a type), and so does the set of all pairs with first element equal to 3. This generality is welcome because it allows one to accommodate many different type systems in the same framework. One has to decide exactly which ideals are to be considered interesting in the context of a particular language.
+
+A particular type system is then a collection of ideals of V, which is usually identified by giving a language of type expressions and a mapping from type expressions to ideals. The ideals in this collection are elevated to the rank of types for a particular language. For example, we can choose the integers, integer pairs, and integer-to-integer functions as our type system. Different languages will have different type systems, but all these type systems can be built on top of the domain V (provided that V is rich enough to start with), using the same techniques.
+
+A monomorphic type system is one in which each value belongs to at most one type (except for the least element of V which, by definition of ideal, belongs to all types). As types are sets, a value may belong to many types. A polymorphic type system is one in which large and interesting collections of values belong to many types. There is also a gray area of mostly monomorphic and almost polymorphic systems, so the definitions are left imprecise, but the important point is that the basic model of ideals over V can explain all these degrees of polymorphism.
+
+Since types are sets, subtypes simply correspond to subsets. Moreover, the semantic assertion Tl is a subtype of T2 corresponds to the mathematical condition Tl is subset of T2 in the type lattice. This gives a very simple interpretation for subrange types and inheritance, as we shall see in later sections.
+
+Finally, if we take our type system as consisting of the single set V, we have a type-free system in which all values have the same type. Hence we can express typed and untyped languages in the same semantic domain and compare them.
+
+The type lattice contains many more points than can be named in any type language. In fact, it includes an uncountable number of points, since it includes every subset of the integers. The objective of a language for talking about types is to allow the programmer to name those types that correspond to interesting kinds of behavior. In order to do this, the language contains type constructors, including function type constructors (e.g., type T = Tl -> T2) for constructing a function type T from domain and range types Tl, T2. These constructors allow an unbounded number of interesting types to be constructed from a finite set of primitive types. However, there may be useful types of the type lattice that cannot be denoted using these constructors.
+
+In the remaining sections of this paper we introduce more powerful type constructors that allow us to talk about types corresponding to infinite unions and intersections in the type lattice. In particular, universal quantification will allow us to name types whose lattice points are infinite intersections of types, while existential quantification will allow us to name types corresponding to infinite unions. Our reason for introducing universal and existential quantification is the importance of the resulting types in increasing the expressive power of typed programming languages. It is fortunate that these concepts are also mathematically simple and that they correspond to well-known mathematical constructions.
+
+The ideal model is not the only model of types that has been studied. With respect to other denotational models, however, it has the advantage of explaining simple and polymorphic types in an intuitive way, namely, as sets of values, and of allowing a natural treatment of inheritance. Less satisfactory is its treatment of type parameterization, which is rather indirect since types cannot be values, and its treatment of type operators, which involves getting out of the model and considering functions over ideals. In view of this intuitive appeal, we have chosen the ideal model as our underlying view of types, but much of our discussion could be carried over, and sometimes even improved, if we chose to refer to other models.
+
+The idea of types as parameters is fully developed in the second-order lambda-calculus [Bruce and Meyer 19841. The (only known) denotational models of the second-order lambda-calculus are retract models [Scott 19761. Here, types are not sets of objects but special functions (called retracts); these can be interpreted as identifying sets of objects but are objects themselves. Because of the property that types are objects, retract models can more naturally explain explicit type parameters, whereas ideal models can more naturally explain implicit type parameters.
+
+
+## Universal Quantification
+
+
+### Universal Quantification and Generic Functions
+
