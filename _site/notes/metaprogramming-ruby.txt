@@ -44,7 +44,7 @@ A class is just a souped-up module with three additional methods - new(), alloca
 
 Using load(), variables fall out of scope when the file has finished loading, constants don’t. As a result, loaded file can pollute your program with the names of its own constants - in particular, class names. You can force the file to keep its constants to itself by passing a second, optional argument to load(): load('file.rb' , true)
 
-If you load a file this way, Ruby creates an anonymous module, uses that module as a Namespace to contain all the constants from file.rb, and then destroys the module. The require() method is quite similar to load(), but it’s meant for a different purpose. You use load() to execute code, and you use require( ) to import libraries. That’s why require() has no second argument: those leftover class names are probably the reason why you imported the file in the first place.
+If you load a file this way, Ruby creates an anonymous module, uses that module as a Namespace to contain all the constants from file.rb, and then destroys the module. The require() method is quite similar to load(), but it’s meant for a different purpose. You use load() to execute code, and you use require() to import libraries. That’s why require() has no second argument: those leftover class names are probably the reason why you imported the file in the first place.
 
 What’s an object? It’s just a bunch of instance variables, plus a link to a class. The object’s methods don’t live in the object—they live in the object’s class, where they’re called the instance methods of the class.
 
@@ -60,7 +60,7 @@ This process - find a method and then execute it - happens in every object-orien
 
 When you include a module in a class (or even in another module), Ruby plays a little trick. It creates an anonymous class that wraps the module and inserts the anonymous class in the chain, just above the including class itself. These “wrapper” classes are called include classes (or sometimes proxy classes). Include classes are a well-kept secret of Ruby. The superclass() method pretends that they don’t even exist, and in general you cannot access them from regular Ruby code.
 
-Ruby includes some methods, such as print( ), that you can call from anywhere in your code. It looks like each and every object has the print( ) method. The trick here is that class Object includes Kernel, so Kernel gets into every object’s ancestors chain. And since you’re always sitting inside an object, you can call the Kernel methods from anywhere. You can take advantage of this mechanism yourself: if you add a method to Kernel, this Kernel Method will be available to all objects.
+Ruby includes some methods, such as print(), that you can call from anywhere in your code. It looks like each and every object has the print() method. The trick here is that class Object includes Kernel, so Kernel gets into every object’s ancestors chain. And since you’re always sitting inside an object, you can call the Kernel methods from anywhere. You can take advantage of this mechanism yourself: if you add a method to Kernel, this Kernel Method will be available to all objects.
 
 (J: but you can't do foo.print, because now you specify a receiver and you're trying to call a public method :print!)
 
@@ -303,3 +303,142 @@ The second potential problem has to do with loading. You should never load an Ar
 Even if a class is just a special case of a module, many programmers think of classes as “more important” than modules. Old habits tend to linger, and most of us are used to seeing classes as the stars of the object-oriented show. Even Bill focused on classes for most of today’s examples.
 
 However, all the concepts you learned today can be generalized from classes to modules. So, when Bill says that “you always have a current class,” that class might actually be a module; when he says that “you can define the instance variable of a class,” that doesn’t stop you from defining the instance variable of a module; when he says that you have “eigenclasses,” those could also be “eigenmodules,” and so on.
+
+
+## Code That Writes Code ##
+
+A Binding is a whole scope packaged as an object. The idea is that you can create a Binding to capture the local scope and carry it around. Later, you can execute code in that scope by using the Binding object in conjunction with eval(), instance_eval(), or class_eval().
+
+You can create a Binding with the Kernel#binding( ) method:
+
+  class MyClass
+    def my_method
+      @x = 1
+      binding
+    end
+  end
+  b = MyClass.new.my_method
+
+You can evaluate code in the captured scope by passing the Binding as an additional argument to one of the eval*() methods:
+
+  eval "@x" , b               # => 1
+
+Ruby also provides a predefined constant named TOPLEVEL_BINDING, which is just a Binding of the top-level scope. You can use it to access the top-level scope from anywhere in your program:
+
+  class AnotherClass
+    def my_method
+      eval "self" , TOPLEVEL_BINDING
+    end
+  end
+  AnotherClass.new.my_method     # => main
+
+In a sense, you can see Binding objects as a “purer” form of closures than blocks, because these objects contain a scope but don’t contain code.
+
+While using irb, you can open a nested session that puts you in the context of a specific object and allows you to execute code there, pretty much like instance_eval( ) does. Just use the irb command:
+
+  irb(main):001:0> s = "abc"
+  => "abc"
+  irb(main):002:0> irb s
+  irb#1(abc):001:0> reverse
+  => "cba"
+  irb#1(abc):002:0> exit # leave the current context
+  irb(main):003:0>
+
+Look at the irb prompt. The object in parentheses is the current self, and the #1 postfix means you’re sitting one level deep into a nested irb session. While this nested session lasts, the object you passed to the irb command is the top-level self.
+
+eval() always requires a string, instance_eval( ) and class_eval( ) can take either a String of Code or a block. This shouldn’t come as a big surprise. After all, code in a string is not that different from code in a block. Strings of Code can even access local variables like blocks do:
+
+  array = ['a' , 'b' , 'c' ]
+  x = 'd'
+  array.instance_eval "self[1] = x"
+  array   # => ["a", "d", "c"]
+
+Because a block and a String of Code are so similar, in many cases you have the option of using either one. Which one should you choose? The short answer is that you should probably go for a block whenever you can, because Strings of Code have a number of downsides.
+
+To start with, Strings of Code don’t always play well with your editor’s features, such as syntax coloring and autocompletion. Even when they do get along with everyone, Strings of Code tend to be difficult to read and modify. Also, Ruby won’t report a syntax error in a String of Code until that string is evaluated, potentially resulting in brittle programs that fail unexpectedly at runtime.
+
+These annoyances are minor compared to the biggest issue with eval(): security. People can inject any code into a string to be evaluated.
+
+You might parse all Strings of Code to identify operations that are potentially dangerous. This approach may prove ineffective, though, because there are so many possible ways to write malicious code. Trying to outsmart a determined hacker can be dangerous to both your computer and your ego.
+
+When it comes to code injection, some strings are safer than others. Only strings that derive from an external source can contain malicious code, so you might simply limit your use of eval() to those strings that you wrote yourself. Again, this is easier said than done, because in a live system it can be surprisingly difficult to track which strings come from where.
+
+With all these challenges, some programmers advocate banning eval() altogether. Programmers tend to be paranoid about anything that might possibly go wrong, so this eval() ban turns out to be a pretty popular choice. If you do away with eval(), you’ll have to look for alternate techniques on a case-by-case basis.
+
+* Ruby's rescue: Tainted Object and Safe Levels
+
+Ruby automatically marks potentially unsafe objects - in particular, objects that come from external sources - as tainted. Tainted objects include strings that your program reads from web forms, files, the command line, or even a system variable. Every time you create a new string by manipulating tainted strings, the result is itself tainted. Here’s an example program that checks whether an object is tainted by calling its tainted?() method:
+
+  # read user input
+  user_input = "User input: #{gets()}"
+  puts user_input.tainted?
+
+  > x = 1
+  > true
+
+If you had to check every string for taintedness, then you wouldn’t be in a much better position than if you had simply tracked unsafe strings on your own. But Ruby also provides the notion of safe levels, which complement tainted objects nicely. When you set a safe level (which you can do by assigning a value to the $SAFE global variable), you disallow certain potentially dangerous operations.
+
+You can choose from five safe levels, from the default 0 (“hippie commune,” where you can hug trees and format hard disks) to 4 (“military dictatorship,” where you can’t even exit the program freely). A safe level of 2, for example, disallows most file-related operations. Note that any safe level greater than 0 also causes Ruby to flat-out refuse to evaluate tainted strings:
+
+  $SAFE = 1
+  user_input = "User input: #{gets()}"
+  eval user_input
+
+  > x = 1
+  > SecurityError: Insecure operation - eval
+
+To fine-tune safety, you can explicitly remove the taintedness on Strings of Code before you evaluate them (you can do that by calling Object#untaint()) and then rely on safe levels to disallow dangerous operations such as disk access.
+
+Ruby has methods like Kernel#load() and Kernel#require() that take the name of a source file and execute code from that file. If you think about it, evaluating a file is not that different from evaluating a string. This means load() and require() are somewhat similar to eval(). Although these methods are not really part of the *eval() family, you can think of them as first cousins. You can usually control the content of your files, so you don’t have as many security concerns with load() and require() as you do with eval(). Still, safe levels higher than 1 do put some limitations on importing files. For example, a safe level of 2 or higher prevents you from using load() with a tainted filename.
+
+By using safe levels carefully, you can write a controlled environment for eval(). Such an environment is called a Sandbox. Let’s take a look at a sandbox taken from a real-life library.
+
+Safe levels are typically used in combination with other techniques, such as threads and Clean Rooms. By using safe levels carefully, you can write a controlled environment for eval(). Such an environment is called a Sandbox.
+
+  class ERB
+    def result(b=TOPLEVEL_BINDING)
+      if @safe_level
+      proc {
+        $SAFE = @safe_level
+        eval(@src, b, (@filename || '(erb)' ), 1)
+      }.call
+    else
+      eval(@src, b, (@filename || '(erb)' ), 1)
+    end
+   end
+
+The @src instance variable carries the content of a code tag, and the @safe_level instance variable contains the safe level required by the user. If no safe level is set, the content of the tag is simply evaluated. Otherwise, eRB builds a quick Sandbox: it makes sure that the global safe level is exactly what the user asked for and also creates a Clean Room to execute the code in a separate scope. (Note that the safe level is changed only within the proc, and it goes back to its former value after the proc has been called.)
+
+(J: only $SAFE goes back to its former value after proc called, user defined global variable or $: doens't. weired)
+
+The inherited() method is an instance method of Class, and Ruby calls it when a class is inherited. By default, Class#inherited() does nothing. A method such as Class#inherited() is called a Hook Method because you can use it to hook into a particular event.
+
+Hook Methods:
+
+  Class#inherited()
+  Module#included()
+  Module#extend_object()
+  Module#method_added()
+  Module#method_removed()
+  Module#method_undefined()
+
+These hooks only work for regular instance methods, which live in the object’s class. They don’t work for Singleton Methods, which live in the object’s eigenclass. To catch Singleton Method events, you can use Kernel#singleton_method_added(), singleton_method_removed(), and singleton_method_undefined().
+
+The notion of hooks extends beyond specialized methods like Class#inherited() or Module#method_added(). Because most operations in Ruby are just regular methods, you can easily twist them into improvised Hook Methods.
+
+For example, you learned how to override Module#included() to execute code when a module is included. But you can also plug into the same event, so to speak, from the other side: because you include a module with the include() method, instead of overriding Module#included( ), you can override Module#include() itself. For example:
+
+  module M; end
+  class C
+    def self.include(*modules)
+      puts "Called: C.include(#{modules})"
+      super
+    end
+    include M
+  end
+
+  > Called: C.include(M)
+
+There is an important difference between overriding Module#included() and overriding Module#include(). Module#included() exists solely to be used as a Hook Method, and its default implementation is empty. But Module#include() has some real work to do: it must actually include the module.
+
+That’s why our hook’s code also should call the base implementation of Module#include() through super. If you forget super, you’ll still catch the event, but you won’t include the module anymore! As an alternative to overriding, you can turn a regular method into a Hook Method by using an Around Alias.
