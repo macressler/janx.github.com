@@ -442,3 +442,23 @@ For example, you learned how to override Module#included() to execute code when 
 There is an important difference between overriding Module#included() and overriding Module#include(). Module#included() exists solely to be used as a Hook Method, and its default implementation is empty. But Module#include() has some real work to do: it must actually include the module.
 
 That’s why our hook’s code also should call the base implementation of Module#include() through super. If you forget super, you’ll still catch the event, but you won’t include the module anymore! As an alternative to overriding, you can turn a regular method into a Hook Method by using an Around Alias.
+
+
+## Tradeoffs ##
+
+Complexity for Beginners vs. Complexity for Experts: For an experienced Ruby coder, metaprogramming code can actually look simple and perfectly readable. Remember, though, that not everybody is as familiar with metaprogramming as you are. Resist the temptation to go wild with magic.
+
+Internal Complexity vs. External Complexity: By making the insides of your code more complex, you make your library simpler for clients.
+
+Complexity by Terseness vs. Complexity by Duplication
+
+Complexity for Humans vs. Complexity for Tools
+
+
+Both instance_variable_names() and protected_instance_variables() are defined by Rails. You might be wondering why Rails defines a method like Object#instance_variable_names() when Ruby already has Object#instance_variables(). There is some trickery going on here. Object#instance_variables() returns either strings or symbols depending on the version of Ruby that you’re using. But Rails’ instance_variable_names() always returns strings, making this code compatible with all versions of Ruby.
+
+First, a Monkeypatch is global. If you change a method on String, all the strings in your system will see that method. Second, a Monkeypatch is invisible. Once you’ve redefined String#capitalize(), it’s difficult to notice that the method was changed. If your code, or a library that you’re using, relies on the original behavior of capitalize(), that code will break - and because Monkeypatches are global, you might have trouble spotting where the problem is and finding out which code modified which class.
+
+One reason why Monkeypatches are dangerous is that they’re difficult to spot. If you make them a tad more visible, you’ll have an easier time tracking them. For example, instead of defining methods straight in the Open Class, you can define methods in a module and then include the module in the Open Class. At least this way you’ll be able to see the module among the Open Class’ ancestors.
+
+Compared to testing regular code, testing metaprogramming code introduces an additional dimension. Remember, metaprogramming is “code that writes code,” so you might have to test it at two different levels: you need to test the code you write, and you should also test the code that your code writes.
