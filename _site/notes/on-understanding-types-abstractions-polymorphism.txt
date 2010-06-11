@@ -354,3 +354,86 @@ The idea of types as parameters is fully developed in the second-order lambda-ca
 
 ### Universal Quantification and Generic Functions
 
+The typed lambda-calculus is sufficient to express monomorphic functions. However, it cannot adequately model polymorphic functions. The identity function can be defined only for specific types such as integers: fun(x:Int) x. We cannot capture the fact that its form does not depend on any specific type. We cannot express the idea of a functional form that is the same for a variety of types, and we must explicitly bind variables and values to a specific type at a time when such binding may be premature.
+
+The fact that a given functional form is the same for all types may be expressed by universal quantification. In particular, the identity function may be expressed as follows:
+
+  value id = all[a] fun(x:a) x
+
+In this definition of id, a is a type variable and all[a] provides type abstraction for a so that id is the identity for all types. In order to apply this identity function to an argument of a specific type, we must first supply the type as a parameter and then the argument of the given type:
+
+  id [Int] (3)
+
+(We use the convention that type parameters are enclosed in square brackets, while typed arguments are enclosed in parentheses.)
+
+We refer to functions like id, which require a type parameter before they can be applied to functions of a specific type as generic functions. id is the generic identity function. Note that all is a binding operator just like fun and requires a matching actual parameter to be supplied during function application. However, all[a] serves to bind a type, while fun(x:a) serves to bind a variable of a given (possibly generic) type.
+
+Although types are applied, there is no implication that types can be manipulated as values: Types and values are still distinct, and type abstractions and application serve type-checking purposes only, with no run-time implications. In fact, we may decide to omit the type information in square brackets:
+
+  value id = fun(x:a) x          -- where a is now afree type variable
+  id(3)
+
+(J: there's no type information at runtime, on values)
+
+Here the type-checking algorithm has the task of recognizing that a is a free type variable and reintroducing the original all[a] and [lnt] information. This is part of what a polymorphic type checker can do, like the one used in the ML language. In fact, ML goes further and allows the programmer to omit even the remaining type information:
+
+  value id = fun(x) x
+  id(3)
+
+ML has a type inference mechanism that allows the system to infer the types of both monomorphic and polymorphic expressions, so that type specifications omitted by the programmer can be reintroduced by the system. This has the advantage that the programmer can use the shorthand of the untyped lambda-calculus, while the system can translate the untyped input into fully typed expressions.
+
+However, there are no known fully automatic type inference algorithms for the powerful type systems we are going to consider. In order for us to clarify what is happening without depending on the current state of type-checking technology, we shall always write down enough type information to make the type-checking task trivial.
+
+Going back to the fully explicit language, let us extend our notation so that the type of a polymorphic function can be explicitly talked about. We denote the type of a generic function from an arbitrary type to itself by Va. a -> a:
+
+  type GenericId = Va. a -> a
+  id: GenericId
+
+Here is an example of a function taking a parameter of a universally quantified type. The function inst takes a function of the above type and returns two instances of it, specialized for integers and Booleans:
+
+  value inst = fun(f: Va. a -> a) (f[lnt],f[Bool])
+  value intid = fst(inst(id))   : Int  -> Int
+  value boolid = snd(inst(id))  : Bool -> Bool
+
+In general, function parameters of universally quantified types are most useful when they have to be used on different types in the body of a single function, for example, a list length function passed as a parameter and used on lists of different types. In order to show some of the freedom we have in defining polymorphic functions, we now write two versions of twice which differ in the way type parameters are passed.
+
+The first version, twice1, has a function parameter f, which is of a universal type. The specification fun(f: Va. a -> a) body-of-function specifies the type of function parameter f to be generic and to admit functions from any given type into the same type. Applied instances of f in the body of twice1 must have a formal type parameter f [t] and require an actual type to be supplied when applying twice1. The full specification of twice1 requires binding of the type parameter t as a universally quantified type and binding of x to t:
+
+  value twice1 = all[t] fun(f: Va. a -> a) fun(x:t) f[t](f[t](x))
+
+Thus twice1 has three bound variables for which actual parameters must be supplied during function application:
+
+  all[t]            -- requires an actual parameter which is a type
+  fun(f: Va. a + a) -- requires a function of the type Va. a + a
+  fun(x: t)         -- requires an argument of the type substituted for t
+
+An application of twice1 to the type Int, the function id, and the argument 3 is specified as follows:
+
+  twice1[Int](id)(3)
+
+Note that the third argument 3 has the type Int of the first argument and that the second argument id is of a universally quantified type. Note also that twicel[int](succ) would not be legal because succ does not have the type Va. a -> a.
+
+The function twice2 below differs from twice1 in the type of the argument f, which is not universally quantified. Now we do not need to apply f [t] in the body of twice:
+
+  value twice2 = all[t] fun(f: t -> t) fun(x: t) f(f(x))
+
+  twice2[Int]      -- yields fun(f: Int -> Int) fun(x: Int) f(f(x))
+
+It is now possible to compute twice of succ:
+
+  twice2[Int](succ)    -- yields fun(x: Int) succ(succ(x))
+  twice2[lnt](succ)(3) -- yields 5
+
+An extra type application is required for twice2 of id, which has to be first specialized to Int
+
+  twice2[Int](id[Int])(3)
+
+Note that both lambda-abstraction (function abstraction) and universal quantification (generic type abstraction) are binding operators that require formal parameters to be replaced by actual parameters. Separation between types and values is achieved by having different binding operations for types and values and different parenthesis syntax when actual parameters are supplied.
+
+The extension of the lambda-calculus to support two different kinds of binding mechanism, one for types and one for variables, is both practically useful in modeling parametric polymorphism and mathematically interesting in generalizing the lambda-calculus to model two qualitatively different kinds of abstraction in the same mathematical model. In the next few sections we introduce still a third kind of abstraction and associated binding mechanism, but first we have to introduce the notion of parametric types.
+
+In Fun, types and values are rigorously distinguished (values are objects and types are sets). Hence we need two distinct binding mechanisms: fun and all. These two kinds of bindings can be unified in some type models where types are values, achieving some economy of concepts, but this unification does not fit our underlying semantics. In such models it is also possible to unify the parametric type-binding mechanism described in the next section with fun and all.
+
+### Parametric Types ###
+
+
