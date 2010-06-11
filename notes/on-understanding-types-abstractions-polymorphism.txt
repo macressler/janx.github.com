@@ -259,7 +259,7 @@ Operations on pairs are selectors for the first and second components:
 
 A record is an unordered set of labeled values. Its type may be specified by indicating the type associated with each of its labels. A record type is denoted by a sequence of labeled types, separated by commas and enclosed in curly braces:
 
-  type ARecordType = (a: Int, b: Bool, c: String}
+  type ARecordType = {a: Int, b: Bool, c: String}
 
 A record of this type may be created by initializing each of the record labels to a value of the required type. It is written as a sequence of labeled values separated by commas and enclosed in curly braces:
 
@@ -304,7 +304,7 @@ An element of this type can either be an integer labeled a, a Boolean labeled b,
 
 The only operation on variants is case selection, A case statement for a variant of type AVariantType has the following form:
 
-  case variunt of
+  case variant of
     [a = (variable) of type Int]    (action for case a)
     [b = (variable) of type Bool]   (action for case b)
     [c = (variable) of type String] (action for case c)
@@ -319,7 +319,7 @@ For simplicity we assume that the only *values* that can be recursively defined 
 
 Finally, we introduce recursive type definitions. This allows us, for example, to define the type of integer lists out of record and variant types:
 
-  rec type IntList = [nil:Unit, cons: (head: Int, tail: IntList) ]
+  rec type IntList = [nil:Unit, cons: {head: Int, tail: IntList}]
 
 
 ## Types Are Sets of Values
@@ -436,4 +436,59 @@ In Fun, types and values are rigorously distinguished (values are objects and ty
 
 ### Parametric Types ###
 
+If we have two type definitions with similar structure, for example,
 
+  type BoolPair = Boo1 x Boo1
+  type IntPair = Int x Int
+
+we may want to factor the common structure in a single parametric definition and use the parametric type in defining other types:
+
+ type Pair[T] = T x T
+ type PairOfBool = Pair[Bool]
+ type PairOfInt = Pair[Int]
+
+A type definition simply introduces a new name for a type expression, and it is equivalent to that type expression in any context. A type definition does not introduce a new type. Hence, 3,4 is an IntPair because it has type Int x Int, which is the definition of IntPair.
+
+A parametric type definition introduces a new type operator. Pair above is a type operator mapping any type T to a type T x T. Hence Pair[lnt] is the type Int x Int, and it follows that 3, 4 has type Pair[Int].
+
+*******************************************************************************************************************
+Type operators are not types: They operate on types. In particular, one should not confuse the following notations:
+
+   type A[T] = T -> T
+   type B    = VT. T -> T
+
+where A is a type operator that, when applied to a type T, gives the type of functions from T to T, and B is the
+type of the identity function and is never applied to types.
+*******************************************************************************************************************
+
+(J: the difference between parametric type (aka. type operator) and universal quantification is interesting and delicate. Type operator, thus parametric type, IS NOT a type. There's no value has type A. Whenever you use a parametric type, you apply a specific type to it first, then you say the value has type A[T]. In contrast, there're values whose type is B, in other words, universally quantified type IS a type. They're the tools aim at the same thing but work in two different ways. The other thing I noticed is, universal quantification need support from both what I called 'value space' and 'type space', e.g., the all operator in value space and V quantifier in type space; while parametric type only need support from type space.)
+
+(J: my feeling is, universally quantified type push the binding of type later than parametric type. Just a feeling.)
+
+(J: here the author showed us how to define a general list, in two ways)
+
+(Way One: use parametric type)
+
+Type operators can be used in recursive definitions, as in the following definition of generic lists. Note that we cannot think of List[ltem] below as an abbreviation that has to be macroexpanded to obtain the real definition (this would cause an infinite expansion). Rather, we should think of List as a new type operator, which is recursively defined and maps any type to lists of that type:
+
+  ret type List[Item] = [nil: Unit, cons: {head: Item, tail: List[Item]}]
+
+(Way Two: use universal quantification)
+
+A generic empty list can be defined, and then specialized, as
+
+  value nil = all Item. [nil = ()]
+  value intNil = nil[Int]
+  value boolNil = nil[Bool]
+
+Now, [nil = ()] has type List[Item], for any Item (as it matches the definition of List[Item]). Hence the types of the generic nil and its specializations are
+
+  nil     : VItem. List[Item]
+  intNil  : List[Int]
+  boolNil : List[Bool]
+
+Similarly, we can define a generic cons function and other list operations:
+
+  value cons : VItem. (Item x List[ltem]) + List[Item] = all Item. fun (h:Item, t:List[Item]) [cons = {head = h, tail = t}]
+
+Note that cons can only build homogeneous lists, because of the way its arguments and result are related by the same Item type. We should mention that there are problems in deciding, in general, when two parametric recursive type definitions represent the same type. Solomon [1978] describes the problem and a reasonable solution, which involves restricting the form of parametric type definitions.
