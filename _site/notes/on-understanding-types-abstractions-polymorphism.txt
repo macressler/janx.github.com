@@ -373,7 +373,7 @@ Although types are applied, there is no implication that types can be manipulate
   value id = fun(x:a) x          -- where a is now afree type variable
   id(3)
 
-(J: there's no type information at runtime, on values)
+(J: there's no type information at runtime, only values)
 
 Here the type-checking algorithm has the task of recognizing that a is a free type variable and reintroducing the original all[a] and [lnt] information. This is part of what a polymorphic type checker can do, like the one used in the ML language. In fact, ML goes further and allows the programmer to omit even the remaining type information:
 
@@ -391,7 +391,7 @@ Going back to the fully explicit language, let us extend our notation so that th
 
 Here is an example of a function taking a parameter of a universally quantified type. The function inst takes a function of the above type and returns two instances of it, specialized for integers and Booleans:
 
-  value inst = fun(f: Va. a -> a) (f[lnt],f[Bool])
+  value inst = fun(f: Va. a -> a) (f[Int],f[Bool])
   value intid = fst(inst(id))   : Int  -> Int
   value boolid = snd(inst(id))  : Bool -> Bool
 
@@ -403,9 +403,9 @@ The first version, twice1, has a function parameter f, which is of a universal t
 
 Thus twice1 has three bound variables for which actual parameters must be supplied during function application:
 
-  all[t]            -- requires an actual parameter which is a type
-  fun(f: Va. a + a) -- requires a function of the type Va. a + a
-  fun(x: t)         -- requires an argument of the type substituted for t
+  all[t]             -- requires an actual parameter which is a type
+  fun(f: Va. a -> a) -- requires a function of the type Va. a + a
+  fun(x: t)          -- requires an argument of the type substituted for t
 
 An application of twice1 to the type Int, the function id, and the argument 3 is specified as follows:
 
@@ -438,7 +438,7 @@ In Fun, types and values are rigorously distinguished (values are objects and ty
 
 If we have two type definitions with similar structure, for example,
 
-  type BoolPair = Boo1 x Boo1
+  type BoolPair = Bool x Bool
   type IntPair = Int x Int
 
 we may want to factor the common structure in a single parametric definition and use the parametric type in defining other types:
@@ -449,7 +449,7 @@ we may want to factor the common structure in a single parametric definition and
 
 A type definition simply introduces a new name for a type expression, and it is equivalent to that type expression in any context. A type definition does not introduce a new type. Hence, 3,4 is an IntPair because it has type Int x Int, which is the definition of IntPair.
 
-A parametric type definition introduces a new type operator. Pair above is a type operator mapping any type T to a type T x T. Hence Pair[lnt] is the type Int x Int, and it follows that 3, 4 has type Pair[Int].
+A parametric type definition introduces a new type operator. Pair above is a type operator mapping any type T to a type T x T. Hence Pair[Int] is the type Int x Int, and it follows that 3, 4 has type Pair[Int].
 
 *******************************************************************************************************************
 Type operators are not types: They operate on types. In particular, one should not confuse the following notations:
@@ -489,6 +489,119 @@ Now, [nil = ()] has type List[Item], for any Item (as it matches the definition 
 
 Similarly, we can define a generic cons function and other list operations:
 
-  value cons : VItem. (Item x List[ltem]) + List[Item] = all Item. fun (h:Item, t:List[Item]) [cons = {head = h, tail = t}]
+  value cons : VItem. (Item x List[ltem]) -> List[Item] = all Item. fun (h:Item, t:List[Item]) [cons = {head = h, tail = t}]
 
 Note that cons can only build homogeneous lists, because of the way its arguments and result are related by the same Item type. We should mention that there are problems in deciding, in general, when two parametric recursive type definitions represent the same type. Solomon [1978] describes the problem and a reasonable solution, which involves restricting the form of parametric type definitions.
+
+
+## Existential Quantification
+
+
+Type specifications for variables of a universally quantified type have the following form for any type expression t(a):
+
+  p: Va.t(a)     (e.g. id: Va. a -> a)
+
+By analogy with universal quantification, we can try to give meaning to existentially quantified types. In general, for any type expression t(a),
+
+  p: Ea.t(a)
+
+has the property: For some type a, p has the type t(a)
+
+For example,
+
+  (3,4): Ea. a x a
+  (3,4): Ea. a
+
+where a = Int in the first case, and a = Int x Int in the second.
+
+Thus we see that a given constant such as (3, 4) can satisfy many different existential types. (Warning: For didactic purposes we assign here existential types to ordinary values, like (3,4). Although this is conceptually correct, in later sections it is disallowed for type-checking purposes, and we require using particular constructs to obtain objects of existential type.)
+
+Every value has type Ea. a because for every value there exists a type such that that value has that type. Thus the type Ea. a denotes the set of all values, which we sometimes call Top (the biggest type):
+
+  type Top = Ea. a -- the type of any value whatsoever
+
+(J: it seems only function can have a universal quantified type? except the residential of bottom type?)
+
+The set of all ordered pairs may be denoted by the following existential type:
+
+  Ea.Eb. a X b     -- the type of any pair whatsoever
+
+This is the type of any pair p, q because, for some type a (take a type of p) and some type b (take a type of q), p, q has type a X b.
+
+The type of any object, together with an integer-valued operation that can be applied to it may be denoted by the following existential type:
+
+  Ea.a X (a -> Int)
+
+The pair (3, succ) has this type, if we take a = Int. Similarly the pair ([l; 2; 3], length) has this type, if we take a = List[lnt].
+
+Because the set of types includes not only simple types but also universal types and the type Top, existentially quantified types have some properties that may at first appear counterintuitive. The type Ea. a X a is not simply the type of pairs of equal type (e.g., 3, 4), as one might expect. In fact, even 3, true has this type. We know that both 3 and true have type Top; hence there is a type a = Top such that 3, true : a X a. Therefore, Ea. a x a is the type of all pairs whatsoever and is the same as Ea.Eb. a x b. Similarly, any function whatsoever has type Ea. a + a, if we take a = Top.
+
+However, Ea. a x (a -> Int) forces a relation between the type of an object and the type of an associated integer-valued function. For example, (3, length) does not have this type (if we consider 3 as having type Top, then we would have to show that length has type Top + Int, but we only know that length : Va. List[a] -> a maps integer lists to integers, and we cannot assume that any arbitrary object of type Top will be mapped to an integer).
+
+Not all existential types turn out to be useful. For example, if we have an (unknown) object of type Ea. a, we have absolutely no way of manipulating it (except passing it around) because we have no information about it. If we have an (unknown) object of type ga. a x a, we can assume that it is a pair and apply fst and snd to it, but then we are stuck because we have no information about a.
+
+Existentially typed objects can be useful, however, if they are sufficiently structured. For example, x : Ea. a x (a -> Int) provides sufficient structure to allow us to compute with it. We can execute
+
+  (snd(x)) (fst(x))
+
+and obtain an integer.
+
+Hence, there are useful existential types, which hide some of the structure of the objects they represent but show enough structure to allow manipulations of the objects through operations the objects themselves provide. These existential types can be used, for example, in forming apparently heterogeneous lists:
+
+  [(3,succ); ([1;2;3],length)] : List[Ea. a x (a -> Int)]
+
+We can later extract an element of this list and manipulate it, although we may not know which particular element we are using and what its exact type is. Of course, we can also form totally heterogeneous lists of type List[Ea.a], but these are quite unusable.
+
+(J: this is the true 'programming to interface'!!! damn cool.)
+
+### Existential Quantification and Information Hiding ###
+
+The real usefulness of existential types becomes apparent only when we realize that Ea. a X (a -> Int) is a simple example of an abstract type packaged with its set of operations. The variable a is the abstract type itself, which hides a representation. The representation was Int and List[Int] in the previous examples.
+
+Then a X (a -> Int) is the set of operators on that abstract type: a constant of type a and an operator of type a -> Int. These operators are unnamed, but we can have a named version by using record types instead of Cartesian products:
+
+  x: Ea. {const: a, op: a -> Int)
+  x.op(x.const)
+
+As we do not know what the representation a really is (we only know that there is one), we cannot make assumptions about it, and users of x will be unable to take advantage of any particular implementation of a. As we announced earlier, we have been a bit liberal in applying various operators directly to objects of existential types (like x.op above). This will be disallowed from now on, for the sole purpose of making our formalism easier to type-check. Instead, we shall have explicit language constructs for creating and manipulating objects of existential types, just as we had type abstractions all[t] and type applications exp[t] for creating and using objects of universal types.
+
+An ordinary object (3, succ) may be converted to an abstract object having type Ea. a x (a -> Int) by packaging it so that some of its structure is hidden. The operation pack below encapsulates the object (3, succ) so that the user knows only that an object of the type a x (a -> Int) exists without knowing the actual object. It is natural to think of the resulting object as having the existential type Ea. a x (a -> Int):
+
+  value p = pack [a=Int in a x (a -> Int)] (3,succ) : Ea. a x (a -> Int)
+
+(J: abstract object means we only know the type of the object, we have the object (value), but we don't know what the object (value) is.)
+
+Packaged objects such as p are called packages. The value (3, succ) is referred to as the content of the package. The type a X (a -> Int) is the interface: It determines the structure specification of the contents and corresponds to the specification part of a data abstraction. The binding a = Int is the type representation: It binds the abstract data type to a particular representation Int, and corresponds to the hidden data type associated with a data abstraction.
+
+The general form of the operation pack is as follows:
+
+  pack[a = typerep in interface] (contents)
+
+The operation pack is the only mechanism for creating objects of an existential type. Thus, if a variable of an existential type has been declared by a declaration such as
+
+  p : Ea.a x (a -> Int)
+
+then p can take only values created by a pack operation.
+
+A package must be opened before it can be used:
+
+  open p as x in (snd(x))(lst(x))
+
+Opening a package introduces a name x for the contents of the package that can be used in the scope following in. When the structure of x is specified by labeled components, components of the opened package may be referred to by name:
+
+  value p = pack [a = Int in (arg:a, op:a->Int)] (3, succ)
+  open p as x in x.op(x.arg)
+
+We may also need to refer to the (unknown) type hidden by the package. For example, suppose that we wanted to apply the second component of p to a value of the abstract type supplied as an external argument. In this case the unknown type b must be explicitly referred to and the following form can be used:
+
+  open p as x [b] in fun(y:b) (snd(x))(y)
+
+Here the type name b is associated with the hidden representation type in the scope following in. The type of the expression following in must not contain b, to prevent b from escaping its scope.
+
+The function of open is mostly to bind names for representation types and to help the type checker in verifying type constraints. In many situations we may want to abbreviate open p as x in x.a to p.a. We are going to avoid such abbreviations to prevent confusion, but they are perfectly admissible.
+
+Both pack and open have no run-time effect on data. Given a smart enough type checker, one could omit these constructs and revert to the notation used in the previous section.
+
+### Packages and Abstract Data Types ###
+
+
