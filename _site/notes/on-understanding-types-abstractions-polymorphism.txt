@@ -534,7 +534,7 @@ The type of any object, together with an integer-valued operation that can be ap
 
 The pair (3, succ) has this type, if we take a = Int. Similarly the pair ([l; 2; 3], length) has this type, if we take a = List[lnt].
 
-Because the set of types includes not only simple types but also universal types and the type Top, existentially quantified types have some properties that may at first appear counterintuitive. The type Ea. a X a is not simply the type of pairs of equal type (e.g., 3, 4), as one might expect. In fact, even 3, true has this type. We know that both 3 and true have type Top; hence there is a type a = Top such that 3, true : a X a. Therefore, Ea. a x a is the type of all pairs whatsoever and is the same as Ea.Eb. a x b. Similarly, any function whatsoever has type Ea. a + a, if we take a = Top.
+Because the set of types includes not only simple types but also universal types and the type Top, existentially quantified types have some properties that may at first appear counterintuitive. The type Ea. a X a is not simply the type of pairs of equal type (e.g., 3, 4), as one might expect. In fact, even 3, true has this type. We know that both 3 and true have type Top; hence there is a type a = Top such that 3, true : a X a. Therefore, Ea. a x a is the type of all pairs whatsoever and is the same as Ea.Eb. a x b. Similarly, any function whatsoever has type Ea. a -> a, if we take a = Top.
 
 However, Ea. a x (a -> Int) forces a relation between the type of an object and the type of an associated integer-valued function. For example, (3, length) does not have this type (if we consider 3 as having type Top, then we would have to show that length has type Top + Int, but we only know that length : Va. List[a] -> a maps integer lists to integers, and we cannot assume that any arbitrary object of type Top will be mapped to an integer).
 
@@ -604,4 +604,100 @@ Both pack and open have no run-time effect on data. Given a smart enough type ch
 
 ### Packages and Abstract Data Types ###
 
+Ada packages, which simply encapsulate a set of operations on a publicly defined data type, do not need fancy type operators. They can be modeled in our notation by the simple typed X-calculus without existential quantification. It is only when we hide the type representation     by using private data types that existential quantification is needed.
 
+value localpoint =
+  let p: Point = ref((0,0))
+  in {makepoint = fun(x: Real, y: Real) p := (x, y),
+      x_coord = fun() fst(p).
+      y_coord = fun() snd(p)
+     }
+
+The let construct was used in the previous example to realize information hiding. We call this first-order information hiding because it is achieved by restricting scoping at the value level. This is in contrast to second-order information hiding that is realized by existential quantifiers, which restrict scoping at the type level.
+
+An Ada point package point2 with a private type Point may be defined as follows:
+
+  package point2
+    type Point is private;
+    function makepoint (x:Real, y:Real) return Point;
+    function x_coord (P:Point) return Real;
+    function y_coord (P:Point) return Real;
+    private
+      -- hidden local definition of the type Point
+  end point2;
+
+The private type Point may be modeled by existential quantification:
+
+  type Point2 = EPoint.
+    {makepoint: (Real x Real) -> Point,
+     x_coord: Point -> Real,
+     y_coord: Point -> Real
+    }
+
+It is sometimes convenient to view the type specifications of an existentially quantified type as a parametric function of the hidden type parameter. In the present example we may define Point2WRT[Point] as follows:
+
+  type Point2WRT[Point] =
+    {makepoint: (Real x Real) -> Point,
+     x_coord: Point -> Real,
+     y_coord: Point -> Real
+    }
+
+The notation WRT in Point2WRT[Point], to be read as with respect to, underlines the fact that this type specification is relative to a type parameter.
+
+A value point2 of the existential type Point2 may be created by the pack operation:
+
+  value point2 : Point2 = pack [Point = (Real x Real) in Point2WRT[Point]] point1
+
+The pack operation hides the representation Real X Real of Point, has the existentially parameterized type Point2WRT[Point] as its specification part, and provides as its hidden body the previously defined value point1 that implements operations for the given data representation. Note that Point2WRT[Point] represents a parameterized type expression which, when supplied with an actual type parameter such as Real, determines a type (in this case a record type with three components). The relation between this kind of parameterization and the other kinds of parameterization introduced so far is illustrated by the following:
+
+  (1) Function abstraction: fun(x : type) value-expr(x). The parameter x is a value and the result of substituting an actual parameter for the formal parameter determines a value.
+
+  (2) Quantification: all(a) value-expr (a). The parameter a is a type and the result of substituting an actual type for the formal parameter determines a value.
+
+  (3) Type abstraction: TypeWRT[T] = type-expr(T). The parameter T is a type and the result of substituting an actual type for the formal parameter is also a type.
+
+Actual type parameters are restricted to be types, whereas actual value parameters may be arbitrarily complex values. However, when the class of namable types is enriched to include universally and existentially quantified types, this also enriches the arguments that may be substituted for formal type parameters.
+
+### Combining Universal and Existential Quantification ###
+
+In this section we give an example that demonstrates the interaction between universal and existential quantification. Universal quantification yields generic types, whereas existential quantification yields abstract data types. When these two notions are combined, we obtain parametric data abstractions.
+
+Stacks are an ideal example for illustrating the interaction between generic types and data abstraction. The simplest form of a stack has both a specific element type such as integer and a specific data structure implementation such as a list or an array. Generic stacks parameterize the element type, whereas abstraction from the data representation may be accomplished by creating a package that has an existential data type. A stack with parameterized element type and a hidden data representation is realized by combining universal quantification to realize the parameterization with existential quantification to realize the data abstraction.
+
+  type GenericStack = VItem. EStack. GenericStackWRT[Item][Stack]
+
+  type GenericStackWRT[Item][Stack] = 
+    {emptystack: Stack,
+     push: (Item,Stack) -> Stack,
+     pop: Stack -> Stack,
+     top: Stack -> Item
+    }
+
+(J: we can merge the above two declaration into one, seperate them into two just for clear)
+
+  value ListStackPackage : GenericStack =
+    all[Item] pack[Stack = List[Item] in GenericStackWRT[Item][Stack]] genericListStack[Item]
+
+  value arrayStackPackage : GenericStack =
+    all[Item] pack[Stack = (Array[Item] x Item) in GenericStackWRT[Item][Stack]] genericArrayStack[Item]
+
+  value genericListStack : GenericListStack =
+    all[Item] {emptystack = nil[Item],
+               push = fun(a:Item,s:List[Item]) cons[Item](a,s),
+               pop = fun(s:List[Item]) tl[Item](s),
+               top = fun(s:List[Item]) hd[Item](s)
+              }
+
+  value genericArrayStack : GenericArrayStack = ...
+
+Functions like the following usestack can work without any knowledge of the implementation:
+
+  value useStack = fun(stackPackage: GenericStack)
+    open stackPackage[Int] as p [stackRep] in p.top(p.push(3,p.emptystack));
+
+They also can be given any implementation of GenericStack as a parameter:
+
+  useStack(listStackPackage)
+  useStack(arrayStackPackage)
+
+In the definition of GenericStack, the type Stack is largely unrelated to Item, whereas it is our intention that, whatever the implementation of Stack, stacks should be collections of items (actually, there is a weak dependency of Stack upon Item given by the order of the quantifiers). Because of this, it is possible to build objects of type GenericStack where stacks have nothing to do with items, and do not obey properties like pop(push(a, s)) = a. This limitation is corrected in more powerful type systems like MacQueen [1986] and Burstall and Lampson [1984], where it is possible to abstract on type operators (e.g., List) instead of just types (e.g., List[Int]), and one can directly express the restriction that representations of Stack must be based on Item (but even in those more expressive type systems it is possible to fake stack packages that do not obey stack properties).
