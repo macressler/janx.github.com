@@ -701,3 +701,91 @@ They also can be given any implementation of GenericStack as a parameter:
   useStack(arrayStackPackage)
 
 In the definition of GenericStack, the type Stack is largely unrelated to Item, whereas it is our intention that, whatever the implementation of Stack, stacks should be collections of items (actually, there is a weak dependency of Stack upon Item given by the order of the quantifiers). Because of this, it is possible to build objects of type GenericStack where stacks have nothing to do with items, and do not obey properties like pop(push(a, s)) = a. This limitation is corrected in more powerful type systems like MacQueen [1986] and Burstall and Lampson [1984], where it is possible to abstract on type operators (e.g., List) instead of just types (e.g., List[Int]), and one can directly express the restriction that representations of Stack must be based on Item (but even in those more expressive type systems it is possible to fake stack packages that do not obey stack properties).
+
+### Quantification and Modules ###
+
+ type Point = EPointRep.
+   {mkpoint: (Real x Real) -> PointRep,
+    x-coord: PointRep -> Real,
+    y-coord: PointRep -> Real
+   }
+
+Our purpose is to define values of this type that hide both the representation PointRep and the implementation of the operations mkpoint, x-cord, and y-coord with respect to this representation. In order to accomplish this, we define the type of these operations as a parametric type with the point representation PointRep as a parameter. The type name PointWRT emphasizes that the operations are defined with respect to a particular representation and that in contrast the abstract datatype Point is representation independent:
+
+  type PointWRT[PointRep] =
+    {mkpoint: (Real x Real) -> PointRep,
+     x-coord: PointRep -> Real,
+     y-coord: PointRep -> Real
+    }
+
+The existential type Point may be defined in terms of PointWRT by existential abstraction with respect to PointRep:
+
+  type Point = EPointRep. PointWRT[PointRep]
+
+The relationship between representation-dependent point operations and the associated abstract data type becomes even clearer when we illustrate the abstraction process for some specific point representations. Let us define a Cartesian point package whose point representation is by pairs of reals and whose operations mkpoint, x-coord, y-coord are as follows:
+
+  value cartesianPointOps =
+    {mkpoint = fun (x:Real, y:Real) (x,y),
+     x-coord = fun (p: Real x Real) fst(p),
+     y-coord = fun (p: Real x Real) snd(p)
+    }
+
+A package with point representation Real x Real and with the above implementations of point operations as its content can be specified as follows:
+
+  value cartesianPointPackage =
+    pack [PointRep = Real x Real in PointWRT[PointRep]] cartesianPointOps
+
+Similarly we can make a polar Point package whose point representation Real X Real is the same as that for the Cartesian Point package but whose content is a different (polar-coordinate) implementation of the operations.
+
+These examples illustrate how a package realizes data abstraction by hiding both the data representation and the implementation of its operations. The Cartesian and polar packages have the same existential type Point, use the same parametric type PointWRT[PointRep] to specify the structure of point operations, and have the same type Real X Real for data representation. They differ only in the content of the package that determines the function implementations. In general, a given existential type forces all packages of that type to have the same structure for operations. But both the type of the internal data representation and the value (implementation) of the operations may differ for different realizations of an abstract data type.
+
+An abstract data type packaged with its operators, like Point, is also a simple example of a module. In general modules can import other (known) modules, or can be parameterized with respect to other (as yet unknown) modules.
+
+Parametric modules can be treated as functions over existential types. Here is a way of extending the Point package with another operation (add). Instead of doing this extension for a particular Point package, we write a procedure to do the extension for any Point package over an unknown representation of point. Recall that & is the record type concatenation operator:
+
+  type ExtendedPointWRT[PointRep] = PointWRT[PointRep] & {add: (PointRep x PointRep) -> PointRep)
+  type ExtendedPoint = EPointRep. ExtendedPointWRT[PointRep]
+
+  value extendPointPackage =
+    fun (pointpackage: Point)
+      open pointpackage as p [PointRep] in
+        pack [PointRep’ = PointRep in ExtendedPointWRT[PointRep’]]
+          p & {add = fun (a:PointRep, b:PointRep)
+               p.mkpoint(p.x-coord(a)+p.x-coord(b),
+               p.y-coord(a)+p.x-coord(b))
+              }
+
+  value extendedCartesianPointPackage = extendPointPackage(cartesianPointPackage)
+  value extendedPolarPointPackage = extendPointPackage(polarPointPackage)
+
+(J: extendPointPackage is a parametric module, which is indeed a function. We benefit from the fact that 'module' is a first-class citizen here.)
+
+We now go back to the Point module and show how other modules can be built on top of it. In particular, we build modules Circle and Rectangle on top of Point and then define a module Picture that uses both Circle and Rectangle. As different instances of Point may be based on different data representations, we have to make sure that circles and rectangles are based on the same representation of Point, if we want to make them interact.
+
+A circle package provides operations to create a circle out of a point (the center) and a real (the radius), and operations to extract the center and the radius of a circle. An operation diff of circle difference (distance between the centers of two circles) is also defined. The two parameters of diff are circles based of Point. A circle package also provides a point on the same implementation package, to allow one to access point operations working on the same representation of point used in the circle package:
+
+  type CircleWRT2[CircleRep,PointRep] =
+    {pointpackage: PointWRT[PointRep],
+     mkcircle: (PointRep x Real) -> CircleRep,
+     center: CircleRep -> PointRep,
+     radius: CircleRep -> Real,
+     diff: (CircleRep x CircleRep) -> Real
+    }
+
+  type CircleWRT1[PointRep] = ECircleRep. CircleWRT2[CircleRep,PointRep]
+  type Circle = EPointRep. CircleWRT1 [PointRep]
+  type CircleModule = VPointRep. PointWRT[PointRep] -> CircleWRT1[PointRep]
+
+  value circleModule : CircleModule =
+    all[PointRep]
+      fun (p: PointWRT[PointRep])
+        pack[CircleRep = PointRep x Real in CircleWRT2[CircleRep,PointRep]]
+          {pointpackage = p,
+           mkcircle = fun (m:PointRep,r:Real) (m,r),
+           center = fun (c: PointRep x Real) fst(c),
+           radius = fun (c: PointRep x Real) snd(c),
+           diff = fun (c1 : PointRep x Real, c2: PointRep x Real)
+                    let pl = fst(c1)
+                    and p2 = fst(c2)
+                    in sqrt((p.x-coord(p1) - p.xcoord(p2))**2+ (p.y-coord(p1) - p.y-coord(p2))**2)
+          }
