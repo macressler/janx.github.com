@@ -789,3 +789,28 @@ A circle package provides operations to create a circle out of a point (the cent
                     and p2 = fst(c2)
                     in sqrt((p.x-coord(p1) - p.xcoord(p2))**2+ (p.y-coord(p1) - p.y-coord(p2))**2)
           }
+
+We can now build some particular circle packages by applying circleModule to various point packages. We could also define different versions of circleModule based on diffeient representations of circle, and all of those could be applied to all the different point packages to obtain circle packages. Here we apply circleModule to CartesianPointPackage and to polarPointPackage to obtain Cartesian and polar circle packages:
+
+  value cartesianCirclePackage =
+    open CartesianPointPackage as p [Rep] in
+      pack[PointRep = Rep in CircleWRTl[PointRep]]
+        circleModule[Rep](p)
+
+  value polarCirclePackage =
+    open polarPointPackage as p [Rep] in
+      pack[PointRep = Rep in CircleWRTl[PointRep]]
+        circleModule[Rep](p)
+
+To use a circle package we have to open it. We actually have to open it twice (note that the type Circle has a double existential quantification) to bind PointRep and CircleRep to the point and circle representations used in that package. Here we use an abbreviated form of open that is equivalent to two consecutive opens:
+
+  open cartesianCirclePackage as c [PointRep] [CircleRep]
+    in ... c.mkcircle(c.pointPackage.mkpoint(3.4),5) ...
+
+### Modules Are First-Class Values ###
+
+In the previous section we have shown that packages and modules are first-class citizens: They are legal values that can be passed and returned from functions and stored in data structures. For example, it is possible to write programs that, depending on conditions, produce one or another package of the same existential type implementing an interface and return it to be used in the construction of larger packages.
+
+The process of linking modules can also be expressed; we have done this in the previous example, for example, when we produced cartesianCirclePackage by linking CartesianPointPackage and circleModule. Hence the process of building systems out of modules can be expressed in the same language used to program modules, and the full power of the language can be applied during the linking phase.
+
+Although we have shown that we can express parametric modules and linking mechanisms, we do not claim that this is the most convenient notation to work with. Our purpose is to show that all these concepts can be captured in a relatively simple framework. There is more to be done, however, to prevent the notation from getting out of hand. The major problem here is that one must be aware of the dependency graph of modules when creating new module instances, and the linking must be done by hand for every new instance. These problems are specifically addressed in the Standard ML module mechanism [MacQueen 1984].
