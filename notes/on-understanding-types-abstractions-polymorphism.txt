@@ -520,7 +520,7 @@ Every value has type Ea. a because for every value there exists a type such that
 
   type Top = Ea. a -- the type of any value whatsoever
 
-(J: it seems only function can have a universal quantified type? except the residential of bottom type?)
+(J: it seems only function can have a universal quantified type? except the residential of bottom type? It's hard for a function to have universal quantified type too, because when the function works on *all* types, it won't know any useful information of the concrete type, the only things the function can do is based on the general information of *all* types. In contrast, existential type is very useful because there's always *some* types satisfy something, so a function in existential type can do anything just like a function in concrete type.)
 
 The set of all ordered pairs may be denoted by the following existential type:
 
@@ -814,3 +814,194 @@ In the previous section we have shown that packages and modules are first-class 
 The process of linking modules can also be expressed; we have done this in the previous example, for example, when we produced cartesianCirclePackage by linking CartesianPointPackage and circleModule. Hence the process of building systems out of modules can be expressed in the same language used to program modules, and the full power of the language can be applied during the linking phase.
 
 Although we have shown that we can express parametric modules and linking mechanisms, we do not claim that this is the most convenient notation to work with. Our purpose is to show that all these concepts can be captured in a relatively simple framework. There is more to be done, however, to prevent the notation from getting out of hand. The major problem here is that one must be aware of the dependency graph of modules when creating new module instances, and the linking must be done by hand for every new instance. These problems are specifically addressed in the Standard ML module mechanism [MacQueen 1984].
+
+
+## Bounded Quantification ##
+
+
+### Type Inclusion, Subranges, and Inheritance ###
+
+We say that a type A is included in or is a subtype of another type B when all the values of type A are also values of type B, that is, exactly when A, considered as a set of values, is a subset of B. This general notion of inclusion specializes to different inclusion rules for different type constructors. In this section we discuss inclusions of subranges, records, variants, and function types. Inclusions of universally and existentially quantified types are discussed in later sections.
+
+As an introduction to inclusions on record types, we first present a simple theory of inclusions on integer subrange types. Let n..m denote the subtype of the type Int associated with the subrange n to m, extremes included, where n and m are known integers. The following type inclusion relations hold for integer subrange types:
+
+  n..m <= n'.. m' iff n' <= n and m <= m’
+
+where the <= on the left is type inclusion and those on the right are less or equal to.
+
+Subrange types may occur as type specifications in lambda-expressions:
+
+  value f = fun (x:2..5) x + 1
+  f : 2..5 -> 3..6
+  f(3)
+
+The constant 3 has the type 3..3 and also has the type of any supertype, including the type 2..5 of x above. It is therefore a legal argument of f. Similarly the following should be legal:
+
+  value g = fun (y:3..4) f(y)
+
+because the type of y is a subtype of the domain off. An actual parameter of an application can have any subtype of the corresponding formal parameter.
+
+Consider a function of type 3..7 -> 7..9. This can also be considered a function of type 4..6 -> 6..10, since it maps integers between 3 and 7 (and hence between 4 and 6) to integers between 7 and 9 (and hence between 6 and 10). Note that the domain shrinks while the codomain expands. In general, we can formulate the inclusion rules for functions as follows:
+
+  s -> t <= s’ -> t’ iff s’ <= s and t <= t’
+
+Note the (rather accidental) similarity of this rule and the rule for subranges, and how the inclusion on the domain is swapped.
+
+The same line of reasoning applies to record types. Suppose we have types
+
+  type Car = (age:Int, speed:Int, fuel:String)
+  type Vehicle = (age:Int, speed:Int)
+
+We would like to claim that all cars are vehicles; that is, that Car is a subtype of Vehicle. To achieve this we need the following inclusion rule for record types:
+
+  {a1:t1, .., an:tn, .., am:tm} <= {a1:u1, .., an:un} iff ti <= ui for i <- 1..n
+
+That is, a record type A is a subtype of another record type B if A has all the attributes (fields) of B, and possibly more, and the types of the common attributes are, respectively, in the subtype relation. Subtyping on record types corresponds to the concept of inheritance (subclass) in languages, especially if records are allowed to have functional components. A class instance is a record with functions and local variables, and a subclass instance is a record with at least those functions and variables, and possibly more.
+
+In fact, we can also express multiple inheritance.  If we add the type definitions
+
+  type Object = (age:Int)
+  type Machine = (age:Int, fuel:String)
+
+then we have that Car is a subtype of (inherits properties from) both Vehicle and Machine, and those are both subtypes of Object. Inheritance on records also extends to higher functional types, as in the case of subranges, and the inclusion rule for function spaces is also maintained.
+
+In the case of variant types, we have the following inclusion rule:
+
+[a1:t1, .., an:tn] <= [a1:u1, .., an:un, .., am:um] iff ti <= ui for i <- 1..n
+
+For example, every bright color is a color:
+
+  type brightcolor = [red:Unit, green:Unit, blue:Unit]
+  type color = [red:Unit, green:Unit, blue:Unit, gray:Unit, brown:Unit]
+
+### Bounded Universal Quantification and Subtyping ###
+
+We now come to the problem of how to mix subtyping and parametric polymorphism. We have seen the usefulness of those two concepts in separate applications; we now show that it is useful, and sometimes necessary, to merge them. Let us take a simple function on records of one component,
+
+  value f0 = fun(x: {one:Int}) x.one
+
+which can be applied to records like {one = 3, two = true}. This can be made polymorphic by
+
+  value f = all[a] fun(x: {one:a}) x.one
+
+We can use f[t] on records of the form {one = y} for any y of type t, and on records like {one = y, two = true}.
+
+The notation all[a]e allows us to express the notion that a type variable ranges over all types but does not allow us to designate type variables that range over a subset of the set of types. A general facility for specifying variables that range over arbitrary subsets of types could be realized by quantification over type sets defined by specified predicates. However, we do not need this generality and can be satisfied with specifying just a particular class of subsets-namely, the set of all subtypes of a given type. This may be accomplished by bounded quantification.
+
+A type variable ranging over the set of all subtypes of a type T may be specified by bounded quantification as follows:
+
+  all[a <= T]e -- a ranges over all subtypes of T in the scope e
+
+Here is a function that accepts any record having integer component one and extracts its contents:
+
+  value g0 = all[a <= {one:Int)] fun(x: a) x.one
+  g0 [{one:Int, two:Bool}]({one=3, two=true})
+
+Note that there is little difference between g0 and f0; all we have done is to move the constraint that the argument must be a subtype of {one:Int} from the fun parameter to the all parameter. We now have two ways of expressing inclusion constraints: implicitly by function parameters and explicitly by bounded quantifiers. Now that we have bounded quantifiers, we could remove the other mechanism, requiring exact matching of types on parameter passing, but we shall leave it for convenience.
+
+To express the type of g0, we need to introduce bounded quantification in type expressions:
+
+  g0 : Va <= {one:Int).a -> Int
+
+Now we have a way of expressing both inheritance and parametric polymorphism. Here is a new version of go in which we abstract Int to any type:
+
+  value g = all[b] all[a <= {one:b}] fun(x:a) x.one
+  g[Int][{one:Int, two:Bool}]({one=3, two=true})
+
+where all[b]e is now an abbreviation for all[b <= Top]e. The new function g could not be expressed by parametric polymorphism or by inheritance separately. Only their combination, achieved by bounded quantifiers, allows us to write it.
+
+So far, bounded quantifiers have not shown any extra power, because we can rephrase go as fo and g as f, given that we allow type inclusion on parameter passing. But bounded quantifiers are indeed more expressive, as is shown in the next example. The need for bounded quantification arises very frequently in object-oriented programming. Suppose that we have the following types and functions:
+
+  type Point = {x: Int, y: Int}
+  value moveX0 = fun(p:Point, dx:Int) p.x := p.x + dx; p
+  value moveX  = all[P <= Point] fun(p:P, dx:Int) p.x := p.x + dx; p
+
+It is typical in (type-free) object-oriented programming to reuse functions like moveX on objects whose type was not known when moveX was defined. If we now define
+
+  type Tile = {x: Int, y:Int, hor: Int, ver:Int}
+
+we may want to use moveX to move tiles, not just points. However, if we use the simpler moveXo function, it is only sound to assume that the result will be a point, even if the parameter was a tile and we allow inclusion on function arguments. Hence, we lose type information by passing a tile through the moveX0 function and, for example, we cannot further extract the her component from the result.
+
+Bounded quantification allows us to better express input/output dependencies: The result type of moveX will be the same as its argument type, whatever subtype of Point that happens to be. Hence we can apply moveX to a tile and get a tile back without losing type information:
+
+  moveX[Tile]({x=0,y=0,hor=1,ver=1},1).hor
+
+This shows that bounded quantification is useful, even in the absence of proper parametric polymorphism, to express adequately subtyping relations.
+
+(J: the difference between bounded quantification and type inclusion is type inclusion happens automatically, but bounded quantification asks for a concrete type when you use it, and you can provide more accurate type information to bounded quantified function.)
+
+Earlier we saw that parametric polymorphism can be either explicit (by using V quantifiers) or implicit (by having free type variables, implicitly quantified). We have a similar situation here, where inheritance can be either explicit, by using bounded quantifiers, or left implicit in the inclusion rules for parameter passing. In object-oriented languages, subtype parameters are generally implicit. We may consider such languages to be abbreviated versions of languages using bounded quantification. Thus bounded quantification is useful not only to ncrease expressive power, but also to make explicit the parameter mechanisms through which inheritance is achieved.
+
+(J: The bound make universal quantification much more useful. In a previous note I mentioned that a univeral quantified function is almost useless, because it only knows limited general informations of *all* types. When we give the universal quantification a bound, we get specific information of the bound, which will enable the function to do more things.)
+
+### Comparison with Other Subtyping Mechanisms ###
+
+How do the above inheritance mechanisms compare with those in Simula, Smalltalk, and LISP Flavors? For many uses of inheritance the correspondence is not exact, although it can be obtained by paraphrases. Other uses of inheritance cannot be simulated, especially those that make essential use of dynamic typing. On the other hand, there are some things that can be done with bounded quantification that are impossible in some object-oriented languages.
+
+Record types are used to model classes and subclasses. Record types are matched by structure, and the (multiple) inheritance relations are implicit in the names and types of record components. In Simula and Smalltalk classes are matched by name, and the inheritance relations are explicit; only single inheritance is allowed. LISP Flavors allow a form of multiple inheritance. Smalltalk’s metaclasses cannot be emulated in the present framework.
+
+Records are used to model class instances. Records have to be constructed explicitly (there is no create new instance of class X primitive) by specifying at construction time the values of the components. Hence different records of the same record type can have different components; this gives a degree of flexibility that is not shared by Simula and Smalltalk. Simula distinguishes between functional components (operations), which must be shared by all the instances of a class, and nonfunctional components (variables), which belong to instances. Simula’s uirtual procedures are a way of introducing functional components that may change in different instances of a class but must still be uniform within subclasses of that class. Smalltalk also distinguishes between methods, shared by all instances of a class, and instance variables, local to instances. Unlike Simula’s variables declared in classes, Smalltalk instance variables are private and cannot be directly accessed. This behavior can be easily obtained in our framework by limiting visibility of local variables via static scoping techniques.
+
+Functional record components are used to model methods. As remarked in the previous paragraph, record components are conceptually bound to individual records, not to record types (although implementations can optimize this). In Simula and Smalltalk it is possible for a subclass automatically to inherit the methods of its superclass, or to redefine them. When we consider multiple inheritance, this automatic way of inheriting methods creates problems in case more than one superclass defines the same method: Which one should be inherited? We avoid this problem by having to create records explicitly. At record creation time one must choose explicitly which field values a particular record should have: whether it should inherit them by using some predefined function (or value) used in the allocation of other records, or redefine them by using a new function (or value). Everything is allowed as long as the type constraints are respected.
+
+(J: in C++ you have to specify which implementation you want to use explicitly when you multi-inheirted from serveral classes, thus the same as here. I still like the mixin way ruby provided.)
+
+Record field selection is used to model message passing. A message sent to an object with some parameters translates to the selection of a functional component of a record and its application to the parameters. This is very similar to what Simula does, whereas Smalltalk goes through a complex name-binding procedure to associate message names with actual methods. Simula can compute statically the precise location of a variable or operation in an instance. Smalltalk has to do a dynamic search, which can be optimized by caching recently used methods. Our field selections have intermediate complexity: Because of multiple inheritante it is not possible to determine statically the precise location of a field in a record, but caching can achieve an almost constant-time access to fields, on the average, and achieves exactly constant time in programs that only use single inheritance.
+
+Smalltalk’s concept of self, corresponding to Simula’s this (a class instance referring to its own methods and variables), can also be simulated without introducing any special construct. This can be done by defining a record recursively, so that an ordinary variable called self (although we could use a different name) refers to the record itself, recursively. Smalltalk’s concept of super (a class instance referring to the methods of its immediate superclass) and similar constructs in Simula (qua) and Flavors cannot be simulated because they imply an explicit class hierarchy.
+
+Simula has a special construct, called inspect, which is essentially a case statement on the class of an object. We have no way of emulating this directly; it turns out, however, that inspect is often used because Simula does not have variant types. Variant types in Simula are obtained by declaring all the variant cases as subclasses of an (often) dummy class and then doing an inspect on objects of that class. Since we have variants, we just have to rephrase the relevant Simula classes and subclasses as variants and then use an ordinary case for discrimination.
+
+Smalltalk and LISP Flavors have some idioms that cannot be reproduced because they are essentially impossible to type check statically. For example, in Flavors one can ask whether an object supports a message (although it may be possible to paraphrase some of these situations by variant types). Generally, the freedom of type-free languages is hard to match, but we have shown in previous sections that polymorphism can go a long way toward achieving flexibility, and bounded quantification can extend that flexibility to inheritance situations.
+
+### Bounded Existential Quantification and Partial Abstraction ###
+
+As we have done for universal quantifiers, we can modify our existential type quantifiers, restricting an existential variable to be a subtype of some type:
+
+  Ea <= t. t'
+
+We retain the notation Ea. t as an abbreviation for Ea <= Top. t.
+
+Bounded existentials allow us to express partially abstract types: Although a is abstract, we know it is a subtype of t, and so it is no more abstract than t is. If t is itself an abstract type, we know that those two abstract types are in a subtype relation.
+
+We can see this in the following example, in which we use a version of the pack construct modified for bounded existentials:
+
+  pack [a <= t = t' in t''] e
+
+Suppose that we have two abstract types, Point and Tile, and we want to use them and make them interact with each other. Suppose also that we want Tile to be a subtype of Point, but we do not want to know why the inclusion holds because we want to use them abstractly. We can satisfy these requirements by the following definition:
+
+  type Tile = EP. ET <= P. TileWRT2[P,T]
+
+Hence there is a type P (Point) such that there is a type T (Tile) subtype of P that supports tile operations. More precisely,
+
+  type TileWRT2[P,T] =
+    {mktile: (Int x Int x Int x Int) -> T,
+     origin: T -> P,
+     hor: T -> Int,
+     ver: T -> Int
+    }
+
+  type TileWRT[P] = ET <= P. TileWRT2[P,T]
+  type Tile = EP. TileWRT[P]
+
+A Tile package can be created as follows, where the concrete representations Points and Tiles are as in the previous sections:
+
+  type PointRep = {x:Int,y:Int}
+  type TileRep = {x:Int,y:Int,hor:Int,ver:Int}
+
+  pack [P = PointRep in TileWRT[P]]
+    pack [T <= PointRep = TileRep in TileWRT2[P,T]]
+      {mktile = fun(x:Int,y:Int,hor:Int,ver:Int), <x=x,y=y,hor=hor,ver=ver>,
+       origin = fun(t:TileRep) t,
+       hor = fun(t:TileRep) t.hor,
+       ver = fun(t:TileRep) t.ver
+      }
+
+Note that origin returns a TileRep (a PoiiltRep is expected), but tiles can be considered as points. A function using abstract tiles can treat them as points, although how tiles and points are represented and why tiles are subtypes of points are unknown:
+
+  fun(tilePack:Tile)
+    open tilePack as t [pointRep] [tileRep]
+      let f = fun(p:pointRep) ...
+      in f(t.mktile(0,0,1,1))
+
+In languages with both type inheritance and abstract types, it is natural to be able to extend inheritance to abstract types without having to reveal the representation of types. As we have just seen, bounded existential quantifiers can explain these situations and achieve a full integration of inheritance and abstraction.
