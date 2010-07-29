@@ -1005,3 +1005,38 @@ Note that origin returns a TileRep (a PoiiltRep is expected), but tiles can be c
       in f(t.mktile(0,0,1,1))
 
 In languages with both type inheritance and abstract types, it is natural to be able to extend inheritance to abstract types without having to reveal the representation of types. As we have just seen, bounded existential quantifiers can explain these situations and achieve a full integration of inheritance and abstraction.
+
+
+## Type Checking and Type Inference ##
+
+In conventional typed languages, the compiler assigns a type to every expression and subexpression. However, the programmer does not have to specify the type of every subexpression of every expression: Type information need only be placed at critical points in a program, and the rest is deduced from the context. This deduction process is called type inference. Typically, type information is given for local variables and for function arguments and results. The type of expressions and statements can then be inferred, given that the type of variables and basic constants is known.
+
+Type inference is usually done bottom up on expression trees. Given the type of the leaves (variables and constants) and type rules for the ways of combining expressions into bigger expressions, it is possible to deduce the type of whole expressions. For this to work it is sufficient to declare the type of newly introduced variables.
+
+The ML language introduced a more sophisticated way of doing type inference. In ML is it not even necessary to specify the type of newly introduced variables, so that one can simply write
+
+  fun (x) x+1
+
+The type inference algorithm still works bottom up. The type of a variable is initially taken to be unknown. In x + 1 above, x would initially have type a, where a is a new type variable (a new type variable is introduced for every program variable). Then the Int operator would retroactively force a to be equivalent to Int. This instantiation of type variables is done by Robinson’s unification algorithm [Robinson 1965], which also takes care of propagating information across all the instances of the same variable, so that incompatible uses of the same variable are detected. An introductory exposition of polymorphic type inference can be found in Cardelli [1984a].
+
+This inference algorithm is not limited to polymorphic languages. It could be added to any monomorphic typed language, with the restriction that at the end of type checking all the type variables should disappear. Expressions like fun (x) x would be ambiguous, and one would have to write fun (x:lnt) x, for example, to disambiguate them.
+
+The best type inference algorithm known is the one used in ML and similar languages. This amounts to saying that the best we know how to do is type inference for type systems with little existential quantification, no subtyping, and a limited (but quite powerful) form of universal quantification. Moreover, in many extensions of the ML type system, the type-checking problem has been shown to be undecidable.
+
+Type inference reduces to type checking when there is so much type information in a program that the type inference task becomes trivial. More precisely, we can talk of type checking when all the type expressions involved in checking a program are already explicitly contained in the program text, that is, when there is no need to generate new type expressions during compilation and all one has to do is match existing type expressions.
+
+
+## Hierarchical Classification of Type Systems ##
+
+
+## Conclusions ##
+
+The augmented X-calculus supports type systems with a very rich type structure in a functional framework. It can model type systems as rich as or richer than those in real programming languages. It is sufficiently expressive to model the data abstractions of Ada and the classes of object-oriented languages. Its ability to express computations on types is strictly weaker than its ability to express computations on values.
+
+By modeling type and module structures of real programming languages in the augmented X-calculus, we gain an understanding of their abstract properties independent of the idiosyncrasies of programming languages in which they may be embedded. Conversely, we may view type and module structures of real programming languages as syntactically sugared versions of our augmented X-calculus.
+
+We started from the typed X-calculus and augmented it with primitive types such as Int, Booi, and String and with type constructors for pairs, records, and variants. Universal quantification was introduced to model parametric polymorphism, and existential quantification was introduced to model data abstraction. Both universal and existential quantification become more interesting when we can restrict the domain of variation of the quantified variable. Bounded universal quantification allows more sensitive parameterization by restricting parameters to the set of all subtypes of a type. Bounded existential quantification allows more sensitive data abstraction by allowing the specification of subtyping relations between abstract types.
+
+The insight that both subrange types of integers and subtypes defined by type inheritance are type inclusion polymorphisms extends the applicability of bounded quantification to both these cases. Records with functional components are a very powerful mechanism for module definitions, especially when combined with mechanisms for information hiding, which are here realized by existential types. Type inclusion of records provides a paradigm for type inheritance and may be used as a basis for the design of strongly typed object-oriented languages with multiple inheritance.
+
+(J: this is the *true* inheritance, or true/structural inheritance. A is subclass of B, C, .. because its intrinsical properties, not because we declared A inherits B in source code.)
