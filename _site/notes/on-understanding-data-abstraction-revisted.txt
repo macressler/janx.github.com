@@ -1,0 +1,120 @@
+# What is the relationship between objects and abstract data types (ADTs)? #
+
+Objects and abstract data types are not the same thing, and neither one is a variation of the other. They are fundamentally different and in many ways complementary, in that the strengths of one are the weaknesses of the other. The issues are obscured by the fact that most modern programming languages support both objects and abstract data types, often blending them together into one syntactic form. But syntactic blending does not erase fundamental semantic differences which affect flexibility, extensibility, safety and performance of programs. Therefore, to use modern programming languages effectively, one should understand the fundamental difference between objects and abstract data types.
+
+While objects and ADTs are fundamentally different, they are both forms of data abstraction. The general concept of data abstraction refers to any mechanism for hiding the implementation details of data. The concept of data abstraction has existed long before the term “data abstraction” came into existence. In mathematics, there is a long history of abstract representations for data. As a simple example, consider the representation of integer sets. Two standard approaches to describe sets abstractly are as an algebra or as a characteristic function. An algebra has a sort, or collection of abstract values, and operations to manipulate the values.  The characteristic function for a set maps a domain of values to a boolean value, which indicates whether or not the value is included in the set. These two traditions in mathematics correspond closely to the two forms of data abstraction in programming: algebras relate to abstract data types, while characteristic functions are a form of object.
+
+
+## Abstract Data Types ##
+
+An abstract data type (ADT) has a public name, a hidden representation, and operations to create, combine, and observe values of the abstraction. The familiar built-in types in most languages, for example the int and bool data types in Algol, Pascal, ML, Java and Haskell, are abstract data types.
+
+In addition to built-in abstract data types, some languages support user-defined abstract data types. User-defined abstract data types that resemble built-in data types were first realized in CLU and Alphard in the 1970s. There were also strong connections to algebraic specification of data types.
+
+A ML example (set of integer):
+
+  abstype set = EMPTY | INS of int * set where
+
+    val empty = EMPTY
+
+    fun insert(s, i) =
+      if not contains(s, i)
+      then INS(i, s)
+      else s
+
+    fun isEmpty(s) = (s == EMPTY)
+
+    fun contains(s, i) =
+      case s of
+        EMPTY ⇒ false
+      | INS(n, r) ⇒
+        if i = n then true
+        else contains(r, i)
+      end
+
+    fun union(s1 , s2 ) =
+      case s1 of
+        EMPTY ⇒ s2
+      | INS(n1 , r1 ) ⇒ insert(union(r1 , s2 ), n1 )
+      end
+  end
+
+Below is the signature of the resulting abstract data type. A signature defines the type name (but not its representation) and the types of the operations. The signature can be extended with a full specification of the behavior of integer sets. Abstract data types support very powerful specification and verification techniques, including equational theories and axiomatic specifications. The specifications work well in this context; they are intuitive, elegant and sound.
+
+  type set
+  val empty    : set
+  val isEmpty  : set -> bool
+  val insert   : set x int -> set
+  val contains : set x int -> bool
+  val union    : set x set -> set
+
+Clients can declare values of type set and use operations to manipulate the values. But clients cannot inspect the representation. This is why the isEmpty function is needed, because the following program is illegal when written outside of the abstraction:
+
+  fun test(a : set) = (a == EMPTY);
+
+The function test is attempting to break the encapsulation of the data abstraction to peek at its internal representation. There is also no predefined notion of equality on integer sets. If equality is desired, it must be programmed and made explicit in the ADT interface.
+
+### Representation Independence ###
+
+The name set is abstract because it has a public name but its details are hidden. This is a fundamental characteristic of abstraction: something is visible on the surface, but the details are hidden. In the case of type abstraction, the type name is public, but the representation is hidden. With procedural abstraction, the procedure interface (name and arguments) is public, but the operational details are hidden. Type abstraction is a technical mechanism that can be used to support data abstraction.
+
+One of the practical benefits of data abstraction is that it allows internal implementation details to be changed without affecting the users of the abstraction.
+
+### Optimization ###
+
+A different implementation opens up the possibility for optimizing some of the operations. For example, the union operation is quite expensive to compute. With a sorted list representation union is computed in linear time. Insertion is faster in some cases, but it may require copying more nodes. Deciding what representations to use, based on the associated algorithmic trade-offs, is a standard software engineering activity.
+
+These optimizations depend critically upon an important feature of abstract data types: the ability to inspect the representation of more than one abstract value at the same time. Multiple representations are inspected in the union operation. There is nothing surprising about inspecting multiple representations. It is a natural side-effect of the type system and the fact that all values of type set belong to the abstract data type implementation that created them. As we shall see, the ability to inspect multiple representations does have some important consequences.
+
+### Unique Implementations ###
+
+With ML abstypes, CLU clusters, Ada packages and Modula2 modules there can only be one implementation of an abstract data type in any given program. The implementation is a construct that manages a collection of values that inhabit the type. All the values from a given implementation share the same representation type, although there can be multiple different representational variants within the type. This is usually accomplished by defining the representation type as a labeled sum. The type name set is a globally bound name that refers to a single hidden representation. The type system ensures that it is sound for the implementation to inspect any set value.
+
+Having only one implementation of a data abstraction is limiting. There is already a name clash between the definitions of list based integer set and sorted-list based integer set. One of them had to be given a different name, set2, even though they are really just two different versions of the same abstraction. Client programs have to be edited to choose one or the other implementation.
+
+ADTs are also frequently used in C programming, using header files as a simple module system. The signature of the type is given in a header file as a forward reference to a structure that is only defined in the implementation file.
+
+### Module System ###
+
+The problem of unique implementation is solved by putting abstract data types into modules. ML has a module system that allows multiple implementations for a given signature. The signature of an abstraction can be defined once, and multiple implementations written in separate modules. A client program can then be parameterized over the signature, so that a particular implementation can be selected during module binding. There can be multiple implementations in software repository, but one implementation is used in a given program.
+
+Allowing multiple implementations is good, but it is still not as flexible as might be desired. Consider a case where one part of a program needs to use the sorted list representation for integer sets, and another part of the program needs to use a binary tree representation. Having two different implementations for an abstraction is possible in ML, Ada, or Module-2. However, the two different parts of the program cannot interoperate. The different parts of the program cannot exchange integer sets. As a result the following program is illegal:
+
+  fun f(a : set, b : set2) = union(a, b)
+
+The ML module system also allows multiple inter-related abstract types to be defined in a single module. For example, a personnel application might have data abstractions Employee and Department with operations to associate employees with departments.
+
+### Formal Models ###
+
+Formal models of abstract data types are based on existential types. In this model, ADT implementations are first class values with existential type, as defined below:
+
+  type SetImp = ∃ rep . {
+    empty : rep,
+    isEmpty : rep → bool,
+    insert : rep × Int → rep,
+    contains : rep × Int → Bool,
+    union : rep × rep → rep
+  }
+
+A value of type SetImp is not a set, it is an implementation of a set abstraction. This two-level structure is essential to abstract data types: the first level is an implementation (SetImp) which publishes an abstract type name and a set of operations. Within that implementation, at the second level, are the values that represent elements of the named abstract type (set).
+
+This existential type is nearly identical to the signature above. Intuitively, it asserts that “a type locally identified as rep exists such that the following operations are defined...”. Most practical languages do not support the full generality of first-class ADT implementations. Thus existential values and their usage are not familiar to most programmers.
+
+(J: the class/module definition/implementation is a value here, so you can pass it to functions, assign it to variables, etc. thus first-class)
+
+To use an existential value, it must be opened to declare a name for the representation type and access the operations. Each time an existential value is opened, it creates a completely new type name. Thus if an ADT implementation is opened twice, the values from one instance cannot be mixed with values from the other instance. In practice, it is standard to open all ADTs once in the global scope of the program. The ML module system has more sophisticated sharing mechanisms that allow multiple implementations to co-exist, while allowing interoperability between multiple uses of the same abstractions. Even in this case values from the two different implementations cannot be mixed.
+
+### Summary ###
+
+An abstract data type is a structure that implements a new type by hiding the representation of the type and supplying operations to manipulate its values. There are several ways in which abstract data types seem fundamentally right.
+
+  • They work just like built-in types.
+  • They have sound proof techniques.
+  • ADTs can be implemented efficiently, even for complex operations that require inspection of multiple abstract values.
+  • From a type theory viewpoint, abstract data types have a fundamental model based on existential types. Existential types are the dual of universal types, which are the basis for parametric polymorphism (called generics in Java and C#). The duality of universal and existential types is fundamental, and it leaves little room for any other alternative. What else could there be?
+  • There is a solid connection to mathematics. An ADT has the same form as an abstract algebra: a type name representing an abstract set of values together with operations on the values. The operations can be unary, binary, multi-ary, or nullary (that is, constructors) and they are all treated uniformly.
+
+All of these observations lead to the general conclusion that abstract data types are the way to define data abstractions. This belief is so deep-seated, so obviously correct, that it is almost impossible to think of any alternative. Many people take “abstract data type” and “data abstraction” as synonyms. But abstract data types are not the only way to define data abstractions. The alternative is fundamentally different.
+
+
+## Objects ##
