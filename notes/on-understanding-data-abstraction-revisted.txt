@@ -118,3 +118,360 @@ All of these observations lead to the general conclusion that abstract data type
 
 
 ## Objects ##
+
+To begin with, let us reconsider the idea of integer sets. One alternative way to formulate integer sets is as the characteristic function:
+
+  type ISet = Int → Boolean
+
+The type Int → Boolean is the type of functions from integer to boolean. It is clear that this is a different way to think about sets than the abstract data types presented in the previous section. Consider a few values of this type:
+
+  Empty = λi. false
+  Insert(s, n) = λi. (i = n or s(i))
+  Union(s1 , s2 ) = λi. (s1 (i) or s2 (i))
+
+In what sense could ISet be understood as defining a data abstraction for integer sets? We have been conditioned to think in terms of representations and operations. But these concepts do not apply in this case. One might say that this approach represents sets as functions from integers to booleans. But this ‘representation’ looks like an interface, not a concrete representation.
+
+Note that there is no “contains” operation, because the set itself is the contains operation. Although it may not seem like it, the characteristic function is the pure object-oriented approach to defining integer sets. You may not accept this statement immediately, because I have not talked about any classes, methods, or inheritance, which are supposed to be characteristic of objects.
+
+### Object Interfaces ###
+
+ISet is an object-oriented interface to an integer set data abstraction. The function is an observation of the set, and a set is 'represented' by the observations that can be performed upon it. One problem with this interface is that there is no way to tell if the set is empty. A more complete interface is given below. It is a record type with four components corresponding to methods. The field names of the record are capitalized, to distinguish them from other uses of the same names. The result is a standard object-oriented interface for immutable integer set objects.
+
+  interface ISet = {
+    isEmpty : bool,
+    contains : int → bool,
+    insert : int → ISet,
+    union : ISet → ISet
+  }
+
+An essential observation is that object interfaces do not use type abstraction: there is no type whose name is known but representation is hidden. The type ISet is defined as a record type containing functions from known types to known types. Instead, objects use procedural abstraction to hide behavior. This difference has significant consequences for use of the two forms of data abstraction.
+
+Object interfaces are essentially higher-order types, in the same sense that passing functions as values is higher-order. Any time an object is passed as a value, or returned as a value, the object-oriented program is passing functions as values and returning functions as values. The fact that the functions are collected into records and called methods is irrelevant. As a result, the typical object-oriented program makes far more use of higher-order values than many functional programs.
+
+The empty operation in the ADT is not part of the object-oriented ISet interface. This is because it is not an observation on sets, it is a constructor of sets.
+
+### Classes ###
+
+Several implementations for the ISet interface are defined below. The contains method is the same as the simple functions given above. The definitions have the same types, after redefining ISet.
+
+  Empty = μ this. {
+    isEmpty = true,
+    contains = λi. false
+    insert = λi. Insert(this, i)
+    union = λs. s
+  }
+
+  Insert(s, n) = if s(n) then s else μ this. {
+    isEmpty = false,
+    contains = λi. (i = n or s(i))
+    insert = λi. Insert(this, i)
+    union = λs. Union(this, s)
+  }
+
+  Union(s1 , s2) = μ this. {
+    isEmpty = false,
+    contains = λi. (s1 (i) or s2 (i))
+    insert = λi. Insert(this, i)
+    union = λs. Union(this, s)
+  }
+
+The special symbol μ is used to define recursive values. The syntax μx.f defines a recursive value where the name x can appear in the expression f . The meaning of μx.f is the value of f where occurences of x represent recursive references within f to itself. Objects are almost always self-referential values, so every object definition uses μ. As a convention, we use this as the name x, but any name could be used. The bound name x corresponds to self in Smalltalk or this in C++.
+
+Each of these definitions correspond to a class in object-oriented programming. In this encoding, classes are only used to construct objects. The use of classes as types is discussed later.
+
+The definition of class state, or member variables, is different from Java. In this encoding, the member variables are listed as parameters on the class, as in Scala.
+
+Several of the method bodies are repeated in these definitions. The insert method simply invokes the Insert class to create a new ISet object with one more member. Inheritance could be used to reuse a single method definition. Inheritance is often mentioned as one of the essential characteristics of object-oriented programming. However, inheritance will not be used in this section because it is neither necessary for, nor specific to, object-oriented programming.
+
+A client of these classes looks just like a Java program, with the familiar method invocation style:
+
+  Empty.insert(3).union(Empty.insert(1)).insert(5).contains(4)
+
+Selecting a function to invoke from a record containing function values is usually called dynamic binding. This term is not a very intuitive description of what is essentially an invocation of a higher-order function.
+
+Just as the ADT version of integer sets had two levels (set implementations and set values), the object-oriented version has two levels as well: interfaces and classes. A class is a procedure that returns a value satisfying an interface. Although Java allows class constructors to be overloaded with more than one definition, it is clear that one of the primary purposes of a class is to construct objects.
+
+### Autognosis ###
+
+A careful examination of the union operator in the object interface reveals that the parameter is typed by an interface. This means that the union method in a set object cannot know the representation of the other set being unioned. Fortunately, the union operator does not need to know the representation of other sets, it just needs to be able to test membership. The Union class constructs an object that represents the union of two sets s1 and s2.
+
+The prohibition of inspecting the representation of other objects is one of the defining characteristics of object-oriented programming. I term this the autognostic principle:
+
+  An object can only access other objects through their public interfaces.
+
+Autognosis means ‘self knowledge’. An autognostic object can only have detailed knowledge of itself. All other objects are abstract.
+
+The converse is quite useful: any programming model that allows inspection of the representation of more than one abstraction at a time is not object-oriented.
+
+### Flexibility ###
+
+Object interfaces do not prescribe a specific representation for values, but instead accept any value that implements the required methods. As a result, objects are flexible and extensible with new representations. The flexibility of object interfaces can be illustrated easily by defining several new kinds of set. For example, the set of all even integers, and the set of all integers, are easily defined:
+
+  Even = μ this. {
+    isEmpty = false,
+    contains = λi. (i mod 2 = 0)
+    insert = λi. Insert(this, i)
+    union = λs. Union(this, s)
+  }
+
+  Full = μ this. {
+    isEmpty = false,
+    contains = λi. true
+    insert = λi. this
+    union = λs. this
+  }
+
+The Full set returns itself as the result of any insert or union operation. This example also illustrates that objects can easily represent infinite sets easily. These new sets can be intermixed with the sets defined above. Other specialized sets can also be defined, including the set of prime numbers or sets representing intervals.
+
+  Interval(n, m) = μ this. {
+    isEmpty = (n > m),
+    contains = λi. (n ≤ i and i ≤ m)
+    insert = λi. Insert(this, i)
+    union = λs. Union(this, s)
+  }
+
+There is no direct equivalent to this kind of flexibility when using abstract data types. This difference is fundamental: abstract data types have a private, protected representation type that prohibits tampering or extension. Objects have behavioral interfaces which allow definition of new implementations at any time.
+
+The extensibility of objects does not depend upon inheritance, but rather is an inherent property of object interfaces.
+
+### Interface Trade-Offs ###
+
+The choice of interfaces to an object can affect which operations are efficient, which are slow, and also which operations are impossible to define.
+
+For example, it is not possible to augment the integer set interface with an intersect operation, because it is not possible to determine if the intersection of two sets is empty without iterating over the sets. It is commonplace to include iterator methods in collection classes like the ones given here. But iterators do not interact well with infinite sets. Significant software engineering decisions must be made when designing interfaces, but these issues are rarely discussed in programming language textbooks.
+
+One problem with object interfaces is that efficiency considerations often allow implementation issues to influence the design of interfaces. Adding public methods that inspect the hidden representation can significantly improve efficiency. But it also restricts the flexibility and extensibility of the resulting interface.
+
+### Optimization ###
+
+The optimization of the union method based on sorted lists is not possible in the object-oriented implementation, without modifying the interfaces. The optimization would be possible if the interfaces included a method to iterate the set contents in sorted order. Extending an object interface with more public methods can significantly improve performance, but it also tends to reduce flexibility. If the sets used a more sophisticated representation, optimizations might require more representational details to be exposed in the public interface.
+
+There are several optimizations in the object implementation above. The first is that the union method on empty sets is the identity function. The second is that the insert class does not always construct a new value. It only creates a new value if the number being inserted is not in the set already.
+
+It is not necessary to include insert and union as methods inside the object interface, because they can be defined as classes that operate on any sets. The optimization of union in the empty set class is one reason why it is useful to internalize the creation operations in the object interface.
+
+### Simulation ###
+
+Object-oriented programming was first invented in the context of the simulation language Simula. The original intent was to simulate real-world systems, but I believe that simulation also allows one object to simulate, or pretend to be, another object.
+
+For example, the set Interval(2, 5) simulates a set that has integers 2 through 5 inserted into it. According to the principle of autognosis, there should be no way for any part of the program to distinguish between the interval and the inserted set. There are many operations that violate this principle, including pointer equality and instanceof tests.
+
+Simulation also provides a basis for verification of object-oriented programs. If two objects simulate each other, forming a bisimulation, then they are equivalent. The concept of simulation and bisimulation are powerful mathematical concepts for analyzing the behaviors.
+
+### Specification and Verification ###
+
+Object-oriented programming has caused significant problems for verification efforts. This is not surprising if you understand that object-oriented programming is high-order procedural programming; objects are a form of first-class procedure value, which are passed as arguments and returned as values everywhere. It is difficult to verify programs that combine first-class higher-order functions and imperative state.
+
+A common complaint is that it is impossible to determine what code will execute when invoking a method. This is no different from common uses of first-class functions. If this objection is taken seriously, then similar complaints must be leveled against ML and Haskell, because it is impossible (in general) to determine what code will run when invoking a function value.
+
+More significantly, it is possible to create bad objects easily. For example, the following object does not meet the specification for integer sets:
+
+  bad = μ this. {
+    IsEmpty = (random() > 0.5),
+    Contains = λi. (time() mod i = 1)
+    Insert = λi. this
+    Union = λs. Insert(3, s)
+  }
+
+It reports that it is empty 50% of the time, and includes integers randomly based on time of day. Object interfaces can be given behavioral specifications, which can be verified to prohibit bad objects.
+
+A more subtle problem is that objects do not necessarily encapsulate state effectively. The problem arises when the state of an object is itself a collection of objects. There is a tendency for the internal objects to leak out and become external, at which point the abstract boundary is lost. This problem motivates the ongoing research effort on ownership types.
+
+One particularly difficult problem is that methods can be re-entered while they are running. This causes problems for the standard Hoare-style approach to verification. In this approach, the class enforces an invariant, and every procedure (method) is given a precondition and a post-condition. The problem is that any method calls within the body of the method may loop back around and invoke some other method of the object being verified. In this case the other method may be called while the object is in an inconsistent state. It may also modify the object state, to invalidate the assumptions used to verify the original method.
+
+Abstract data types do not usually have this problem because they are built in layers; each layer invokes lower layers, but lower layers do not invoke higher layers. Not all systems can be organized in this fashion, however. Complex systems often require notifications, or call-backs, which allow lower layers to call into higher layers. This can cause problems for verification if call-backs are included in ADTs.
+
+Object-oriented programming is designed to be as flexible as possible. It is almost as if it were designed to be as difficult to verify as possible.
+
+### Some More Theory ###
+
+The object interface has some interesting relationships to the abstract data type signature. First, the methods have one fewer argument than the corresponding operations in the ADT signature. In each case, the rep argument is missing. Second, the rep in the ADT operations corresponds to a recursive reference to ISet in each method of the object interface. The similarity can be expressed by the following type function:
+
+  type F(t) = {
+    IsEmpty : bool,
+    Contains : int → bool,
+    Insert : int → t,
+    Union :t→t
+  }
+
+The types given above can be rewritten in terms of F:
+
+  ISet = F(ISet)
+  SetImp = ∃ rep. rep × (rep → F(rep))
+
+The original definition of SetImp is isomorphic to this new definition. To see the relationship, note that in rep → F(rep) the function type with domain rep supplies the missing argument that appears in all the ADT operations. The cartesian product with rep supplies the empty constructor. The definition of SetImp above is the encoding of a final coalgebra X → F (X) into the polymorphic λ-calculus.  The only problem is that F is not a covariant functor, because of the union method. This encoding also corresponds to the greatest fixedpoint of F , which corresponds to the recursive type ISet. The relationship between coalgebra and objects is an active research topic.
+
+### Summary ###
+
+An object is a value exporting a procedural interface to data or behavior. Objects use procedural abstraction for information hiding, not type abstraction. Object and and their types are often recursive. Objects provide a simple and powerful form of data abstraction. They can be understood as closures, first-class modules, records of functions, or processes. Objects can also be used for procedural abstraction. Unlike abstract data types, many people find objects to be deeply disturbing. They are fundamentally higher-order, unlike abstract data types. With an object, you are never quite certain what it is going to do: What method is being called? What kind of object is it really?
+
+On the other hand, many people find objects to be deeply appealing in their simplicity and flexibility. They do not require complex type systems. Inheritance allows recursive values to be extended in powerful ways.
+
+The fact that objects are autognostic, so that they can only know themselves, is also confusing. On the one hand, it interferes with desirable optimizations that require inspection of multiple representations. One solution is to expose representational details in the object’s interface, which limits flexibility. The benefits of autognosis are often subtle and only realized as a system grows and evolves.
+
+Finally, as parts of a long and rich tradition of abstraction, objects too—not just ADTs—are fundamentally grounded in mathematics.
+
+
+## Relationships between ADTs and OOP ##
+
+Although object-oriented programming and abstract data types are two distinct forms of data abstraction, there are many relationships between them. Many simple abstractions can be implemented in either style, although the usages of the resulting programs is quite different.
+
+### Static vs. Dynamic Typing ###
+
+One of the most significant differences between abstract data types and objects is that objects can be used to define data abstractions in a dynamically typed language. Objects do not depend upon a static type system; all they need is some form of first-class functions or processes.
+
+Abstract data types depend upon a static type system to enforce type abstraction. It is not an accident that dynamic languages use objects instead of user-defined abstract data types. Dynamic languages typically support built-in abstract data types for primitive types; the type abstraction here is enforced by the runtime system.
+
+Type systems only enforce structural properties of programs; they do not ensure conformance to a specification. But with ADTs, the type system can ensure that if the ADT implementation is correct, then all programs based on it will operate correctly. The type system prevents outside clients from tampering with the implementation. Pure object interfaces allow any structurally compatible implementation, thus the type system does not prohibit bad implementations from being used.
+
+### Simple and Complex Operations ###
+
+One point of overlap between objects and abstract data types is that simple data abstractions can be implemented equally well in either style. The difference between simple and complex data abstractions is whether or not they have operations, like the union operation in the set ADT, that inspect the representation of multiple abstract values.
+
+In this essay I call an operation “complex” if it inspects multiple representations. In some of the literature complex operations are called “binary”. Literally speaking, a binary operation is one that accepts two inputs of the abstract type. For an object, a binary method is one that takes a second value of the abstract type, in addition to the abstract value whose method is being invoked. According to these definitions, union is always binary.
+
+However, not all binary methods are complex. This depends on how the operation is implemented. A binary operation can be implemented by invoking public methods on the abstract arguments. Doing so does not require the representation of the two values to be inspected. 
+
+Pure object-oriented programming does not support complex operations. Doing so requires inspection of another object’s representation, using instance-of or similar means. Any abstract data type with only simple operations can be implemented without loss of functionality, but more simply and extensibly, with objects.
+
+The converse, however, is not necessarily true. It is possible to take any fixed set of object-oriented classes that implement an interface and convert them to an ADT. One simple way to do it is to use objects as the representation type for the ADT, but rewriting the abstractions is always possible. However, the result is no longer extensible, so the conversion incurs a loss of flexibility.
+
+### Extensibility Problem ###
+
+When implementing data abstractions, there are two important dimensions of extensibility. New representational variants can be added, or new operations can be added. This observation suggests it is natural to organize the behaviors into a matrix with representations on one axis and observations/actions on the other. Then extensibility can be viewed as adding a column or row to the matrix.
+
+In the 1970s, as work began on understanding data abstraction, Reynolds published a prophetic paper that identified the key differences between objects and abstract data types, although I think he did not realize he was describing objects. Reynolds noticed that abstract data types facilitate adding new operations, while “procedural data values” (objects) facilitate adding new representations. Since then, this duality has been independently discovered at least three times.
+
+This duality has practical implications for programming. Abstract data types define operations that collect together the behaviors for a given action. Objects organize the matrix the other way, collecting together all the actions associated with a given representation. It is easier to add new operations in an ADT, and new representations using objects. Although not discussed in detail here, object-oriented programs can use inheritance to add new operations.
+
+### Imperative State and Polymorphism ###
+
+Issues of imperative state and polymorphism have been avoided in this essay because they are, for the most part, orthogonal to the issues of data abstraction. The integer sets discussed in this paper can be generalized to polymorphic sets, set<t>. These generalization can be carried out for either abstract data types or objects. While there is significant work involved in doing so, the issues of polymorphism do not interact very much with the issues relating to data abstraction.
+
+Both abstract data types and objects can be defined in either a pure functional or imperative style. Pure functional objects are quite common, although not as common as they could be. Issues of state are largely orthogonal from a language design viewpoint. However, imperative programming has a significant impact on verification.
+
+
+## Reality ##
+
+The reality in practical programming languages is not so pure and simple. It turns out that statically typed object-oriented languages all support both pure objects and also a form of abstract data types. They also support various hybrids.
+
+### OOP in Java ###
+
+While Java is not a pure object-oriented language, it is possible to program in a pure object-oriented style by obeying the following rules:
+
+  Classes only as constructors: A class name may only be used after the keyword new.
+
+  No primitive equality: The program must not use primitive equality (==). Primitive equality exposes representation and prevents simulation of one object by another.
+
+In particular, classes may not be used as types to declare members, method arguments or return values. Only interfaces may be used as types. Also, classes may not be used in casts or to test with instanceof.
+
+This is generally considered good object-oriented style. But what if you were forced to follow this style, because the language you were using required it? Smalltalk comes close. Since Smalltalk is dynamically typed, classes are only used as constructors. It does support instanceof, although it is rarely used.
+
+One other way to break encapsulation in Java is through the use of reflection, although this is not common when writing most programs. Reflection is useful when writing metatools (e.g. debuggers) and program generators. However, use of reflection appears to be growing more widespread. More research is needed to quantify the effect of reflection on data abstraction and encapsulation.
+
+### ADT in Java ###
+
+It takes a little more work to encode abstract data types in statically typed object-oriented programming languages.
+
+  class ASet {
+    // declare representation fields
+    // no public constructor
+    static ASet empty();
+    static ASet insert(ASet s, int n);
+    static bool contains(ASet s, int n);
+    static ASet union(ASet a, ASet b);
+  }
+
+Using a class name as a type introduces type abstraction. A class hides its representation. Object-oriented languages do not always support the sums-of-products data structures found in other languages, but such types can be simulated using an abstract class with a subclass for each variant in the sum type. Pattern matching on these types can then be implemented by using instanceof and appropriate casts.
+
+One direct encoding uses static methods for all the ADT operations, and the class just holds the representation.
+
+  class CSet {
+    // declare representation fields
+    // no public constructor
+    static CSet empty();
+    CSet insert(Integer n);
+    bool contains(Integer n);
+    CSet union(CSet b);
+  }
+
+To summarize, when a class name is used as a type, it represents an abstract data type.
+
+
+### Haskell Type Classes ###
+
+Type classes in Haskell are a powerful mechanism for parameterization and extensibility. A type class is an algebraic signature that associates a group of operations with one or more type names. A type class for integer sets, defined below, is very similar to the existential type above, but in this case uses curried functions:
+
+  class Set s where
+    empty :: s
+    isEmpty :: s → Bool
+    insert :: s → Int → s
+    contains :: s → Int → Bool
+    union :: s → s → s
+
+Functions can be written using the generic operations:
+
+  test :: Set s ⇒ s → Bool
+  test s = contains(union(insert(s, 3), insert(empty, 4)), 5)
+
+The qualification on the type of test indicates that the type s is any instance of Set. Any type can made an instance of Set by defining the appropriate operations:
+
+  instance Set [Int] where
+    empty = []
+    isEmpty = (== [])
+    insert = flip (:)
+    contains = flip elem
+    union = (++)
+
+Instance definitions can connect type classes with actual types that come from different libraries, and all three parts can be written without prearranged knowledge of the others. As a result, type classes are flexible and extensible.
+
+A type can only be an instance of a class in one way. For example, there is no way to define sorted lists and lists as both being different instances of Set. This restriction can always be bypassed by creating a new type that is a tagged or labeled version of an existing type, although this can introduce undesirable bookkeeping when tagging values.
+
+Type classes are similar to object interfaces in allowing a method to operate on any value that has the necessary operations.
+
+On the other hand, type classes are based on algebraic signatures as in abstract data types. The main difference is that type classes do not enforce any hiding of representations. As a result, they provide parametric abstraction over type signatures, without the information hiding aspect of ADTs. Given the success of Haskell, one might argue that encapsulation is somewhat overrated.
+
+Type classes are not autognostic. When a function is qualified by a type class, the same type instance must be used for all values within that function. Type classes do not allow different instances to interoperate. There are other ways in which Haskell provides abstraction and information hiding, for example, by parametericity.
+
+On the other hand, the object-oriented data abstractions given here can also be coded in Haskell. In addition, an existential type can be used to combine the type class operations with a value to create a form of object. In this encoding, the type class acts as a method table for the value.
+
+### Smalltalk ###
+
+There are many interesting aspects of the Smalltalk language and system. One curious fact is that Smalltalk has no built-in control flow and very few built in types. To see how this works, consider the Smalltalk implementation of Booleans.
+
+There are two Boolean classes in Smalltalk, named True and False. They both implement a two-argument method called ifTrue:ifFalse:.
+
+  class True
+    ifTrue: a ifFalse: b
+      ^ a value
+
+  class False
+    ifTrue: a ifFalse: b
+      ^ b value
+
+Method names in Smalltalk are sequences of keyword labels, where each keyword identifies a parameter. The body of the True method returns the result of sending the value message to the first argument, a. The body of the False method returns the second argument, b.
+
+The value method is needed because a and b represent thunks or functions with a single dummy argument. A thunk is created by enclosing statements in square brackets. A conditional is implemented by sending two thunks to a Boolean value.
+
+  (x > y) ifTrue: [ x print ]
+          ifFalse: [ y print ]
+
+The implementation of Booleans and conditionals in Smalltalk is exactly the same as for Church booleans in the λ-calculus. Given that objects are the only way to implement data abstraction in an untyped language, it makes sense that the same kind of data would be used in Smalltalk and the untyped λ-calculus. It would be possible to implement a RandomBoolean class that acts as true or false based on the flip of a coin, or a LoggingBoolean that traced how many computations were performed. These booleans could be use anywhere that the standard booleans are used, including in low-level system code.
+
+Smalltalk numbers are not Church numerals, although they share some characteristics. In particular, numbers in Smalltalk implement iteration, just as they do in the Church encoding. Similarly, Smalltalk collections implement a reduce operator analogous to the Church encoding of lists.
+
+The Smalltalk system does include a primitive integer type, implemented as an ADT for efficiency. The primitive types are wrapped in high-level objects, which communicate with each to other through an ingenious interface to perform coercions and implement both fixed and infinite precision arithmetic. Even with these wrappers, I claim that Smalltalk is not truly “objects all the way down” because the implementation depends upon primitive ADTs. It may be that objects are simply not the best way to implement numbers.
+
+More analysis is needed to determine the efficiency costs and whether the resulting flexibility is useful in practice. One conclusion you could draw from this analysis is that the untyped λ-calculus was the first object-oriented language.
+
+
+## Discussions ##
+
+The academic community as a whole has not adopted objects as warmly as they were received in industry. There are three reasons for this situation. One is that the conceptual foundations for objects, discussed here, are not widely known. The second is that academics tend to be more interested in correctness than flexibility. Finally, programming language researchers tend to work with data abstractions that are more natural as ADTs.
+
+
+## Conclusion ##
+
+Objects and abstract data types (ADTs) are two different forms of data abstraction. They can both implement simple abstractions without complex methods, but objects are extensible while ADTs are easier to verify. Significant differences arise when implementing abstractions with complex operations, for example comparisons or composition operators. Object interfaces support the same level of flexibility, but often force a trade-off between interface simplicity and efficiency. Abstract data types support clean interfaces, optimization, and verification, but do not allow mixing or extending the abstractions. Mathematically oriented types, including numbers and sets, typically involve complex operations that manipulate multiple abstract values, and are best defined using ADTs. Most other types including files, device drivers, graphic objects, often do not require optimized complex operations, and so are best implemented as objects.
+
+Modern object-oriented languages support a mixture of object-oriented and ADT functionality, allowing programmers to choose ADT style for specific situations. In modern object-oriented languages, the issue boils down to whether or not classes are used as types. In a pure object-oriented style, classes are only used to construct objects, and interfaces are used for types. When classes are used as types, the programmer is implicitly choosing to use a form of abstract data type. The decision affects how easy it is for the program to be extended and maintained over time, and also how easy it is to optimize complex operations. Understanding the fundamental differences between objects and ADTs can help in choosing to use them wisely.
