@@ -1,0 +1,397 @@
+What Is Machine Learning?
+
+Machine learning is a subfield of artificial intelligence (AI)
+concerned with algorithms that allow computers to learn. What this
+means, in most cases, is that an algorithm is given a set of data and
+infers information about the properties of the data — and that
+information allows it to make predictions about other data that it
+might see in the future. This is possible because almost all nonrandom
+data contains patterns, and these patterns allow the machine to
+generalize. In order to generalize, it trains a model with what it
+determines are the important aspects of the data.
+
+There are many different machine-learning algorithms, all with
+different strengths and suited to different types of problems. Some,
+such as decision trees, are transparent, so that an observer can
+totally understand the reasoning process undertaken by the
+machine. Others, such as neural networks, are black box, meaning that
+they produce an answer, but it’s often very difficult to reproduce
+the reasoning behind it.
+
+
+Limits of Machine Learning
+
+Machine learning is not without its weaknesses. The algorithms vary in
+their ability to generalize over large sets of patterns, and a pattern
+that is unlike any seen by the algorithm before is quite likely to be
+misinterpreted. While humans have a vast amount of cultural knowledge
+and experience to draw upon, as well as a remarkable ability to
+recognize similar situations when making decisions about new
+information, machine-learning methods can only generalize based on the
+data that has already been seen, and even then in a very limited manner.
+
+The spam-filtering method you’ll see in this book is based on the
+appearance of words or phrases without any regard to what they mean or
+to sentence structures. Although it’s theoretically possible to build
+an algorithm that would take grammar into account, this is rarely done
+in practice because the effort required would be disproportionately
+large compared to the improvement in the algorithm. Understanding
+the meaning of words or their relevance to a person’s life would
+require far more information than spam filters, in their current
+incarnation, can access.
+
+In addition, although they vary in their propensity for doing so, all
+machine-learning methods suffer from the possibility of
+overgeneralizing. As with most things in life, strong generalizations
+based on a few examples are rarely entirely accurate. It’s certainly
+possible that you could receive an important email message from a
+friend that contains the words “online pharmacy.” In this case, you
+would tell the algorithm that the message is not spam, and it might
+infer that messages from that particular friend are acceptable. The
+nature of many machine-learning algorithms is that they can continue
+to learn as new information arrives.
+
+
+Making Recommendations
+======================
+
+A collaborative filtering algorithm usually works by searching a large
+group of people and finding a smaller set with tastes similar to
+yours. It looks at other things they like and combines them to create
+a ranked list of suggestions. There are several different ways of
+deciding which people are similar and combining their choices to make
+a list; this chapter will cover a few of these.
+
+Collecting Preferences
+----------------------
+
+The first thing you need is a way to represent different people and
+their preferences.
+
+No matter how preferences are expressed, you need a way to map them
+onto numerical values. e.g. in online shopping, 'bought' can map to 2,
+'browsed' can map to 1, and "didn't buy" can map to 0.
+
+For small dataset you can use nested map/dictionary, for large dataset
+you may need database or other storage methods.
+
+Finding Similar Users
+---------------------
+
+After collecting data about the things people like, you need a way to
+determine how similar people are in their tastes. You do this by
+comparing each person with every other person and calculating a
+similarity score. There are a few ways to do this, and in this section
+I’ll show you two systems for calculating similarity scores:
+Euclidean distance and Pearson correlation.
+
+* Euclidean Distance Score
+
+One very simple way to calculate a similarity score is to use a
+Euclidean distance score, which takes the items that people have
+ranked in common and uses them as axes for a chart. You can then plot
+the people on the chart and see how close together they are.
+
+This is like calculating distance between two points in a n-dimension
+space. Result is between 0 and 1.
+
+* Pearson Correlation Score
+
+A slightly more sophisticated way to determine the similarity between
+people’s interests is to use a Pearson correlation coefficient. The
+correlation coefficient is a measure of how well two sets of data fit
+on a straight line. The formula for this is more complicated than the
+Euclidean distance score, but it tends to give better results in
+situations where the data isn’t well normalized—for example, if
+critics’ movie rankings are routinely more harsh than average.
+
+This is kinda a reversion of Euclidean Distance method: use user as
+axes, plot their ratings on each item on graph, then find the best-fit
+line. Result is between -1 and 1. A negative result indicates 'dislike'.
+
+This is called the best-fit line because it comes as close to all the
+items on the chart as possible. If the two critics had identical
+ratings for every movie, this line would be diagonal and would touch
+every item in the chart, giving a perfect correlation score of 1.
+
+One interesting aspect of using the Pearson score, which you can see
+in the figure, is that it corrects for grade inflation. In this
+figure, Jack Matthews tends to give higher scores than Lisa Rose, but
+the line still fits because they have relatively similar
+preferences. If one critic is inclined to give higher scores than the
+other, there can still be perfect correlation if the difference
+between their scores is consistent. The Euclidean distance score
+described earlier will say that two critics are dissimilar because one
+is consistently harsher than the other, even if their tastes are very
+similar. Depending on your particular application, this behavior may
+or may not be what you want.
+
+See: http://en.wikipedia.org/wiki/Pearson_correlation
+
+There are actually many more ways to measure similarity between two
+sets of data. The best one to use will depend on your application, and
+it is worth trying Pearson, Euclidean distance, or others to see which
+you think gives better results.
+
+See: http://en.wikipedia.org/wiki/Metric_(mathematics)#Examples
+
+Ranking the Critics
+-------------------
+
+Now that you have functions for comparing two people, you can create a
+function that scores everyone against a given person and finds the
+closest matches.
+
+Recommending Items
+------------------
+
+Finding a good critic to read is great, but what I really want is a
+movie recommendation right now. I could just look at the person who
+has tastes most similar to mine and look for a movie he likes that I
+haven’t seen yet, but that would be too permissive. Such an approach
+could accidentally turn up reviewers who haven’t reviewed some of the
+movies that I might like. It could also return a reviewer who
+strangely liked a movie that got bad reviews from all the other
+critics in top matches.
+
+To solve these issues, you need to score the items by producing a
+weighted score that ranks the critics. Take the votes of all the other
+critics and multiply how similar they are to me by the score they gave
+each movie.
+
+Matching Products
+-----------------
+
+What if you want to see which products are similar to each other?
+
+In this case, you can determine similarity by looking at who liked a
+particular item and seeing the other things they liked. This is
+actually the same method we used earlier to determine similarity
+between people — you just need to swap the people and the items. So you
+can use the same methods you wrote earlier if you transform the
+dictionary from:
+
+    {'Lisa Rose': {'Lady in the Water': 2.5, 'Snakes on a Plane': 3.5},
+     'Gene Seymour': {'Lady in the Water': 3.0, 'Snakes on a Plane': 3.5}}
+
+to:
+    {'Lady in the Water':{'Lisa Rose':2.5,'Gene Seymour':3.0},
+     'Snakes on a Plane':{'Lisa Rose':3.5,'Gene Seymour':3.5}}
+
+It’s not always clear that flipping people and items will lead to
+useful results, but in many cases it will allow you to make
+interesting comparisons. An online retailer might collect purchase
+histories for the purpose of recommending products to
+individuals. Reversing the products with the people, as you’ve done
+here, would allow them to search for people who might buy certain
+products. This might be very useful in planning a marketing effort for
+a big clearance of certain items. Another potential use is making sure
+that new links on a link-recommendation site are seen by the people
+who are most likely to enjoy them.
+
+Item-Based Filtering
+--------------------
+
+The way the recommendation engine has been implemented so far requires
+the use of all the rankings from every user in order to create a
+dataset. This will probably work well for a few thousand people or
+items, but a very large site like Amazon has millions of customers and
+products—comparing a user with every other user and then comparing
+every product each user has rated can be very slow. Also, a site that
+sells millions of products may have very little overlap between
+people, which can make it difficult to decide which people are
+similar.
+
+The technique we have used thus far is called user-based collaborative
+filtering. An alternative is known as item-based collaborative
+filtering. In cases with very large datasets, item-based collaborative
+filtering can give better results, and it allows many of the
+calculations to be performed in advance so that a user needing
+recommendations can get them more quickly.
+
+The procedure for item-based filtering draws a lot on what we have
+already discussed. The general technique is to precompute the most
+similar items for each item. Then, when you wish to make
+recommendations to a user, you look at his top-rated items and create
+a weighted list of the items most similar to those. The important
+difference here is that, although the first step requires you to
+examine all the data, comparisons between items will not change as
+often as comparisons between users. This means you do not have to
+continuously calculate each item’s most similar items—you can do it
+at low-traffic times or on a computer separate from your main
+application.
+
+Building the Item Comparison Dataset
+------------------------------------
+
+To compare items, the first thing you’ll need to do is write a
+function to build the complete dataset of similar items. Again, this
+does not have to be done every time a recommendation is
+needed—instead, you build the dataset once and reuse it each time you
+need it.
+
+Remember, this function only has to be run frequently enough to keep
+the item similarities up to date. You will need to do this more
+often early on when the user base and number of ratings is small, but
+as the user base grows, the similarity scores between items will
+usually become more stable.
+
+Getting Recommendations
+-----------------------
+
+Now you’re ready to give recommendations using the item similarity
+dictionary without going through the whole dataset. You’re going to
+get all the items that the user has ranked, find the similar items,
+and weight them according to how similar they are. The items
+dictionary can easily be used to get the similarities.
+
+Thoughts
+--------
+
+This is a method mining the deep relations in a 2 dimension matrix, or
+a many-to-many mapping. A easy way to find applicable scenarios is
+check your data models, find those have many-to-many associations, and
+try to apply there.
+
+Item-based filtering is significantly faster than user-based when
+getting a list of recommendations for a large dataset, but it does
+have the additional overhead of maintaining the item similarity
+table. Also, there is a difference in accuracy that depends on how
+“sparse” the dataset is. In the movie example, since every critic
+has rated nearly every movie, the dataset is dense (not sparse). On
+the other hand, it would be unlikely to find two people with the same
+set of del.icio.us bookmarks—most book- marks are saved by a small
+group of people, leading to a sparse dataset. Item-based filtering
+usually outperforms user-based filtering in sparse datasets, and the
+two per- form about equally in dense datasets.
+
+Having said that, user-based filtering is simpler to implement and
+doesn’t have the extra steps, so it is often more appropriate with
+smaller in-memory datasets that change very frequently. Finally, in
+some applications, showing people which other users have preferences
+similar to their own has its own value—maybe not something you would
+want to do on a shopping site, but possibly on a link-sharing or music
+recommendation site.
+
+
+Discovering Groups
+==================
+
+This chapter expands above recommendation ideas and introduces data
+clustering, a method for discovering and visualizing groups of things,
+people, or ideas that are all closely related.
+
+Supervised versus Unsupervised Learning
+---------------------------------------
+
+Techniques that use example inputs and outputs to learn how to make
+predictions are known as supervised learning methods. We’ll explore
+many supervised learning methods in this book, including neural
+networks, decision trees, support-vector machines, and Bayesian
+filtering. Applications using these methods “learn” by examining a
+set of inputs and expected outputs. When we want to extract
+information using one of these methods, we enter a set of inputs and
+expect the application to produce an output based on what it has
+learned so far.
+
+Clustering is an example of unsupervised learning. Unlike a neural
+network or a decision tree, unsupervised learning algorithms are not
+trained with examples of correct answers. Their purpose is to find
+structure within a set of data where no one piece of data is the
+answer. In the fashion example given earlier, the clusters don’t tell
+the retailers what an individual is likely to buy, nor do they make
+predictions about which fashion island a new person fits into. The
+goal of clustering algorithms is to take the data and find the
+distinct groups that exist within it.
+
+Word Vectors
+------------
+
+The normal way of preparing data for clustering is to determine a common set of
+numerical attributes that can be used to compare the items.
+
+In the example, we choose the top 120 blogs, define a set of words,
+then count the use frequency of those words in each blogs. The result
+is something like this:
+
+blog  word1  word2  word3
+A     0      11     3
+B     0      1      0
+C     2      0      5
+
+(see pci/blogdata.txt)
+
+Hierarchical Clustering
+-----------------------
+
+Hierarchical clustering builds up a hierarchy of groups by
+continuously merging the two most similar groups. Each of these groups
+starts as a single item, in this case an individual blog. In each
+iteration this method calculates the distances between every pair of
+groups, and the closest ones are merged together to form a new
+group. This is repeated until there is only one group.
+
+After hierarchical clustering is completed, you usually view the
+results in a type of graph called a dendrogram, which displays the
+nodes arranged into their hierarchy.
+
+This dendrogram not only uses connections to show which items ended up
+in each cluster, it also uses the distance to show how far apart the
+items were. The AB cluster is a lot closer to the individual A and B
+items than the DE cluster is to the individual D and E
+items. Rendering the graph this way can help you determine how similar
+the items within a cluster are, which could be interpreted as the
+tightness of the cluster.
+
+Column Clustering
+-----------------
+
+In the blog dataset, the columns represent words, and it’s
+potentially interesting to see which words are commonly used
+together. The easiest way to do this using the functions you’ve
+written thus far is to rotate the entire dataset so that the columns
+(the words) become rows, each with a list of numbers indicating how
+many times that particular word appears in each of the blogs.
+
+K-Means Clustering
+------------------
+
+Hierarchical clustering gives a nice tree as a result, but it has a couple
+of disadvan- tages. The tree view doesn’t really break the data into
+distinct groups without additional work, and the algorithm is extremely
+computationally intensive. Because the relationship between every pair
+of items must be calculated and then recalculated when items are merged,
+the algorithm will run slowly on very large datasets.
+
+An alternative method of clustering is K-means clustering. This type of
+algorithm is quite different from hierarchical clustering because it is
+told in advance how many distinct clusters to generate. The algorithm will
+determine the size of the clusters based on the structure of the data.
+
+K-means clustering begins with k randomly placed centroids (points in
+space that represent the center of the cluster), and assigns every item
+to the nearest one. After the assignment, the centroids are moved to the
+average location of all the nodes assigned to them, and the assignments
+are redone. This process repeats until the assignments stop changing.
+
+The function for doing K-means clustering takes the same data rows as
+input as does the hierarchical clustering algorithm, along with the
+number of clusters (k) that the caller would like returned
+
+Because this function uses random centroids to start with, the order
+of the results returned will almost always be different. It’s also
+possible for the contents of the clusters to be different depending on
+the initial locations of the centroids.
+
+Clusters of Preferences
+-----------------------
+
+The Pearson correlation works well for the blog dataset where the values
+are actual word counts. However, this dataset just has 1s and 0s for
+presence or absence, and it would be more useful to define some measure
+of overlap between the people who want two items. For this, there is
+a measure called the Tanimoto coefficient, which is the ratio of the
+intersection set (only the items that are in both sets) to the union set
+(all the items in either set).
+
+(see zebo.txt)
