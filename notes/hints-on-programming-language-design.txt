@@ -1,0 +1,558 @@
+If a programming language is regarded as a tool to aid the programmer,
+it should give him the greatest assistance in the most difficult
+aspects of his art, namely program design, documentation, and
+debugging.
+
+* Program Design
+
+The first and very difficult aspect of design is deciding what the
+program is to do, and formulating this as a clear, precise, and
+acceptable specification. Often just as difficult is deciding how to
+do it, -- how to divide a complex task into simpler subtasks, and to
+specify the purpose of each part, and define clear, precise, and
+efficient interfaces between them. A good programing language should
+give assistance in expressing not only how the program is to run, but
+what it is intended to accomplish; and it should enable this to be
+expressed at various levels, from the overall strategy to the details
+of coding and data representation. It should assist in establishing
+and enforcing the programming conventions and disciplines which will
+ensure harmonious cooperation of the parts of a large program when
+they are developed separately and finally assembled together.
+
+* Programming Documentation
+
+The purpose of program documentation is to explain to a human reader
+the way in which a program works, so that it can be successfully
+adapted after it goes into service, either to meet the changing
+requirements of its users, to improve it in the light of increased
+knowledge, or just to remove latent errors and oversights. The view
+that documentation is something that is added to a program after it
+has been commissioned seems to be wrong in principle and
+counterproductive in practice. Instead, documentation must be regarded
+as an integral part of the process of design and coding. A good
+programming language will encourage and assist the programmer to write
+clear self-documenting code, and even perhaps _ to develop and display
+a pleasant style of writing. The readability of programs is
+immeasurably more important than their writeability.
+
+* Program Debugging
+
+Firstly, the notations should be designed to reduce as far as possible
+the scope for coding error; or at least to guarantee that such errors
+can be detected by a compiler, before the program even begins to
+run. Certain programming errors cannot always be detected in this
+way,and must be cheaply detectable at run time; in no case can they be
+allowed to give rise to machine or'implementation dependent effects,
+which are inexplicable in terms of the language itself. This is a
+criterion to which I give the name "security". Of course, the compiler
+itself must be utterly reliable, so that its user has complete
+confidence that any unexpected effect was obtained by his own
+program. And the compiler must be compact and fast, so that there is
+no appreciable delay or cost involved in correcting a program in
+source code and resubmitting for another run; and the object code too
+should be fast and efficient, so that extra instructions can be
+inserted even in large and time-consuming programs in order to help
+detect their errors or inefficiencies.
+
+--------------------------------------------------------------------
+
+A necessary condition for the achievement of any of these objectives
+is the utmost simplicity in the design of the language.
+
+The objective criteria for good language design may be summarized in
+five catch phrases: simplicity, security, fast translation, efficient
+object code, and readability.
+
+* Simplicity
+
+The principles of modularity, or orthogonality, insofar as they
+contribute to overall simplicity, are an excellent means to an end;
+but as a substitute for simplicity they are very questionable. Since
+in practice they have proved to be a technically more difficult
+achievement than simplicity, it is foolish to adopt them as primary
+objectives.
+
+* Security
+
+The objective of security has also been widely ignored; it is believed
+instead that coding errors should be removed by the programmer with
+the assistance of a so-called "checkout" compiler. But this approach
+has several practical disadvantages. For example, the debugging
+compiler and the standard compiler are often not equally
+reliable. Even if they are, it is impossible to guarantee that they
+will give the same results, especially on a subtly incorrect program;
+and when they do not, there is nothing to help the programmer find the
+mistake. For a large and complex program, the extra inefficiency of
+the debugging runs may be serious; and even on small programs, the
+cost of loading a large debugging system can be high. You should
+always pity the fate of the programmer whose task is so difficult that
+his program will not fit into the computer together with your
+sophisticated debugging package. Finally, it is absurd to make
+elaborate security checks on debugging runs, when no trust is put in
+the results, and then remove them in production runs, when an
+erroneous result could be expensive or disastrous. What would we think
+of a sailing enthusiast who wears his lifejacket when training on dry
+land, but takes it off as soon as he goes to sea? Fortunately, with a
+secure language the security is equally tight for production and for
+debugging.
+
+* Fast Translation
+
+In the early days of high level languages it was openly stated that
+speed of compilation was of minor importance, because programs would be
+compiled only once and then executed many times. After a while it was
+realized that the reverse was often true, that a program would be
+compiled frequently while it was being debugged; but instead
+of'constructing a fast translator, language designers turned to
+independent compilation, which permits a programmer to avoid
+recompiling parts of his program which he has not changed since the
+last time. But this is a poor substitute for fast compilation, and has
+many practical disadvantages. Often it encourages or even forces a
+programmer to split a large program into modules which are too small
+to express properly the structure of his problem. It entails the use
+of wide interfaces and cumbersome and expensive parameter lists at
+inappropriate places. And even worse, it prevents the compiler from
+adequately checking the validity of these interfaces. It requires
+additional file space to store bulky intermediate code, in addition to
+source code which must, of course, never be thrown away. It
+discourages the programmer from making changes to his data structure
+or representation, since this would involve a heavy burden of
+recompilation,. And finally the linkage editor is often cumbersome to
+invoke and expensive to execute. And it is all so unnecessary, if the
+compiler for a good language can work faster than the linkage editor
+anyway.
+
+If you want to make a fast compiler even faster still, I can suggest
+three technniques which have all the benefits of independent
+compilation and none of the disadvantages.
+
+    (1) Prescan.
+
+    	The slowest part of a modern fast compiler is the lexical scan
+	which inputs individual characters, assembles them into words
+	or numbers, identifies basic symbols, removes spaces and
+	separates the comments. If the source text of the program can
+	be stored in a compact form in which c this character handling
+	does not have to be repeated, compilation time may be halved,
+	with the added advantage that the original source program may
+	still be listed (with suitably elegant indentation); and so
+	the amount of file storage is reduced by a factor considerably
+	greater than two. A similar technique was used by the PACT I 
+	assembler for the IBM 701.
+
+    (2) Precompile.
+
+    	This is a directive which can be given to the compiler after
+	submitting any initial segment of a large program. It causes
+	the compiler to make a complete dump of its workspace
+	including dictionary and object code, in a specified user
+	file. When the user wishes to add to his program and run it,
+	he directs the compiler to recover the dump and proceed. When
+	his additions are adequately tested, a further precompile
+	instruction can be given. If the programmer needs to modify a
+	precompiled procedure, he can just redeclare it in the block
+	containing his main program, and normal ALGOL-like scope rules
+	will do the rest. An occasional complete recompilation will
+	consolidate the changes after they have been fully tested. The
+	technique of precompilation is effective only on single-pass
+	compilers; it was successfully incorporated in the Elliott
+	ALGOL programming system.
+
+    (3) dump
+
+    	This is an instmction which can be called by the user program
+	during execution, and causes a complete binary dump of its
+	code and workspace into a named user file. The dump can be
+	restored and restarted at the instruction following the dump
+	by an instruction to the operating system. If all necessary
+	data input and initialization is carried out before the dump,
+	the time spent on this as well as recompilation time can be
+	saved. This provides a simple and effective way of achieving
+	the FORTRAN effect of block data, and was successfully
+	incorporated in the implementation of Elliott ALGOL.
+
+The one remaining use of independent compilation is to link a high
+level language with machine code. But even here independent
+compilation , is the wrong technique, involtig all the inefficiency of
+procedure call and all the complexity of parameter access at just the
+point where it hurts most. A far better solution is to allow machine
+code instructions to be inserted in-line within a high level language
+program, as was done in Elliott ALGOL; or better, provide a macro
+facility for machine code, as in PL/360. Independent compilation is a
+solution to y4esterdayts problems; today it has grown into a problem
+in its own right. The wise designer will prefer to avoid rather than
+solve such problems.
+
+* Efficient Object Code
+
+There is another argument which is all too prevalent among
+enthusiastic language designers, that efficiency of object code is no
+longer important; that the speed and-capacity of computers is
+increasing and their price is coming down, and the programming
+language designer might as well take advantage of this. This is an
+argument that would be quite acceptable if used to justify an
+efficiency loss of ten or twenty percent, or even thirty and forty
+percent. But all too frequently it is used to justify an efficiency
+loss of a factor of two, or ten, or even more; and worse, the overhead
+is not only in time taken but in space occupied by the running
+program. In no other engineering discipline would such avoidable
+overhead be tolerated, and it should not be in programming language
+design, for the following reasons:
+
+    ** The magnitude of the tasks we wish computers to perform is
+    growing faster .than the cost-effectiveness of the hardware. 
+
+    ** However cheap and fast a computer is, it will be cheaper and
+    faster to use it more efficiently.
+
+    ** In the future we must hope that hardware designers will pay
+    increasing attention to reliability rather than to speed and
+    cost.
+
+    ** The speed, cost, and reliability of peripheral equipment is not
+    improving at the same rate as those of processors.
+
+    ** If anyone is to be allowed to introduce inefficiency it should
+    be the user programmer, not the language designer. The user
+    programmer can take advantage of this freedom to write better
+    structured and clearer programs, and should not have to expend
+    extra effort to obscure the structure and write less clear
+    programs just to regain the efficiency which has been so
+    arrogantly preempted by the language designer.
+
+* Readability
+
+The objective of readability by human beings has sometimes been denied
+in favor of readability by a machine; and sometimes even been denied
+in favor of abbreviation of writing, achieved by a wealth of default
+conventions and implicit assumptions. It is of course possible for a
+compiler or service program to expand the abbreviations, fill in the
+defaults, and make explicit the assumptions. But in practice,
+experience shows that it is very unlikely that the output of a
+computer will ever be more readable than its input, except in such
+trivial but important aspects as improved indentation. Since in
+principle programs should be read by others, or reread by their
+authors, before being submitted to the ccmputer, it would be wise for
+the programming language designer to concentrate on the easier task of
+designing a readable language to begin with.
+
+----------------------------------------------------------------------
+
+Comment Conventions
+
+In low level programming, the greater part of the space on each line
+is devoted to comment. A comment is always terminated by an end of
+line, and starts either in a fixed column, or with a special symbol
+allocated for this purpose. The introduction of free format into high
+level languages prevents the use of the former method; but it is
+surprising that few languages have adopted the latter.
+
+
+Syntax
+
+1) In a modern fast compiler, a significant time can be taken in
+assembly of characters into meaningful symbols, identifiers, numbers
+and basic words, and in checking the context-free structure of the
+program.
+
+2) When a program contains a syntactic error, it is important that the
+compiler should be able to pinpoint the error accurately, to diagnose
+its cause, recover from it, and continue checking the rest of the
+program.
+
+
+Arithmetic Expressions
+
+(J: well, the paper is really old ;-)
+
+These seem to be six fundamental principles of structuring,
+transparency of meaning and purpose, independence of parts, recursive
+application, narrow interfaces, and manifestness of structure. In the
+case of arithmetic expressions these six principles are reconciled and
+achieved together with very high efficiency of implementation.
+
+When the operands are too large, and especially when they may be
+partially or wholly stored on backing store, it becomes much more
+efficient to use updating operations, since then the space occupied by
+one of the operands can be used to hold the result. It would therefore
+seem advisable to introduce special notations into a language to
+denote such operations as adding one matrix to another, appending one
+list to another, or making a new entry in a file, for example:
+
+     A.+B              instead of A :=A+B if A and B are matrices
+     Ll.append(L2)     if Ll and L2 are lists .
+
+(J: is this the origin of +=?)
+
+Another efficiency problem which arises from the attempt of a language
+to provide large data structures and built-in operations on them is
+that - the implementation must select a particular machine
+representation for the data, and use it uniformly, even in cases where
+other representations might be considerably more efficient. For
+example, the APL representation is fine for small matrices, but is
+very inappropriate or even impossible for large and sparse ones. The
+LISP representation of lists is very efficient for data held wholly in
+main store, but becomes inefficient when the lists are so long that
+they must be held on backing store, particularly discs and tapes.
+
+Often the efficiency of a representation depends on the relative
+frequency of various forms of operation, and therefore should be
+different in different programs, or even be changed from one phase of
+a program to another.
+
+A solution to this problem is to design a general purpose language
+which provides the prograsfllner with the tools to design and
+implement his own representation for data and code the operations upon
+it. This is the main justification for the design of "extensible"
+languages, which so many designers have aimed at, with rather great
+lack of success. In order to succeed, it will be necessary to
+recognize the following:
+
+    (1) The need for an exceptionally efficient base language in order
+    to define the extensions.
+
+    (2) The avoidance of any form of syntactic extension to the
+    language. All that is needed is to extend the meaning of the
+    existing operators of the language, an idea which was called
+    "overloading" by McCarthy.
+
+    (3) The complete avoidance of any form of automatic type transfer,
+    coercion, or default convention, other than those implemented as
+    an extension by the programmer himself.
+
+
+Program Structures
+
+(J: Hoare invented case statement here!)
+
+
+Variables
+
+One of the most powerful and most dangerous aspects of machine code
+programming is that each individual instruction of the code can change
+the content of any register, any location of store, and alter the
+condition of any peripheral: it can even change its neighboring
+instructions or itself. Worse still, the identity of the location
+changed is not always apparent from the written form of the
+instruction; it cannot be determined until run time, when the values
+of base registers, index registers, and indirect addresses are
+known. This does not matter if the program is correct, but if there is
+the slightest error, even only in a single bit, there is no limit to
+the damage which may be done, and no limit to the difficulty of In
+summary, the interface between tracing the cause of the damage. every
+two consecutive instructions in a machine code program consists of the
+state of the entire machine -- registers, mainstore, backing stores
+and all peripheral equipment.
+
+(J: Very profound observation, ruby is such a hard to trace error
+language! But the ability to change oneself is powerful.)
+
+In a high level language, the prograrmner is deprived of the dangerous
+power to update his own program while it is running. Even more
+
+(J: not true nowadays)
+
+valuable, he has the power to split his machine into a number of
+separate variables, arrays, files, etc.; and when he wishes to update
+any of these, he must quote its name explicitly on the left of the
+assignment so that the identity of the part of the machine subject to
+change is immediately apparent; and finally, a high level language can
+guarantee that all variables are disjoint, and that updating any one
+of them cannot possibly have any effect on any other.
+
+(J: all variables are disjoint)
+
+Unlike all other values (integers, strings, arrays, files, etc.)
+references have no meaning independent of a particular run of a
+program. They cannot be input as data, and they cannot be output as
+results. If either data or references to data have to be stored on
+files or backing stores, the problems are immense. And on many
+machines they have a surprising overhead on performance, for example
+they will clog up instruction pipe-lines, data lookahead, slave
+stores, and even paging systems. References are like jumps, leading
+wildly from one part of a data structure to another. Their
+introduction into high level languages has been a step backward from
+which we may never recover.
+
+(J: no reference? how?)
+
+
+Block Structure
+
+For achieving even greater security, namely the scope and locality
+associated with block structure.
+
+Like all the best programming language features, the locality and
+scope rules of ALGOL 60 are not only of great assistance to the
+programmer in the decomposition of his task and the implementation of
+its subtasks; they also permit economy in the use of machine
+resources, for example main store. The fact that a group of variables
+is required for purposes local only to part of a program means that
+their values will usually be relevant only while that part of the
+program is being executed. It is therefore possible to reallocate to
+other purposes the storage assigned , to these variables as soon as
+they are no longer required. Since the blocks of a program in ALGOL 60
+are always completed in the exact reverse of the order in which they
+were entered, the dynamic reallocation of storage can be accomplished
+by stack techniques, with small overhead of time and space, or none at
+all in the case of blocks which are not procedure bodies, for which
+the administration can be done at compile time. Finally, the
+programmer is encouraged to declare at the same time those variables
+which will be used together, and these will be allocated in contiguous
+locations, which will increase the efficiency of slave storage and
+paging techniques.
+
+It is worthy of note that the economy of dynamic reallocation is
+achieved without any risk that the programmer will accidentally refer
+to a variable that has been reallocated, andthis is guaranteed by a
+compile-time and not a run-time check. All these advantages are
+achieved in ALGOL 60 by the close correspondence between the
+statically visible scope of a variable in a source program and the
+dynamic lifetime of its storage when the program is run. A language
+designer should therefore be extremely reluctant to break this
+correspondence, which can easily be done, for example, by the
+introduction of references which may point to variables of an exited
+block. The rules of ALGOL 68, designed to detect such so-called
+"dangling references" at compile time, are both complicated and
+ineffective; and PL/I does not bother at all.
+
+
+Procedures and Parameters
+
+According to current theories of structured programming, every large
+scale programming project involves the design, use, and implementation
+of a special-purpose prograznming language, with its own data concepts
+and primitive operations, specifically oriented to that particular
+project. The procedure%nd parameter are the major tool provided for
+this purpose by high level languages since FORTRAN. In itself, this
+affords all the major advantages claimed for extensible
+languages. Furthermore, in its implementation as a closed subroutine,
+the procedure can achieve very great economies of storage at run
+time. For these reasons, the language designer should give the
+greatest attention to this feature of his language. Procedure calls
+and parameter passing should produce very compact code. Lengthy
+preludes and postludes must be avoided. The effect of the procedure on
+its parameters should be clearly manifest from its syntactic form, and
+should be simple to understand and resistant to error. And finally,
+since the procedure interface is so often the interface between major
+parts of a program, the correctness of its use should be subjected to
+the most rigorous cxnpile time check.
+
+The chief defects of the FORTRAN parameter mechanism are:
+
+    (1) It fails to give a notational distinction at the call side
+    between parameters that convey values into a procedure, that
+    convey values out of a procedure, and that do both. This negates
+    many of the advantages which the assignment statement has over
+    machine code programming.
+
+    (2) The shibboleth of independent compilation prohibits compile
+    time checks on parameter passing, just where interface errors are
+    most likely and most disastrous and most difficult to debug.
+
+    (3) The ability to de f'ine side effects of function calls negates
+    many of the advantages of arithmetic expressions.
+
+
+Types
+
+Among the most trivial but tiresome errors of low level programming
+are type errors, for example, using a fixed point operation to add
+floating point numbers, using an address as an integer or vice versa,
+or forgetting the position of a field in a data structure. The effects
+of such errors, although fully explicable in terms of bit patterns and
+machine operations, are so totally unrelated to the concepts in terms
+of which the programmer is thinking that the detection and correction
+of such errors can be exceptionally tedious. The trouble is that the
+hardware of the computer is far too tolerant and forgiving. It is
+willing to accept almost any sequence of instructions and make sense
+of them at its own level. That is the secret of the power,
+flexibility, and simplicity, and even reliability of computer
+hardware, and should therefore be cherished.
+
+But it is also one of the main reasons why we turn to high level
+languages, which can eliminate the risk of such error by a compile
+time check. The programmer declares the type of each variable, and the
+compiler can Work out the type of each result; it therefore always
+knows what type of machine code instruction to generate. In cases
+where there is no meaningful operation (for example, the addition of
+an integer and a Boolean), the compiler can inform the programmer of
+his mistake, which is far better than having to chase its curious
+consequences after the program has run.
+
+However, not all language designers would agree. Sane languages, by
+complex rules of automatic type transfers and coercions, prefer the
+dangerous tolerance of machine code, but with the following added
+disadvantages:
+
+    (1) The result will often be "nearly" right, so that the
+    programmer has less warning of his error.
+
+    (2) The inefficiency of the conversion is often a shock.
+
+    (3) The language is much complicated by the rules.
+
+    (4) The introduction of genuine language extensibility is made
+    much more difficult. 
+
+Apart from the elimination of risk of error, the concept of type is of
+vital assistance in the design and documentation phases of program
+development. The design of abstract and concrete data structures is
+one of the first tools for refining our understanding of problems, and
+for defining the common interfaces between the parts of a large
+program. The declaration of the name and structure or range of values
+of each variable is a most important aspect of clear programming, and
+the formal description of the relationship of each variable to other
+program variables is a most important part of its annotation; and
+finally an informal description of the purpose of each variable and
+its manner of use is a most important part of program
+documentation. In fact, I believe a language should enable the
+programmer to declare the units in which his numbers are expressed, so
+that a compiler can check that he is not confusing radians and
+degrees, adding heights to weights or comparing meters with yards.
+
+(J: not implemented yet? bad efficiency?)
+
+Again not all language designers would agree. Many languages do not
+require the programmer to declare his variables at all. Instead they
+define-complex default rules which the compiler must apply to
+undeclared variables. But this can only encourage sloppy program
+design and documentation, and nullify many of the advantages of block
+structure and type checking; the default rules soon get so complex
+that they are very likely to give results not expected by the
+programmer, and as ludicrously or subtly inappropriate to his
+intentions as a machine code program which contains a type error.
+
+
+Language Feature Design
+
+(1) The designer of a new feature should concentrate on one feature at
+a time. If necessary, he should design it in the context of some well
+known programming language which he likes. He should make sure that
+his feature mitigates some disadvantage or remedies some
+incompleteness of the language, without compromising any of its
+existing merits. He should show how the feature can be simply and
+efficiently implemented. He should write a section of a user manual,
+explaining clearly with examples how the feature is intended to be
+used. He should check carefully that there are no traps lurking for
+the unwary user, which cannot be checked at compile time. He should
+write a number of example programs, evaluating all the consequences of
+using the feature, in comparison with its many alternatives. And
+finally if a simple proof rule can be given for the feature, this
+would be the final accolade.
+
+(2) The language designer should be familiar with many alternative
+features designed by others, and should have excellent judgment in
+choosing the best, and rejecting any that are mutually
+inconsistent. He must be capable of reconciling, by good engineering
+design, any remaining minor inconsistencies or overlaps between
+separately designed features. He must have a clear idea of the scope
+and purpose and range of application of his new language, and how far
+it should go in size and complexity. He should have the resources to
+implement the language on one or more machines, to write user manuals,
+introductory texts, advanced texts; he should construct auxiliary
+programming aids and library programs and procedures; and finally, he
+should have the political will and resources to sell and distribute
+the language to its intended range of customers. One thing he should
+not do is to include untried ideas of his own. His task is
+consolidation, not innovation.
