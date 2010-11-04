@@ -395,3 +395,42 @@ intersection set (only the items that are in both sets) to the union set
 (all the items in either set).
 
 (see zebo.txt)
+
+Viewing Data in Two Dimensions
+------------------------------
+
+Since most real-life examples of items you would want to cluster have
+more than two numbers, you can’t just take the data as-is and plot it
+in two dimensions. However, to understand the relationship between the
+various items, it would be very useful to see them charted on a page
+with closer distances indicating similarity.
+
+This section will introduce a technique called multidimensional scaling,
+which will be used to find a two-dimensional representation of the
+dataset. The algorithm takes the difference between every pair of items
+and tries to make a chart in which the distances between the items match
+those differences. To do this, the algorithm first calculates the target
+distances between all the items. In the blog dataset, Pearson correlation
+was used to compare the items.
+
+Next, all the items (blogs, in this case) are placed randomly on the
+two-dimensional chart. The current distances between all the items are
+calculated using the actual distance (the sum of the differences of the
+squares).  For every pair of items, the target distance is compared to
+the current distance and an error term is calculated. Every item is moved
+a small amount closer or further in proportion to the error between the
+two items.
+
+Every node is moved according to the combination of all the other nodes
+pushing and pulling on it. Each time this happens, the difference between
+the current distances and the target distances gets a bit smaller. This
+procedure is repeated many times until the total amount of error cannot
+be reduced by moving the items any more.
+
+The concept of imagining items in space depending on their parameters will
+be a recurring theme in this book. Using multidimensional scaling is an
+effective way to take a dataset and actually view it in a way that’s
+easy to interpret. It’s important to realize that some information is
+lost in the process of scaling, but the result should help you understand
+the algorithms better.
+
